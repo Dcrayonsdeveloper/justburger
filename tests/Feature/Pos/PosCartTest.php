@@ -3,6 +3,8 @@
 namespace Tests\Feature\Pos;
 
 use App\Models\Category;
+use App\Models\Coupon;
+use App\Models\DiscountRule;
 use App\Models\PosRegister;
 use App\Models\Product;
 use App\Models\Staff;
@@ -18,12 +20,14 @@ class PosCartTest extends TestCase
 
     private array $posSession;
     private Product $product;
+    private Store $store;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $store = Store::create(['name' => 'Test Store', 'code' => 'TS-01', 'is_active' => true]);
+        $this->store = $store;
         $register = PosRegister::create(['store_id' => $store->id, 'name' => 'C1', 'device_id' => 'POS-T1', 'status' => 'active']);
         $user = User::factory()->create(['first_name' => 'Cashier', 'role' => 'admin']);
         $staff = Staff::create(['user_id' => $user->id, 'employee_id' => 'E-01', 'role' => 'cashier', 'store_id' => $store->id, 'pin' => bcrypt('1234'), 'is_active' => true]);
@@ -132,5 +136,115 @@ class PosCartTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['cart' => ['items', 'subtotal', 'discount', 'tax', 'total']]);
+    }
+
+    public function test_apply_discount_rule_without_pin(): void
+    {
+        $rule = DiscountRule::create(['label' => 'Loyalty 10%', 'percent' => 10, 'requires_pin' => false, 'is_active' => true]);
+
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/add', ['product_id' => $this->product->id, 'quantity' => 1]);
+
+        $response = $this->withSession($this->posSession)
+            ->post('/pos/cart/discount', ['type' => 'percentage', 'value' => $rule->percent, 'rule_id' => $rule->id]);
+
+        $response->assertStatus(200);
+        $this->assertEquals(49.9, $response->json('cart.discount'));
+    }
+
+    public function test_apply_discount_rule_requires_pin_and_rejects_wrong_pin(): void
+    {
+        Staff::create([
+            'user_id' => User::factory()->create()->id,
+            'employee_id' => 'MGR-01',
+            'role' => 'manager',
+            'store_id' => $this->store->id,
+            'pin' => bcrypt('9999'),
+            'is_active' => true,
+        ]);
+        $rule = DiscountRule::create(['label' => 'Clearance 20%', 'percent' => 20, 'requires_pin' => true, 'is_active' => true]);
+
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/add', ['product_id' => $this->product->id, 'quantity' => 1]);
+
+        $response = $this->withSession($this->posSession)
+            ->post('/pos/cart/discount', [
+                'type' => 'percentage', 'value' => $rule->percent, 'rule_id' => $rule->id, 'manager_pin' => '0000',
+            ]);
+
+        $response->assertStatus(401);
+    }
+
+    public function test_apply_discount_rule_accepts_correct_manager_pin(): void
+    {
+        Staff::create([
+            'user_id' => User::factory()->create()->id,
+            'employee_id' => 'MGR-01',
+            'role' => 'manager',
+            'store_id' => $this->store->id,
+            'pin' => bcrypt('9999'),
+            'is_active' => true,
+        ]);
+        $rule = DiscountRule::create(['label' => 'Clearance 20%', 'percent' => 20, 'requires_pin' => true, 'is_active' => true]);
+
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/add', ['product_id' => $this->product->id, 'quantity' => 1]);
+
+        $response = $this->withSession($this->posSession)
+            ->post('/pos/cart/discount', [
+                'type' => 'percentage', 'value' => $rule->percent, 'rule_id' => $rule->id, 'manager_pin' => '9999',
+            ]);
+
+        $response->assertStatus(200);
+        $this->assertEquals(99.8, $response->json('cart.discount'));
+    }
+
+    public function test_discount_rule_rejects_over_max_cart_value(): void
+    {
+        $rule = DiscountRule::create([
+            'label' => 'Small Basket 15%', 'percent' => 15, 'max_cart_value' => 100, 'requires_pin' => false, 'is_active' => true,
+        ]);
+
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/add', ['product_id' => $this->product->id, 'quantity' => 1]);
+
+        $response = $this->withSession($this->posSession)
+            ->post('/pos/cart/discount', ['type' => 'percentage', 'value' => $rule->percent, 'rule_id' => $rule->id]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_remove_manual_discount(): void
+    {
+        $rule = DiscountRule::create(['label' => 'Loyalty 10%', 'percent' => 10, 'requires_pin' => false, 'is_active' => true]);
+
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/add', ['product_id' => $this->product->id, 'quantity' => 1]);
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/discount', ['type' => 'percentage', 'value' => $rule->percent, 'rule_id' => $rule->id]);
+
+        $response = $this->withSession($this->posSession)
+            ->delete('/pos/cart/discount');
+
+        $response->assertStatus(200);
+        $this->assertEquals(0, $response->json('cart.discount'));
+        $this->assertNull($response->json('cart.manual_discount'));
+    }
+
+    public function test_remove_coupon(): void
+    {
+        Coupon::create(['code' => 'SAVE10', 'name' => 'Save 10%', 'type' => 'percentage', 'value' => 10, 'is_active' => true]);
+
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/add', ['product_id' => $this->product->id, 'quantity' => 1]);
+        $this->withSession($this->posSession)
+            ->post('/pos/cart/coupon', ['code' => 'SAVE10']);
+
+        $response = $this->withSession($this->posSession)
+            ->delete('/pos/cart/coupon');
+
+        $response->assertStatus(200);
+        $this->assertNull($response->json('cart.coupon'));
+        $this->assertEquals(0, $response->json('cart.discount'));
     }
 }

@@ -76,29 +76,28 @@ class ProductController extends Controller
 
     /**
      * Lookup product by barcode (USB scanner or camera).
+     *
+     * Fallback chain: products.barcode -> product_variants.barcode ->
+     * products.sku -> product_variants.sku -> barcodes table -> products.marg_code.
      */
     public function barcodeLookup(Request $request, string $code): JsonResponse
     {
-        // Check product barcode
-        $product = Product::where('barcode', $code)
+        $productQuery = fn () => Product::query()
             ->where('status', 'approved')
             ->where('is_active', true)
-            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,barcode,price,stock_quantity,attributes'])
-            ->first();
+            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,barcode,price,stock_quantity,attributes']);
 
+        // Tier 1: product barcode
+        $product = $productQuery()->where('barcode', $code)->first();
         if ($product) {
-            return response()->json([
-                'found'   => true,
-                'product' => $this->formatProduct($product),
-            ]);
+            return response()->json(['found' => true, 'product' => $this->formatProduct($product)]);
         }
 
-        // Check variant barcode
+        // Tier 2: variant barcode
         $variant = ProductVariant::where('barcode', $code)
             ->where('is_active', true)
             ->with(['product' => fn ($q) => $q->with(['primaryImage', 'category:id,name'])])
             ->first();
-
         if ($variant && $variant->product) {
             return response()->json([
                 'found'      => true,
@@ -107,15 +106,29 @@ class ProductController extends Controller
             ]);
         }
 
-        // Check barcodes table
+        // Tier 3: product SKU
+        $product = $productQuery()->where('sku', $code)->first();
+        if ($product) {
+            return response()->json(['found' => true, 'product' => $this->formatProduct($product)]);
+        }
+
+        // Tier 4: variant SKU
+        $variant = ProductVariant::where('sku', $code)
+            ->where('is_active', true)
+            ->with(['product' => fn ($q) => $q->with(['primaryImage', 'category:id,name'])])
+            ->first();
+        if ($variant && $variant->product) {
+            return response()->json([
+                'found'      => true,
+                'product'    => $this->formatProduct($variant->product),
+                'variant_id' => $variant->id,
+            ]);
+        }
+
+        // Tier 5: barcodes table (alternate/legacy codes)
         $barcode = \App\Models\Barcode::where('barcode', $code)->first();
         if ($barcode) {
-            $product = Product::where('id', $barcode->product_id)
-                ->where('status', 'approved')
-                ->where('is_active', true)
-                ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,barcode,price,stock_quantity,attributes'])
-                ->first();
-
+            $product = $productQuery()->where('id', $barcode->product_id)->first();
             if ($product) {
                 return response()->json([
                     'found'      => true,
@@ -123,6 +136,12 @@ class ProductController extends Controller
                     'variant_id' => $barcode->variant_id,
                 ]);
             }
+        }
+
+        // Tier 6: Marg ERP code
+        $product = $productQuery()->where('marg_code', $code)->first();
+        if ($product) {
+            return response()->json(['found' => true, 'product' => $this->formatProduct($product)]);
         }
 
         return response()->json([
@@ -165,6 +184,7 @@ class ProductController extends Controller
             'name'           => $product->name,
             'sku'            => $product->sku,
             'barcode'        => $product->barcode,
+            'marg_code'      => $product->marg_code,
             'price'          => (float) $product->price,
             'mrp'            => (float) ($product->mrp ?? $product->price),
             'cost_price'     => (float) ($product->cost_price ?? 0),

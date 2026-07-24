@@ -13,6 +13,7 @@ class PosSale extends Model
         'store_id',
         'register_id',
         'staff_id',
+        'salesperson_id',
         'customer_id',
         'subtotal',
         'discount',
@@ -62,6 +63,11 @@ class PosSale extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class);
+    }
+
+    public function salesperson(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'salesperson_id');
     }
 
     public function customer(): BelongsTo

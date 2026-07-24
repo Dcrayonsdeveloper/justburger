@@ -7,7 +7,6 @@ use App\Models\PosRegister;
 use App\Models\Staff;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -108,12 +107,8 @@ class AuthController extends Controller
         }
 
         // Find staff by PIN at this store
-        $staff = Staff::with('user')
-            ->where('store_id', $storeId)
-            ->where('is_active', true)
-            ->whereNotNull('pin')
-            ->get()
-            ->first(fn (Staff $s) => Hash::check($validated['pin'], $s->pin));
+        $staff = Staff::findByPin($storeId, $validated['pin']);
+        $staff?->loadMissing('user');
 
         if (! $staff) {
             // Increment failed attempts
@@ -191,13 +186,8 @@ class AuthController extends Controller
         $storeId = $request->session()->get('pos_store_id');
 
         // Find a supervisor or manager with this PIN at this store
-        $manager = Staff::with('user')
-            ->where('store_id', $storeId)
-            ->where('is_active', true)
-            ->whereIn('role', ['manager', 'supervisor'])
-            ->whereNotNull('pin')
-            ->get()
-            ->first(fn (Staff $s) => Hash::check($validated['pin'], $s->pin));
+        $manager = Staff::findByPin($storeId, $validated['pin'], ['manager', 'supervisor']);
+        $manager?->loadMissing('user');
 
         if (! $manager) {
             return response()->json([

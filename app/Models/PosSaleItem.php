@@ -13,10 +13,16 @@ class PosSaleItem extends Model
         'variant_id',
         'barcode',
         'product_name',
+        'hsn_code',
+        'tax_rate',
         'quantity',
         'price',
         'discount',
+        'discount_reason',
         'tax',
+        'cgst',
+        'sgst',
+        'igst',
         'total',
     ];
 
@@ -25,7 +31,11 @@ class PosSaleItem extends Model
         return [
             'price' => 'decimal:2',
             'discount' => 'decimal:2',
+            'tax_rate' => 'decimal:2',
             'tax' => 'decimal:2',
+            'cgst' => 'decimal:2',
+            'sgst' => 'decimal:2',
+            'igst' => 'decimal:2',
             'total' => 'decimal:2',
         ];
     }

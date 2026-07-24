@@ -43,18 +43,26 @@ Route::prefix('pos')->name('pos.')->group(function () {
             Route::get('/categories', [Pos\ProductController::class, 'categories'])->name('categories');
 
             // ── Cart ─────────────────────────────────────────────────
+            // Note: literal /cart/* sub-paths must be registered before the
+            // /cart/{item} wildcards below, otherwise the wildcard swallows
+            // them (e.g. "discount"/"coupon" would be treated as an item id).
             Route::post('/cart/add', [Pos\CartController::class, 'add'])->name('cart.add');
-            Route::patch('/cart/{item}', [Pos\CartController::class, 'update'])->name('cart.update');
-            Route::delete('/cart/{item}', [Pos\CartController::class, 'remove'])->name('cart.remove');
             Route::delete('/cart', [Pos\CartController::class, 'clear'])->name('cart.clear');
             Route::post('/cart/discount', [Pos\CartController::class, 'applyDiscount'])->name('cart.discount');
+            Route::delete('/cart/discount', [Pos\CartController::class, 'removeDiscount'])->name('cart.discount.remove');
+            Route::get('/discount-rules', [Pos\CartController::class, 'discountRules'])->name('discount-rules');
             Route::post('/cart/coupon', [Pos\CartController::class, 'applyCoupon'])->name('cart.coupon');
             Route::delete('/cart/coupon', [Pos\CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
             Route::post('/cart/customer', [Pos\CartController::class, 'attachCustomer'])->name('cart.customer');
+            Route::post('/cart/salesperson', [Pos\CartController::class, 'setSalesperson'])->name('cart.salesperson');
+            Route::get('/staff/active', [Pos\CartController::class, 'activeStaff'])->name('staff.active');
             Route::get('/cart/data', [Pos\CartController::class, 'data'])->name('cart.data');
+            Route::patch('/cart/{item}', [Pos\CartController::class, 'update'])->name('cart.update');
+            Route::delete('/cart/{item}', [Pos\CartController::class, 'remove'])->name('cart.remove');
 
             // ── Sales ────────────────────────────────────────────────
             Route::post('/sale/complete', [Pos\SaleController::class, 'complete'])->name('sale.complete');
+            Route::get('/sale/past', [Pos\SaleController::class, 'past'])->name('sale.past');
             Route::get('/sale/{sale}/receipt', [Pos\SaleController::class, 'receipt'])->name('sale.receipt');
             Route::get('/sale/{sale}/receipt-data', [Pos\SaleController::class, 'receiptData'])->name('sale.receipt-data');
 

@@ -56,6 +56,7 @@ class SaleController extends Controller
                     'store_id'        => $storeId,
                     'register_id'     => $registerId,
                     'staff_id'        => $staffId,
+                    'salesperson_id'  => $cart['salesperson_id'] ?? null,
                     'customer_id'     => $cart['customer']['id'] ?? null,
                     'subtotal'        => $cart['subtotal'],
                     'discount'        => $cart['discount'],
@@ -154,7 +155,7 @@ class SaleController extends Controller
 
             // Clear the cart
             $request->session()->put('pos_cart', [
-                'items' => [], 'customer' => null, 'coupon' => null,
+                'items' => [], 'customer' => null, 'salesperson_id' => null, 'coupon' => null,
                 'manual_discount' => null, 'subtotal' => 0, 'discount' => 0,
                 'tax' => 0, 'total' => 0,
             ]);
@@ -176,6 +177,49 @@ class SaleController extends Controller
                 'message' => 'Sale processing failed. Please try again.',
             ], 500);
         }
+    }
+
+    /**
+     * Browse past completed sales for the Past Bills / reprint modal.
+     */
+    public function past(Request $request): JsonResponse
+    {
+        $storeId = $request->session()->get('pos_store_id');
+        $query = trim((string) $request->input('q', ''));
+
+        $sales = PosSale::with('customer')
+            ->where('store_id', $storeId)
+            ->where('status', 'completed')
+            ->when($query !== '', function ($q) use ($query) {
+                $q->where(function ($qq) use ($query) {
+                    $qq->where('sale_number', 'like', "%{$query}%")
+                       ->orWhereHas('customer', fn ($cq) => $cq->where('phone', 'like', "%{$query}%")
+                           ->orWhere('first_name', 'like', "%{$query}%"));
+                });
+            })
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->input('date_from')))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->input('date_to')))
+            ->orderByDesc('created_at')
+            ->paginate($request->input('per_page', 20));
+
+        return response()->json([
+            'sales' => $sales->getCollection()->map(fn (PosSale $sale) => [
+                'id'             => $sale->id,
+                'sale_number'    => $sale->sale_number,
+                'date'           => $sale->created_at->format('d M Y, g:i A'),
+                'total'          => (float) $sale->total,
+                'payment_method' => $sale->payment_method,
+                'customer'       => $sale->customer
+                    ? ($sale->customer->first_name ?? $sale->customer->name)
+                    : 'Walk-in',
+                'receipt_url'    => route('pos.sale.receipt', $sale->id),
+            ]),
+            'pagination' => [
+                'current_page' => $sales->currentPage(),
+                'last_page'    => $sales->lastPage(),
+                'total'        => $sales->total(),
+            ],
+        ]);
     }
 
     /**
@@ -223,7 +267,7 @@ class SaleController extends Controller
             'store_name'     => $store->name ?? config('app.name', 'JustBurgers'),
             'store_address'  => $store->address ?? '',
             'store_phone'    => $store->phone ?? '',
-            'gstin'          => $store->gstin ?? '',
+            'gstin'          => $store->gst_number ?? '',
             'sale_number'    => $sale->sale_number,
             'date'           => $sale->created_at->format('d/m/Y h:i A'),
             'cashier'        => $sale->staff?->user?->first_name ?? 'Staff',
