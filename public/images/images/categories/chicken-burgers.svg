@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="cbg3" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#FFB74D"/>
+      <stop offset="100%" stop-color="#6D3A00"/>
+    </radialGradient>
+    <filter id="cshadow3" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <linearGradient id="cbun3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4903A"/>
+      <stop offset="100%" stop-color="#A0622A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#cbg3)" rx="24"/>
+  <circle cx="400" cy="340" r="190" fill="none" stroke="#fff" stroke-opacity="0.06" stroke-width="35"/>
+  <!-- Chicken burger -->
+  <g transform="translate(400,320)" filter="url(#cshadow3)">
+    <ellipse cx="0" cy="-65" rx="135" ry="55" fill="url(#cbun3)"/>
+    <ellipse cx="0" cy="-77" rx="124" ry="32" fill="#E8A94D" opacity="0.4"/>
+    <ellipse cx="-38" cy="-88" rx="6" ry="4" fill="#FFF5DC"/>
+    <ellipse cx="25" cy="-92" rx="6" ry="4" fill="#FFF5DC"/>
+    <ellipse cx="58" cy="-84" rx="6" ry="4" fill="#FFF5DC"/>
+    <path d="M-142,-28 Q-107,-42 -72,-24 Q-37,-42 2,-26 Q37,-42 72,-24 Q107,-42 142,-28 L142,-16 Q107,-30 72,-12 Q37,-30 2,-14 Q-37,-30 -72,-12 Q-107,-30 -142,-16 Z" fill="#66BB6A"/>
+    <ellipse cx="-35" cy="-8" rx="30" ry="8" fill="#E53935"/>
+    <ellipse cx="30" cy="-6" rx="28" ry="7" fill="#EF5350"/>
+    <!-- Crispy chicken -->
+    <ellipse cx="0" cy="18" rx="125" ry="30" fill="#D4903A"/>
+    <ellipse cx="0" cy="13" rx="118" ry="22" fill="#E8A94D" opacity="0.5"/>
+    <circle cx="-55" cy="14" r="6" fill="#C88030" opacity="0.5"/>
+    <circle cx="-25" cy="20" r="5" fill="#C88030" opacity="0.4"/>
+    <circle cx="30" cy="12" r="6" fill="#C88030" opacity="0.5"/>
+    <circle cx="65" cy="18" r="5" fill="#C88030" opacity="0.45"/>
+    <circle cx="0" cy="8" r="4" fill="#C88030" opacity="0.4"/>
+    <rect x="-135" y="44" width="270" height="30" fill="url(#cbun3)" rx="6"/>
+    <ellipse cx="0" cy="74" rx="135" ry="13" fill="#A0622A"/>
+  </g>
+  <!-- Label -->
+  <rect x="190" y="525" width="420" height="70" fill="#000" fill-opacity="0.35" rx="35"/>
+  <text x="400" y="568" text-anchor="middle" font-family="Georgia, serif" font-size="36" font-weight="bold" fill="#fff">Chicken Burgers</text>
+  <text x="400" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#FFE0B2" letter-spacing="4" opacity="0.8">CRISPY &amp; GRILLED</text>
+</svg>

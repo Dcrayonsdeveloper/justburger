@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg2" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#E65100"/>
+      <stop offset="100%" stop-color="#6D1B00"/>
+    </radialGradient>
+    <filter id="shadow2" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <linearGradient id="bun2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4903A"/>
+      <stop offset="100%" stop-color="#A0622A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg2)" rx="20"/>
+  <rect x="40" y="40" width="720" height="720" fill="none" stroke="#fff" stroke-opacity="0.12" stroke-width="2" rx="15"/>
+  <!-- Double burger icon -->
+  <g transform="translate(400,320)" filter="url(#shadow2)">
+    <!-- Top bun -->
+    <ellipse cx="0" cy="-90" rx="130" ry="55" fill="url(#bun2)"/>
+    <ellipse cx="0" cy="-100" rx="120" ry="32" fill="#E8A94D" opacity="0.5"/>
+    <!-- Seeds -->
+    <ellipse cx="-45" cy="-110" rx="7" ry="4" fill="#FFF5DC" transform="rotate(-15)"/>
+    <ellipse cx="25" cy="-115" rx="7" ry="4" fill="#FFF5DC" transform="rotate(10)"/>
+    <ellipse cx="55" cy="-105" rx="7" ry="4" fill="#FFF5DC"/>
+    <ellipse cx="-10" cy="-120" rx="7" ry="4" fill="#FFF5DC"/>
+    <!-- Lettuce -->
+    <path d="M-140,-50 Q-105,-65 -70,-45 Q-35,-65 0,-47 Q35,-65 70,-45 Q105,-65 140,-50 L140,-38 Q105,-53 70,-33 Q35,-53 0,-35 Q-35,-53 -70,-33 Q-105,-53 -140,-38 Z" fill="#4CAF50"/>
+    <!-- Cheese 1 -->
+    <rect x="-130" y="-45" width="260" height="18" fill="#FFC107" rx="3"/>
+    <!-- Patty 1 -->
+    <ellipse cx="0" cy="-15" rx="120" ry="25" fill="#5D2F0E"/>
+    <!-- Middle bun -->
+    <rect x="-125" y="5" width="250" height="18" fill="#C88A35" rx="4"/>
+    <!-- Cheese 2 -->
+    <rect x="-130" y="20" width="260" height="18" fill="#FFA000" rx="3"/>
+    <!-- Patty 2 -->
+    <ellipse cx="0" cy="50" rx="120" ry="25" fill="#5D2F0E"/>
+    <!-- Bottom bun -->
+    <rect x="-130" y="70" width="260" height="30" fill="url(#bun2)" rx="5"/>
+    <ellipse cx="0" cy="100" rx="130" ry="14" fill="#A0622A"/>
+  </g>
+  <!-- Text -->
+  <text x="400" y="560" text-anchor="middle" font-family="Georgia, serif" font-size="48" font-weight="bold" fill="#fff" filter="url(#shadow2)">The Big JB</text>
+  <text x="400" y="610" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#FFCC80" letter-spacing="4">SIGNATURE</text>
+  <text x="400" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#FFE0B2" letter-spacing="3">JUSTBURGERS</text>
+  <!-- Star burst -->
+  <circle cx="680" cy="120" r="50" fill="#FFC107" opacity="0.2"/>
+  <circle cx="680" cy="120" r="35" fill="#FFC107" opacity="0.15"/>
+</svg>

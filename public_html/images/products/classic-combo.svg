@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg13" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#FF6F00"/>
+      <stop offset="100%" stop-color="#6D2D00"/>
+    </radialGradient>
+    <filter id="shadow13" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <linearGradient id="bun13" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4903A"/>
+      <stop offset="100%" stop-color="#A0622A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg13)" rx="20"/>
+  <rect x="40" y="40" width="720" height="720" fill="none" stroke="#FFB74D" stroke-opacity="0.15" stroke-width="2" rx="15"/>
+  <!-- Combo: Burger + Fries + Drink -->
+  <g filter="url(#shadow13)">
+    <!-- Burger (left) -->
+    <g transform="translate(250,310)">
+      <ellipse cx="0" cy="-35" rx="85" ry="35" fill="url(#bun13)"/>
+      <ellipse cx="0" cy="-42" rx="78" ry="20" fill="#E8A94D" opacity="0.4"/>
+      <ellipse cx="-25" cy="-50" rx="4" ry="3" fill="#FFF5DC"/>
+      <ellipse cx="15" cy="-52" rx="4" ry="3" fill="#FFF5DC"/>
+      <ellipse cx="38" cy="-46" rx="4" ry="3" fill="#FFF5DC"/>
+      <path d="M-90,-12 Q-65,-22 -40,-8 Q-15,-22 10,-10 Q35,-22 60,-8 Q85,-22 90,-12 L90,-5 Q85,-15 60,-1 Q35,-15 10,-3 Q-15,-15 -40,-1 Q-65,-15 -90,-5 Z" fill="#4CAF50"/>
+      <rect x="-88" y="-5" width="176" height="14" fill="#FFC107" rx="2"/>
+      <ellipse cx="0" cy="18" rx="82" ry="18" fill="#5D2F0E"/>
+      <rect x="-85" y="32" width="170" height="20" fill="url(#bun13)" rx="4"/>
+      <ellipse cx="0" cy="52" rx="85" ry="8" fill="#A0622A"/>
+    </g>
+    <!-- Fries (right) -->
+    <g transform="translate(480,330)">
+      <path d="M-50,10 L-60,80 L60,80 L50,10 Z" fill="#D32F2F"/>
+      <text x="0" y="55" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#FFCDD2">JB</text>
+      <rect x="-38" y="-50" width="10" height="65" fill="#FFD54F" rx="2" transform="rotate(-10,-33,-17)"/>
+      <rect x="-20" y="-58" width="10" height="72" fill="#FFCA28" rx="2" transform="rotate(-3,-15,-22)"/>
+      <rect x="-2" y="-55" width="10" height="70" fill="#FFD54F" rx="2" transform="rotate(3,3,-20)"/>
+      <rect x="16" y="-50" width="10" height="65" fill="#FFC107" rx="2" transform="rotate(8,21,-17)"/>
+      <rect x="32" y="-45" width="10" height="60" fill="#FFD54F" rx="2" transform="rotate(12,37,-15)"/>
+    </g>
+    <!-- Drink (far right) -->
+    <g transform="translate(600,310)">
+      <path d="M-30,-40 L-38,70 Q-38,80 0,80 Q38,80 38,70 L30,-40 Z" fill="#D32F2F"/>
+      <path d="M-30,-40 L30,-40 L28,-35 L-28,-35 Z" fill="#B71C1C"/>
+      <text x="0" y="30" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#FFCDD2">JB</text>
+      <!-- Lid -->
+      <ellipse cx="0" cy="-40" rx="32" ry="8" fill="#E0E0E0"/>
+      <rect x="-2" y="-90" width="5" height="55" fill="#BDBDBD" rx="1"/>
+    </g>
+  </g>
+  <!-- Value badge -->
+  <g transform="translate(140,160)">
+    <circle r="50" fill="#FFC107" opacity="0.9"/>
+    <text x="0" y="-8" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#5D2F0E">BEST</text>
+    <text x="0" y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#5D2F0E">VALUE</text>
+  </g>
+  <!-- Text -->
+  <text x="400" y="540" text-anchor="middle" font-family="Georgia, serif" font-size="42" font-weight="bold" fill="#fff" filter="url(#shadow13)">Classic Combo</text>
+  <text x="400" y="585" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#FFB74D" letter-spacing="3">BURGER + FRIES + DRINK</text>
+  <text x="400" y="635" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#FFE0B2" letter-spacing="3">JUSTBURGERS</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="cbg2" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#4A148C"/>
+      <stop offset="100%" stop-color="#1A0033"/>
+    </radialGradient>
+    <filter id="cshadow2" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <linearGradient id="cgold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="50%" stop-color="#DAA520"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#cbg2)" rx="24"/>
+  <!-- Gold ring -->
+  <circle cx="400" cy="340" r="180" fill="none" stroke="url(#cgold)" stroke-opacity="0.15" stroke-width="2"/>
+  <circle cx="400" cy="340" r="200" fill="none" stroke="url(#cgold)" stroke-opacity="0.08" stroke-width="1"/>
+  <!-- Sparkles -->
+  <circle cx="180" cy="180" r="2" fill="#FFD700" opacity="0.5"/>
+  <circle cx="620" cy="200" r="2.5" fill="#FFD700" opacity="0.4"/>
+  <circle cx="150" cy="600" r="2" fill="#FFD700" opacity="0.35"/>
+  <circle cx="650" cy="580" r="2" fill="#FFD700" opacity="0.4"/>
+  <!-- Gourmet burger (black bun) -->
+  <g transform="translate(400,320)" filter="url(#cshadow2)">
+    <ellipse cx="0" cy="-68" rx="135" ry="55" fill="#1A1A1A"/>
+    <ellipse cx="0" cy="-80" rx="124" ry="32" fill="#2A2A2A" opacity="0.5"/>
+    <ellipse cx="-40" cy="-90" rx="6" ry="4" fill="#DAA520"/>
+    <ellipse cx="22" cy="-94" rx="6" ry="4" fill="#FFD700"/>
+    <ellipse cx="58" cy="-86" rx="6" ry="4" fill="#DAA520"/>
+    <path d="M-80,-30 Q-50,-38 -20,-28 Q10,-38 40,-30 Q70,-38 80,-30" fill="none" stroke="#F5F5DC" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    <path d="M-140,-18 Q-105,-30 -70,-14 Q-35,-30 0,-16 Q35,-30 70,-14 Q105,-30 140,-18 L140,-8 Q105,-20 70,-4 Q35,-20 0,-6 Q-35,-20 -70,-4 Q-105,-20 -140,-8 Z" fill="#2E7D32"/>
+    <rect x="-132" y="-6" width="264" height="18" fill="#FFE082" rx="3"/>
+    <ellipse cx="0" cy="25" rx="128" ry="27" fill="#3E1500"/>
+    <rect x="-135" y="48" width="270" height="30" fill="#1A1A1A" rx="5"/>
+    <ellipse cx="0" cy="78" rx="135" ry="13" fill="#0D0D0D"/>
+  </g>
+  <!-- Label -->
+  <rect x="190" y="525" width="420" height="70" fill="#000" fill-opacity="0.4" rx="35"/>
+  <text x="400" y="570" text-anchor="middle" font-family="Georgia, serif" font-size="36" font-weight="bold" fill="url(#cgold)">Gourmet Burgers</text>
+  <text x="400" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#CE93D8" letter-spacing="5" opacity="0.8">ELEVATED DINING</text>
+</svg>

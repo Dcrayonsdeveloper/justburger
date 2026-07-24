@@ -1,0 +1,513 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Cart;
+use App\Models\CartItem;
+use App\Models\Coupon;
+use App\Models\Product;
+use App\Services\AnalyticsService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class CartController extends Controller
+{
+    public function index(): View
+    {
+        $cart = $this->getOrCreateCart();
+        $cart->load(['items.product.primaryImage', 'items.variant']);
+        $recommendations = $this->getCartRecommendations($cart);
+
+        return view('cart.index', compact('cart', 'recommendations'));
+    }
+
+    public function data(): JsonResponse
+    {
+        $cart = $this->getOrCreateCart();
+        $cart->load(['items.product.primaryImage', 'items.variant']);
+
+        $items = $cart->items->map(function ($item) {
+            $toppings = $item->toppings_list;
+            $toppingsTotal = $item->toppings_total;
+
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'variant_id' => $item->variant_id,
+                'quantity' => $item->quantity,
+                'price' => (float) $item->price,
+                'toppings_total' => (float) $toppingsTotal,
+                'line_price' => (float) $item->price + $toppingsTotal,
+                'product_name' => $item->product->name ?? '',
+                'variant_name' => $item->variant->name ?? null,
+                'image' => $item->product->primary_image_url,
+                'slug' => $item->product->slug ?? '',
+                'toppings' => $toppings,
+            ];
+        });
+
+        // Get cross-sell / upsell recommendations based on cart items
+        $recommendations = $this->getCartRecommendations($cart);
+
+        return response()->json([
+            'items' => $items,
+            'cart_count' => $cart->items->sum('quantity'),
+            'subtotal' => (float) $cart->subtotal,
+            'discount' => (float) $cart->discount,
+            'total' => (float) $cart->total,
+            'recommendations' => $recommendations,
+        ]);
+    }
+
+    public function add(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'variant_id' => ['nullable', 'exists:product_variants,id'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            'toppings_added' => ['nullable', 'array'],
+            'toppings_added.*.id' => ['required_with:toppings_added', 'integer'],
+            'toppings_added.*.name' => ['required_with:toppings_added', 'string'],
+            'toppings_added.*.price' => ['required_with:toppings_added', 'numeric', 'min:0'],
+            'toppings_removed' => ['nullable', 'array'],
+            'toppings_removed.*.id' => ['required_with:toppings_removed', 'integer'],
+            'toppings_removed.*.name' => ['required_with:toppings_removed', 'string'],
+            'toppings_kept' => ['nullable', 'array'],
+            'toppings_kept.*.id' => ['required_with:toppings_kept', 'integer'],
+            'toppings_kept.*.name' => ['required_with:toppings_kept', 'string'],
+        ]);
+
+        $product = Product::with(['category', 'brand'])->findOrFail($validated['product_id']);
+
+        // Check stock
+        $variantId = $validated['variant_id'] ?? null;
+        $stockQuantity = $variantId
+            ? $product->variants()->find($variantId)->stock_quantity
+            : $product->stock_quantity;
+
+        if ($stockQuantity < $validated['quantity']) {
+            $error = $stockQuantity > 0
+                ? "Only {$stockQuantity} item(s) available in stock."
+                : 'This item is currently out of stock.';
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $error, 'available' => $stockQuantity], 422);
+            }
+            return back()->with('error', $error);
+        }
+
+        // Build toppings snapshot for cart item attributes
+        $toppingsAdded = $validated['toppings_added'] ?? [];
+        $toppingsRemoved = $validated['toppings_removed'] ?? [];
+        $toppingsKept = $validated['toppings_kept'] ?? [];
+        $toppingsAttr = null;
+        if (!empty($toppingsAdded) || !empty($toppingsRemoved) || !empty($toppingsKept)) {
+            $toppingsAttr = [
+                'toppings' => [
+                    'added' => array_map(fn ($t) => [
+                        'id' => (int) $t['id'],
+                        'name' => $t['name'],
+                        'price' => (float) $t['price'],
+                    ], $toppingsAdded),
+                    'removed' => array_map(fn ($t) => [
+                        'id' => (int) $t['id'],
+                        'name' => $t['name'],
+                    ], $toppingsRemoved),
+                    'kept' => array_map(fn ($t) => [
+                        'id' => (int) $t['id'],
+                        'name' => $t['name'],
+                    ], $toppingsKept),
+                ],
+            ];
+        }
+
+        $cart = $this->getOrCreateCart();
+
+        // Match existing item by product + variant + same toppings selection
+        $toppingsSignature = $toppingsAttr ? md5(json_encode($toppingsAttr['toppings'])) : '';
+        $existingItem = null;
+        $cartItems = $cart->items()
+            ->where('product_id', $validated['product_id'])
+            ->where('variant_id', $variantId)
+            ->get();
+
+        foreach ($cartItems as $item) {
+            $itemToppings = $item->attributes['toppings'] ?? null;
+            $itemSig = $itemToppings ? md5(json_encode($itemToppings)) : '';
+            if ($itemSig === $toppingsSignature) {
+                $existingItem = $item;
+                break;
+            }
+        }
+
+        if ($existingItem) {
+            $newQuantity = $existingItem->quantity + $validated['quantity'];
+            if ($newQuantity > $stockQuantity) {
+                $inCart = $existingItem->quantity;
+                $canAdd = $stockQuantity - $inCart;
+                $error = $canAdd > 0
+                    ? "You already have {$inCart} in your cart. You can add up to {$canAdd} more."
+                    : "You already have all {$stockQuantity} available item(s) in your cart.";
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => $error, 'available' => $stockQuantity, 'in_cart' => $inCart], 422);
+                }
+                return back()->with('error', $error);
+            }
+            $existingItem->update(['quantity' => $newQuantity]);
+        } else {
+            $price = $variantId
+                ? $product->variants()->find($variantId)->price ?? $product->price
+                : $product->price;
+
+            $cart->items()->create([
+                'product_id' => $validated['product_id'],
+                'variant_id' => $variantId,
+                'quantity' => $validated['quantity'],
+                'price' => $price,
+                'attributes' => $toppingsAttr,
+            ]);
+        }
+
+        $cart->recalculate();
+
+        // Facebook CAPI: AddToCart
+        $eventId = AnalyticsService::generateEventId('atc');
+        app(AnalyticsService::class)->trackAddToCart($product, $validated['quantity'], $request, $eventId);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added to cart',
+                'cart_count' => $cart->items->sum('quantity'),
+                'cart_total' => $cart->total,
+                'fb_event' => [
+                    'event_id' => $eventId,
+                    'content_ids' => [(string) $product->id],
+                    'content_name' => $product->name,
+                    'content_type' => 'product',
+                    'value' => (float) $product->price * $validated['quantity'],
+                    'currency' => 'INR',
+                ],
+                'ga4_item' => [
+                    'item_id' => $product->sku ?? (string) $product->id,
+                    'item_name' => $product->name,
+                    'item_category' => $product->category?->name ?? '',
+                    'item_brand' => $product->brand?->name ?? '',
+                    'price' => (float) $product->price,
+                    'quantity' => (int) $validated['quantity'],
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Product added to cart.');
+    }
+
+    public function update(Request $request, CartItem $cartItem): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        // Check stock
+        $stockQuantity = $cartItem->variant_id
+            ? $cartItem->variant->stock_quantity
+            : $cartItem->product->stock_quantity;
+
+        if ($validated['quantity'] > $stockQuantity) {
+            $error = $stockQuantity > 0
+                ? "Only {$stockQuantity} item(s) available in stock."
+                : 'This item is currently out of stock.';
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $error, 'available' => $stockQuantity], 422);
+            }
+            return back()->with('error', $error);
+        }
+
+        $cartItem->update(['quantity' => $validated['quantity']]);
+        $cart = $cartItem->cart;
+        $hadCoupon = $cart->coupon_id;
+        $cart->recalculate();
+        $cart->refresh();
+        $cart->load('coupon');
+
+        $couponRemoved = $hadCoupon && !$cart->coupon_id;
+        $message = $couponRemoved
+            ? 'Cart updated. Coupon was removed as it no longer applies.'
+            : 'Cart updated';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'coupon_removed' => $couponRemoved,
+                'item_total' => $cartItem->quantity * $cartItem->price,
+                'cart_count' => $cart->items->sum('quantity'),
+                'cart_subtotal' => (float) $cart->subtotal,
+                'cart_discount' => (float) $cart->discount,
+                'cart_total' => (float) $cart->total,
+                'coupon' => $cart->coupon ? $this->formatCouponData($cart->coupon, $cart) : null,
+            ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function destroy(CartItem $cartItem): JsonResponse|RedirectResponse
+    {
+        $cart = $cartItem->cart;
+        $hadCoupon = $cart->coupon_id;
+
+        // Capture product info for GA4 before deleting
+        $removedItem = [
+            'item_id' => $cartItem->product->sku ?? (string) $cartItem->product_id,
+            'item_name' => $cartItem->product->name,
+            'price' => (float) $cartItem->price,
+            'quantity' => $cartItem->quantity,
+        ];
+
+        $cartItem->delete();
+        $cart->recalculate();
+        $cart->refresh();
+        $cart->load('coupon');
+
+        $couponRemoved = $hadCoupon && !$cart->coupon_id;
+        $message = $couponRemoved
+            ? 'Item removed from cart. Coupon was removed as it no longer applies.'
+            : 'Item removed from cart';
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'coupon_removed' => $couponRemoved,
+                'cart_count' => $cart->items->sum('quantity'),
+                'cart_subtotal' => (float) $cart->subtotal,
+                'cart_discount' => (float) $cart->discount,
+                'cart_total' => (float) $cart->total,
+                'coupon' => $cart->coupon ? $this->formatCouponData($cart->coupon, $cart) : null,
+                'ga4_removed_item' => $removedItem,
+            ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function clear(): JsonResponse|RedirectResponse
+    {
+        $cart = $this->getOrCreateCart();
+        $cart->items()->delete();
+        $cart->update([
+            'coupon_id' => null,
+            'discount' => 0,
+        ]);
+        $cart->recalculate();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart cleared',
+            ]);
+        }
+
+        return back()->with('success', 'Cart cleared.');
+    }
+
+    public function applyCoupon(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string'],
+        ]);
+
+        $cart = $this->getOrCreateCart();
+        $cart->load(['items.product', 'coupon']);
+
+        // Prevent stacking — if a coupon is already applied, reject
+        if ($cart->coupon_id) {
+            $message = 'A coupon is already applied. Remove it first to apply a different one.';
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        $coupon = Coupon::where('code', strtoupper($validated['code']))
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
+            ->first();
+
+        if (!$coupon) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Invalid or expired coupon code'], 422);
+            }
+            return back()->with('error', 'Invalid or expired coupon code.');
+        }
+
+        // Check minimum order amount (not for BOGO — BOGO checks quantity instead)
+        if ($coupon->type !== 'buy_x_get_y' && $coupon->min_order_amount && $cart->subtotal < $coupon->min_order_amount) {
+            $message = "This coupon requires a minimum order of " . format_price($coupon->min_order_amount);
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        // Check global usage limit
+        if ($coupon->usage_limit && $coupon->times_used >= $coupon->usage_limit) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'This coupon has reached its usage limit'], 422);
+            }
+            return back()->with('error', 'This coupon has reached its usage limit.');
+        }
+
+        // Check per-user usage limit
+        if (auth()->check() && $coupon->usage_per_user) {
+            $userUsage = \App\Models\Order::where('user_id', auth()->id())
+                ->where('coupon_id', $coupon->id)
+                ->count();
+            if ($userUsage >= $coupon->usage_per_user) {
+                $message = 'You have already used this coupon the maximum number of times.';
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+        }
+
+        // Calculate discount using the model
+        $discount = $coupon->calculateDiscount((float) $cart->subtotal, $cart->items);
+
+        if ($discount <= 0 && $coupon->type !== 'free_shipping') {
+            $message = $coupon->type === 'buy_x_get_y'
+                ? 'Your cart does not meet the quantity requirements for this offer.'
+                : 'This coupon cannot be applied to your cart.';
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        $cart->update([
+            'coupon_id' => $coupon->id,
+            'discount' => $discount,
+        ]);
+        $cart->recalculate();
+        $cart->refresh();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Coupon applied successfully',
+                'cart_discount' => (float) $cart->discount,
+                'cart_total' => (float) $cart->total,
+                'coupon' => $this->formatCouponData($coupon, $cart),
+            ]);
+        }
+
+        return back()->with('success', 'Coupon applied successfully.');
+    }
+
+    public function removeCoupon(): JsonResponse|RedirectResponse
+    {
+        $cart = $this->getOrCreateCart();
+        $cart->update([
+            'coupon_id' => null,
+            'discount' => 0,
+        ]);
+        $cart->recalculate(skipAutoApply: true);
+        $cart->refresh();
+        $cart->load('coupon');
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Coupon removed',
+                'cart_subtotal' => (float) $cart->subtotal,
+                'cart_discount' => (float) $cart->discount,
+                'cart_total' => (float) $cart->total,
+                'coupon' => $cart->coupon ? $this->formatCouponData($cart->coupon, $cart) : null,
+            ]);
+        }
+
+        return back()->with('success', 'Coupon removed.');
+    }
+
+    protected function formatCouponData(Coupon $coupon, Cart $cart): array
+    {
+        $data = [
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value' => (float) $coupon->value,
+            'auto_apply' => $coupon->auto_apply,
+        ];
+
+        if ($coupon->type === 'buy_x_get_y' && $coupon->conditions) {
+            $data['buy_qty'] = (int) ($coupon->conditions['buy_qty'] ?? 0);
+            $data['get_qty'] = (int) ($coupon->conditions['get_qty'] ?? 0);
+        }
+
+        return $data;
+    }
+
+    protected function getCartRecommendations(Cart $cart): array
+    {
+        $cartProductIds = $cart->items->pluck('product_id')->toArray();
+
+        if (empty($cartProductIds)) {
+            return [];
+        }
+
+        $cartProducts = Product::whereIn('id', $cartProductIds)->get(['id', 'category_id', 'brand_id', 'price']);
+        $categoryIds = $cartProducts->pluck('category_id')->filter()->unique()->toArray();
+        $brandIds = $cartProducts->pluck('brand_id')->filter()->unique()->toArray();
+        $avgPrice = $cartProducts->avg('price');
+
+        // Fetch recommendations: same category/brand, not in cart, prioritize upsell (higher price)
+        $recommendations = Product::active()
+            ->whereNotIn('id', $cartProductIds)
+            ->where(function ($q) use ($categoryIds, $brandIds) {
+                $q->whereIn('category_id', $categoryIds)
+                  ->orWhereIn('brand_id', $brandIds);
+            })
+            ->with(['primaryImage', 'brand'])
+            ->orderByRaw('CASE WHEN price > ? THEN 0 ELSE 1 END', [$avgPrice])
+            ->inRandomOrder()
+            ->take(6)
+            ->get();
+
+        return $recommendations->map(function ($product) {
+            $hasDiscount = $product->price < $product->mrp;
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => (float) $product->price,
+                'mrp' => (float) $product->mrp,
+                'has_discount' => $hasDiscount,
+                'discount_pct' => $hasDiscount ? round($product->discount_percentage ?? 0) : 0,
+                'image' => $product->primary_image_url,
+                'url' => route('product.show', $product),
+                'rating' => (float) ($product->rating ?? 0),
+                'brand' => $product->brand?->name,
+            ];
+        })->toArray();
+    }
+
+    protected function getOrCreateCart(): Cart
+    {
+        if (auth()->check()) {
+            return Cart::firstOrCreate(
+                ['user_id' => auth()->id()],
+                ['session_id' => null]
+            );
+        }
+
+        $sessionId = session()->getId();
+        return Cart::firstOrCreate(
+            ['session_id' => $sessionId],
+            ['user_id' => null]
+        );
+    }
+}

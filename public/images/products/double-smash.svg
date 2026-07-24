@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg14" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#BF360C"/>
+      <stop offset="100%" stop-color="#4A1500"/>
+    </radialGradient>
+    <filter id="shadow14" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <linearGradient id="bun14" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4903A"/>
+      <stop offset="100%" stop-color="#A0622A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg14)" rx="20"/>
+  <rect x="40" y="40" width="720" height="720" fill="none" stroke="#FF8A65" stroke-opacity="0.15" stroke-width="2" rx="15"/>
+  <!-- Sizzle lines -->
+  <path d="M250,170 Q265,150 280,170" fill="none" stroke="#fff" stroke-opacity="0.12" stroke-width="2"/>
+  <path d="M350,160 Q365,135 380,160" fill="none" stroke="#fff" stroke-opacity="0.1" stroke-width="2"/>
+  <path d="M450,165 Q465,142 480,165" fill="none" stroke="#fff" stroke-opacity="0.11" stroke-width="2"/>
+  <!-- Burger -->
+  <g transform="translate(400,330)" filter="url(#shadow14)">
+    <!-- Top bun -->
+    <ellipse cx="0" cy="-80" rx="128" ry="52" fill="url(#bun14)"/>
+    <ellipse cx="0" cy="-90" rx="118" ry="30" fill="#E8A94D" opacity="0.4"/>
+    <!-- Seeds -->
+    <ellipse cx="-40" cy="-100" rx="6" ry="4" fill="#FFF5DC"/>
+    <ellipse cx="20" cy="-104" rx="6" ry="4" fill="#FFF5DC"/>
+    <ellipse cx="55" cy="-95" rx="6" ry="4" fill="#FFF5DC"/>
+    <ellipse cx="-10" cy="-106" rx="6" ry="4" fill="#FFF5DC"/>
+    <!-- Lettuce -->
+    <path d="M-135,-42 Q-100,-55 -65,-38 Q-30,-55 5,-40 Q40,-55 75,-38 Q110,-55 135,-42 L135,-32 Q110,-45 75,-28 Q40,-45 5,-30 Q-30,-45 -65,-28 Q-100,-45 -135,-32 Z" fill="#4CAF50"/>
+    <!-- American cheese 1 -->
+    <rect x="-128" y="-35" width="256" height="16" fill="#FF8F00" rx="2"/>
+    <path d="M128,-35 L138,-19 L128,-19 Z" fill="#FF8F00"/>
+    <path d="M-128,-35 L-138,-19 L-128,-19 Z" fill="#FF8F00"/>
+    <!-- Smash patty 1 (thin, wide, crispy edges) -->
+    <ellipse cx="0" cy="-10" rx="130" ry="18" fill="#4A1A00"/>
+    <ellipse cx="0" cy="-14" rx="125" ry="12" fill="#6B2A10" opacity="0.4"/>
+    <!-- Crispy lace edges -->
+    <circle cx="-125" cy="-10" r="8" fill="#3E1500" opacity="0.7"/>
+    <circle cx="125" cy="-10" r="7" fill="#3E1500" opacity="0.7"/>
+    <circle cx="-118" cy="-5" r="5" fill="#3E1500" opacity="0.5"/>
+    <circle cx="118" cy="-5" r="5" fill="#3E1500" opacity="0.5"/>
+    <!-- American cheese 2 -->
+    <rect x="-125" y="5" width="250" height="16" fill="#FFC107" rx="2"/>
+    <path d="M125,5 L135,21 L125,21 Z" fill="#FFC107"/>
+    <path d="M-125,5 L-135,21 L-125,21 Z" fill="#FFC107"/>
+    <!-- Smash patty 2 -->
+    <ellipse cx="0" cy="30" rx="128" ry="18" fill="#4A1A00"/>
+    <ellipse cx="0" cy="26" rx="122" ry="12" fill="#6B2A10" opacity="0.4"/>
+    <circle cx="-123" cy="30" r="7" fill="#3E1500" opacity="0.7"/>
+    <circle cx="123" cy="30" r="7" fill="#3E1500" opacity="0.7"/>
+    <!-- Bottom bun -->
+    <rect x="-128" y="45" width="256" height="28" fill="url(#bun14)" rx="5"/>
+    <ellipse cx="0" cy="73" rx="128" ry="12" fill="#A0622A"/>
+  </g>
+  <!-- Text -->
+  <text x="400" y="555" text-anchor="middle" font-family="Georgia, serif" font-size="42" font-weight="bold" fill="#fff" filter="url(#shadow14)">Double Smash</text>
+  <text x="400" y="600" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#FFAB91" letter-spacing="5">SMASHED TO ORDER</text>
+  <text x="400" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#FFCCBC" letter-spacing="3">JUSTBURGERS</text>
+</svg>
