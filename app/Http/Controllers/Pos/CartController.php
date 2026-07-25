@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Models\DiscountRule;
 use App\Models\PosHeldBill;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Staff;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -185,23 +187,104 @@ class CartController extends Controller
     }
 
     /**
-     * Apply a manual discount to the cart.
+     * List active discount rules available for the manual-discount chips.
+     */
+    public function discountRules(): JsonResponse
+    {
+        $rules = DiscountRule::where('is_active', true)
+            ->orderBy('position')
+            ->get()
+            ->map(fn (DiscountRule $rule) => [
+                'id'             => $rule->id,
+                'label'          => $rule->label,
+                'percent'        => (float) $rule->percent,
+                'max_cart_value' => $rule->max_cart_value !== null ? (float) $rule->max_cart_value : null,
+                'requires_pin'   => $rule->requires_pin,
+            ]);
+
+        return response()->json(['rules' => $rules]);
+    }
+
+    /**
+     * Apply a manual discount to the cart — either a free-form percentage/fixed
+     * value, or a preset DiscountRule (which may require manager PIN authorization).
      */
     public function applyDiscount(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'type'   => ['required', 'in:percentage,fixed'],
-            'value'  => ['required', 'numeric', 'min:0'],
-            'reason' => ['nullable', 'string', 'max:255'],
+            'type'         => ['required', 'in:percentage,fixed'],
+            'value'        => ['required', 'numeric', 'min:0'],
+            'reason'       => ['nullable', 'string', 'max:255'],
+            'rule_id'      => ['nullable', 'integer', 'exists:discount_rules,id'],
+            'manager_pin'  => ['nullable', 'string', 'min:4', 'max:6'],
         ]);
 
         $cart = $this->getCart($request);
+        $authorizedBy = null;
+        $label = $validated['reason'] ?? '';
+        $ruleId = null;
+        $requiresPin = false;
+
+        if (! empty($validated['rule_id'])) {
+            $rule = DiscountRule::findOrFail($validated['rule_id']);
+
+            if (! $rule->isApplicable($cart['subtotal'])) {
+                return response()->json([
+                    'message' => $rule->max_cart_value !== null
+                        ? "This discount only applies to carts up to £" . number_format($rule->max_cart_value, 2) . '.'
+                        : 'This discount rule is not currently active.',
+                ], 422);
+            }
+
+            if ($rule->requires_pin) {
+                $storeId = $request->session()->get('pos_store_id');
+                $manager = $validated['manager_pin']
+                    ? Staff::findByPin($storeId, $validated['manager_pin'], ['manager', 'supervisor'])
+                    : null;
+
+                if (! $manager) {
+                    return response()->json(['message' => 'Manager PIN required to apply this discount.'], 401);
+                }
+
+                $authorizedBy = $manager->id;
+            }
+
+            $ruleId = $rule->id;
+            $requiresPin = $rule->requires_pin;
+            $label = $rule->label;
+        }
 
         $cart['manual_discount'] = [
-            'type'   => $validated['type'],
-            'value'  => (float) $validated['value'],
-            'reason' => $validated['reason'] ?? '',
+            'type'          => $validated['type'],
+            'value'         => (float) $validated['value'],
+            'reason'        => $label,
+            'rule_id'       => $ruleId,
+            'requires_pin'  => $requiresPin,
+            'authorized_by' => $authorizedBy,
         ];
+
+        $this->recalculate($cart);
+        $this->saveCart($request, $cart);
+
+        if ($authorizedBy) {
+            AuditController::log($request, 'discount_authorized', 'pos_cart', null, [
+                'authorized_by' => $authorizedBy,
+                'description'   => "Applied '{$label}' discount requiring manager authorization",
+            ]);
+        }
+
+        return response()->json([
+            'cart' => $this->formatCartResponse($cart),
+        ]);
+    }
+
+    /**
+     * Remove the applied manual discount.
+     */
+    public function removeDiscount(Request $request): JsonResponse
+    {
+        $cart = $this->getCart($request);
+        $cart['manual_discount'] = null;
 
         $this->recalculate($cart);
         $this->saveCart($request, $cart);
@@ -254,19 +337,20 @@ class CartController extends Controller
         $discount = 0;
         if ($coupon->type === 'percentage') {
             $discount = round($cart['subtotal'] * $coupon->value / 100, 2);
-            if ($coupon->max_discount_amount) {
-                $discount = min($discount, $coupon->max_discount_amount);
+            if ($coupon->max_discount) {
+                $discount = min($discount, $coupon->max_discount);
             }
         } elseif ($coupon->type === 'fixed') {
             $discount = min($coupon->value, $cart['subtotal']);
         }
 
         $cart['coupon'] = [
-            'id'       => $coupon->id,
-            'code'     => $coupon->code,
-            'type'     => $coupon->type,
-            'value'    => (float) $coupon->value,
-            'discount' => round($discount, 2),
+            'id'           => $coupon->id,
+            'code'         => $coupon->code,
+            'type'         => $coupon->type,
+            'value'        => (float) $coupon->value,
+            'max_discount' => $coupon->max_discount ? (float) $coupon->max_discount : null,
+            'discount'     => round($discount, 2),
         ];
 
         $this->recalculate($cart);
@@ -325,6 +409,44 @@ class CartController extends Controller
         ]);
     }
 
+    /**
+     * List active staff at the current store, for the salesperson dropdown.
+     */
+    public function activeStaff(Request $request): JsonResponse
+    {
+        $storeId = $request->session()->get('pos_store_id');
+
+        $staff = Staff::with('user')
+            ->where('store_id', $storeId)
+            ->where('is_active', true)
+            ->get()
+            ->map(fn (Staff $s) => [
+                'id'   => $s->id,
+                'name' => $s->user->first_name ?? $s->user->name ?? 'Staff',
+                'role' => $s->role,
+            ]);
+
+        return response()->json(['staff' => $staff]);
+    }
+
+    /**
+     * Set (or clear) the salesperson credited for the current cart's sale.
+     */
+    public function setSalesperson(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'salesperson_id' => ['nullable', 'integer', 'exists:staff,id'],
+        ]);
+
+        $cart = $this->getCart($request);
+        $cart['salesperson_id'] = $validated['salesperson_id'] ?? null;
+        $this->saveCart($request, $cart);
+
+        return response()->json([
+            'cart' => $this->formatCartResponse($cart),
+        ]);
+    }
+
     // ═══════ HELD BILLS ═══════
 
     /**
@@ -366,16 +488,17 @@ class CartController extends Controller
         }
 
         PosHeldBill::create([
-            'store_id'      => $request->session()->get('pos_store_id'),
-            'register_id'   => $request->session()->get('pos_register_id'),
-            'staff_id'      => $request->session()->get('pos_staff_id'),
-            'customer_id'   => $cart['customer']['id'] ?? null,
-            'items'         => $cart['items'],
-            'discount_data' => $cart['coupon'] ?? $cart['manual_discount'] ?? null,
-            'note'          => $validated['reference'],
-            'subtotal'      => $cart['subtotal'],
-            'tax'           => $cart['tax'],
-            'total'         => $cart['total'],
+            'store_id'       => $request->session()->get('pos_store_id'),
+            'register_id'    => $request->session()->get('pos_register_id'),
+            'staff_id'       => $request->session()->get('pos_staff_id'),
+            'salesperson_id' => $cart['salesperson_id'] ?? null,
+            'customer_id'    => $cart['customer']['id'] ?? null,
+            'items'          => $cart['items'],
+            'discount_data'  => $cart['coupon'] ?? $cart['manual_discount'] ?? null,
+            'note'           => $validated['reference'],
+            'subtotal'       => $cart['subtotal'],
+            'tax'            => $cart['tax'],
+            'total'          => $cart['total'],
         ]);
 
         // Clear the cart
@@ -401,6 +524,7 @@ class CartController extends Controller
                 'phone' => $heldBill->customer->phone ?? '',
                 'email' => $heldBill->customer->email ?? '',
             ] : null,
+            'salesperson_id'  => $heldBill->salesperson_id,
             'coupon'          => null,
             'manual_discount' => null,
             'subtotal'        => 0,
@@ -456,6 +580,7 @@ class CartController extends Controller
         return [
             'items'           => [],
             'customer'        => null,
+            'salesperson_id'  => null,
             'coupon'          => null,
             'manual_discount' => null,
             'subtotal'        => 0,
@@ -487,8 +612,10 @@ class CartController extends Controller
             $subtotal += $lineTotal;
 
             // Calculate tax per item (GST inclusive price → extract tax)
+            $item['tax_amount'] = 0;
             if ($item['tax_rate'] > 0) {
                 $taxAmount = round($lineTotal * $item['tax_rate'] / (100 + $item['tax_rate']), 2);
+                $item['tax_amount'] = $taxAmount;
                 $totalTax += $taxAmount;
             }
         }
@@ -498,8 +625,8 @@ class CartController extends Controller
         if ($cart['coupon']) {
             if ($cart['coupon']['type'] === 'percentage') {
                 $couponDiscount = round($subtotal * $cart['coupon']['value'] / 100, 2);
-                if (isset($cart['coupon']['max_discount_amount'])) {
-                    $couponDiscount = min($couponDiscount, $cart['coupon']['max_discount_amount']);
+                if (! empty($cart['coupon']['max_discount'])) {
+                    $couponDiscount = min($couponDiscount, $cart['coupon']['max_discount']);
                 }
             } elseif ($cart['coupon']['type'] === 'fixed') {
                 $couponDiscount = min($cart['coupon']['value'], $subtotal);
@@ -515,6 +642,7 @@ class CartController extends Controller
             } else {
                 $manualDiscount = min($cart['manual_discount']['value'], $subtotal);
             }
+            $cart['manual_discount']['discount'] = round($manualDiscount, 2);
         }
 
         $totalDiscount = round($couponDiscount + $manualDiscount, 2);
@@ -533,13 +661,15 @@ class CartController extends Controller
     private function formatCartResponse(array $cart): array
     {
         return [
-            'items'    => array_values($cart['items']),
-            'customer' => $cart['customer'],
-            'coupon'   => $cart['coupon'],
-            'subtotal' => $cart['subtotal'],
-            'discount' => $cart['discount'],
-            'tax'      => $cart['tax'],
-            'total'    => $cart['total'],
+            'items'           => array_values($cart['items']),
+            'customer'        => $cart['customer'],
+            'salesperson_id'  => $cart['salesperson_id'] ?? null,
+            'coupon'          => $cart['coupon'],
+            'manual_discount' => $cart['manual_discount'] ?? null,
+            'subtotal'        => $cart['subtotal'],
+            'discount'        => $cart['discount'],
+            'tax'             => $cart['tax'],
+            'total'           => $cart['total'],
         ];
     }
 }

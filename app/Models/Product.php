@@ -31,6 +31,7 @@ class Product extends Model
         'description',
         'sku',
         'barcode',
+        'marg_code',
         'mrp',
         'price',
         'cost_price',

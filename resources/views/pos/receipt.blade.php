@@ -101,7 +101,7 @@
     @foreach($vatItems->groupBy('tax_rate') as $rate => $items)
     <div class="row" style="font-size: 10px;">
         <span>VAT @ {{ $rate }}%</span>
-        <span>£{{ number_format($items->sum('tax_amount'), 2) }}</span>
+        <span>£{{ number_format($items->sum('tax'), 2) }}</span>
     </div>
     @endforeach
     @endif

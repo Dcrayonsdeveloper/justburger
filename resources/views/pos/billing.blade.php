@@ -1,4 +1,26 @@
 <x-pos.layout>
+<style>
+    @media (max-width: 1023px) {
+        .pos-product-panel {
+            width: 100% !important;
+            border-right: none !important;
+        }
+        .pos-cart-panel {
+            position: fixed !important;
+            left: 0; right: 0; bottom: 0; top: auto;
+            width: 100% !important;
+            max-height: 85vh;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+            transform: translateY(100%);
+            transition: transform 0.25s ease;
+            z-index: 95;
+        }
+        .pos-cart-panel.mobile-open {
+            transform: translateY(0);
+        }
+    }
+</style>
 <div class="pos-container" x-data="posBilling()" @keydown.window="handleKeydown($event)" x-init="init()">
 
     {{-- ═══════ TOP BAR ═══════ --}}
@@ -29,9 +51,15 @@
                 style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.15); --tw-ring-color: var(--pos-primary);"
             >
             <button x-show="searchQuery" @click="searchQuery = ''; searchResults = []; showSearchResults = false"
-                    class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search">
+                    class="absolute right-9 top-1/2 -translate-y-1/2" aria-label="Clear search">
                 <svg class="w-4 h-4" style="color: #CBD5E1;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <button @click="openCameraScanner()" class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Scan barcode with camera">
+                <svg class="w-4 h-4" style="color: #CBD5E1;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
             </button>
 
@@ -109,6 +137,11 @@
                         <svg class="w-4 h-4" style="color: var(--pos-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                         Returns
                     </button>
+                    <button @click="menuOpen = false; showPastBills()" class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2" style="color: var(--pos-text);"
+                            @mouseenter="$el.style.background='#F8FAFC'" @mouseleave="$el.style.background='white'">
+                        <svg class="w-4 h-4" style="color: var(--pos-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Past Bills
+                    </button>
                     <button @click="menuOpen = false; window.location.href = '{{ route('pos.shift.close') }}'" class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2" style="color: var(--pos-text);"
                             @mouseenter="$el.style.background='#F8FAFC'" @mouseleave="$el.style.background='white'">
                         <svg class="w-4 h-4" style="color: var(--pos-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -136,7 +169,7 @@
     <div class="flex flex-1 overflow-hidden">
 
         {{-- ═══════ LEFT: Product Grid (60%) ═══════ --}}
-        <div class="flex flex-col" style="width: 60%; border-right: 1px solid var(--pos-border);">
+        <div class="pos-product-panel flex flex-col" style="width: 60%; border-right: 1px solid var(--pos-border);">
 
             {{-- Category Tabs --}}
             <div class="flex items-center gap-1 px-4 py-2 overflow-x-auto" style="background: white; border-bottom: 1px solid var(--pos-border); min-height: 48px;"
@@ -233,7 +266,15 @@
         </div>
 
         {{-- ═══════ RIGHT: Cart (40%) ═══════ --}}
-        <div class="flex flex-col" style="width: 40%; background: white;">
+        <div class="pos-cart-panel flex flex-col" :class="{ 'mobile-open': mobileCartOpen }" style="width: 40%; background: white;">
+
+            {{-- Mobile drag handle + close (hidden on desktop) --}}
+            <div class="lg:hidden flex items-center justify-center py-2 relative" style="border-bottom: 1px solid var(--pos-border);">
+                <div class="w-10 h-1 rounded-full" style="background: var(--pos-border);"></div>
+                <button @click="mobileCartOpen = false" class="absolute right-3 top-1/2 -translate-y-1/2 p-1" style="color: var(--pos-text-muted);" aria-label="Close cart">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+            </div>
 
             {{-- Cart Header --}}
             <div class="flex items-center justify-between px-4 py-3" style="border-bottom: 1px solid var(--pos-border);">
@@ -252,6 +293,15 @@
                         </svg>
                         <span x-text="cart.customer ? cart.customer.name : 'Walk-in'"></span>
                     </button>
+                    {{-- Salesperson --}}
+                    <select x-model="salespersonId" @change="setSalesperson()"
+                            class="px-2 py-1.5 rounded-lg text-xs font-medium focus:outline-none"
+                            style="background: #F1F5F9; color: var(--pos-text-muted); border: 1px solid var(--pos-border);">
+                        <option value="">Salesperson</option>
+                        <template x-for="s in staffList" :key="s.id">
+                            <option :value="s.id" x-text="s.name"></option>
+                        </template>
+                    </select>
                     {{-- Clear Cart --}}
                     <button x-show="cart.items.length > 0" @click="clearCart()"
                             class="p-1.5 rounded-lg transition-colors" style="color: var(--pos-danger);"
@@ -290,6 +340,10 @@
                             {{-- Discount per item --}}
                             <div x-show="item.discount > 0" class="text-xs mt-0.5" style="color: var(--pos-success);">
                                 -£<span x-text="item.discount.toFixed(2)" class="pos-mono"></span> discount
+                            </div>
+                            {{-- GST per item --}}
+                            <div x-show="item.tax_rate > 0" class="text-xs mt-0.5 pos-mono" style="color: var(--pos-text-muted);">
+                                GST <span x-text="item.tax_rate"></span>% · £<span x-text="(item.tax_amount || 0).toFixed(2)"></span>
                             </div>
                         </div>
                         {{-- Quantity Controls --}}
@@ -338,6 +392,48 @@
                                 <span class="text-xs" style="color: var(--pos-success);" x-text="'-£' + cart.coupon.discount.toFixed(2)"></span>
                             </div>
                             <button @click="removeCoupon()" class="text-xs" style="color: var(--pos-danger);">Remove</button>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- Manual Discount --}}
+                <div class="px-4 py-2" style="border-bottom: 1px solid #F1F5F9;">
+                    <template x-if="!cart.manual_discount">
+                        <div>
+                            <div class="text-xs font-medium mb-1.5" style="color: var(--pos-text-muted);">Manual Discount</div>
+                            <div x-show="discountRules.length > 0" class="flex flex-wrap gap-1.5 mb-2">
+                                <template x-for="rule in discountRules" :key="rule.id">
+                                    <button @click="applyDiscountRule(rule)"
+                                            :disabled="rule.max_cart_value && cart.subtotal > rule.max_cart_value"
+                                            class="px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                                            :style="(rule.max_cart_value && cart.subtotal > rule.max_cart_value)
+                                                ? 'background: #F1F5F9; color: #94A3B8; opacity: 0.6;'
+                                                : (rule.requires_pin ? 'background: #FEE2E2; color: #991B1B;' : 'background: #FEF3C7; color: #92400E;')">
+                                        <span x-show="rule.requires_pin">🔒</span>
+                                        <span x-text="rule.label + ' (' + rule.percent + '%)'"></span>
+                                    </button>
+                                </template>
+                            </div>
+                            <div x-show="discountRules.length > 0" class="text-xs mb-1.5" style="color: var(--pos-text-muted);">
+                                Max: <span x-text="Math.max(...discountRules.map(r => r.percent), 0)"></span>%
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" x-model="freeDiscountPercent" placeholder="Free % discount"
+                                       class="flex-1 px-3 py-1.5 rounded text-sm border focus:outline-none focus:ring-1"
+                                       style="border-color: var(--pos-border); --tw-ring-color: var(--pos-primary);"
+                                       min="0" max="100" @keydown.enter="applyFreeDiscount()">
+                                <button @click="applyFreeDiscount()" :disabled="!freeDiscountPercent"
+                                        class="px-3 py-1.5 rounded text-sm font-medium"
+                                        style="background: var(--pos-text); color: white;"
+                                        :style="!freeDiscountPercent ? 'opacity: 0.5;' : ''">Apply</button>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="cart.manual_discount">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold" style="background: #FEF3C7; color: #92400E;"
+                                  x-text="(cart.manual_discount.reason || 'Discount') + ' · -£' + (cart.manual_discount.discount || 0).toFixed(2)"></span>
+                            <button @click="removeManualDiscount()" class="text-xs" style="color: var(--pos-danger);">Remove</button>
                         </div>
                     </template>
                 </div>
@@ -857,6 +953,129 @@
         </div>
     </div>
 
+    {{-- ═══════ MANAGER AUTHORIZATION MODAL ═══════ --}}
+    <div x-show="showAuthModal" x-transition.opacity class="fixed inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.5); z-index: 110;" @click.self="cancelAuth()">
+        <div class="pos-card p-6 w-full max-w-xs text-center pos-fade-in" @click.stop>
+            <h3 class="text-base font-semibold mb-1" style="color: var(--pos-text);">Manager Authorization</h3>
+            <p class="text-xs mb-4" style="color: var(--pos-text-muted);">Enter manager or supervisor PIN to continue</p>
+
+            <div class="flex justify-center gap-3 mb-4" :class="{ 'pos-shake': authShake }" @animationend="authShake = false">
+                <template x-for="i in 4" :key="i">
+                    <div class="w-4 h-4 rounded-full transition-all duration-150"
+                         :style="authPin.length >= i ? 'background: var(--pos-primary); transform: scale(1.15);' : 'background: #E2E8F0;'"></div>
+                </template>
+            </div>
+
+            <p x-show="authError" x-text="authError" x-transition class="text-sm mb-3" style="color: var(--pos-danger);"></p>
+
+            <div class="flex flex-col items-center gap-2">
+                <div class="flex gap-2">
+                    <button @click="addAuthDigit('1')" class="pos-numpad-btn">1</button>
+                    <button @click="addAuthDigit('2')" class="pos-numpad-btn">2</button>
+                    <button @click="addAuthDigit('3')" class="pos-numpad-btn">3</button>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="addAuthDigit('4')" class="pos-numpad-btn">4</button>
+                    <button @click="addAuthDigit('5')" class="pos-numpad-btn">5</button>
+                    <button @click="addAuthDigit('6')" class="pos-numpad-btn">6</button>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="addAuthDigit('7')" class="pos-numpad-btn">7</button>
+                    <button @click="addAuthDigit('8')" class="pos-numpad-btn">8</button>
+                    <button @click="addAuthDigit('9')" class="pos-numpad-btn">9</button>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="authPin = authPin.slice(0, -1)" class="pos-numpad-btn text-lg" style="color: var(--pos-danger);" aria-label="Delete digit">⌫</button>
+                    <button @click="addAuthDigit('0')" class="pos-numpad-btn">0</button>
+                    <button @click="submitAuth()" class="pos-numpad-btn" style="background: var(--pos-primary); color: white; border-color: var(--pos-primary);" aria-label="Submit PIN">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button @click="cancelAuth()" class="w-full mt-4 pos-btn pos-btn-ghost text-sm">Cancel</button>
+        </div>
+    </div>
+
+    {{-- ═══════ CAMERA BARCODE SCANNER MODAL ═══════ --}}
+    <div x-show="showScannerModal" x-transition.opacity class="fixed inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.8); z-index: 110;">
+        <div class="w-full max-w-md pos-fade-in">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-base font-semibold text-white">Scan Barcode</h3>
+                <button @click="closeCameraScanner()" class="p-1 rounded text-white" aria-label="Close scanner">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="relative rounded-lg overflow-hidden" style="background: black; aspect-ratio: 4/3;">
+                <video x-ref="scannerVideo" class="w-full h-full object-cover" muted playsinline></video>
+                {{-- Aiming reticle --}}
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-2/3 h-1/3 rounded-lg" style="border: 2px solid rgba(255,255,255,0.8);"></div>
+                </div>
+                <div x-show="scannerError" class="absolute inset-0 flex items-center justify-center p-6" style="background: rgba(0,0,0,0.85);">
+                    <div class="text-center">
+                        <p class="text-sm text-white mb-3" x-text="scannerError"></p>
+                        <button @click="startCameraScanner()" class="pos-btn pos-btn-primary text-sm px-6">Retry</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══════ PAST BILLS MODAL ═══════ --}}
+    <div x-show="showPastBillsModal" x-transition.opacity class="fixed inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.4); z-index: 100;" @click.self="showPastBillsModal = false">
+        <div class="pos-card w-full max-w-lg pos-fade-in flex flex-col" style="max-height: 85vh;" @click.stop>
+            <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--pos-border);">
+                <h3 class="text-base font-semibold" style="color: var(--pos-text);">Past Bills</h3>
+                <button @click="showPastBillsModal = false" class="p-1 rounded" style="color: var(--pos-text-muted);">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="px-6 py-3" style="border-bottom: 1px solid #F1F5F9;">
+                <input type="text" x-model="pastBillsSearch" @input.debounce.400ms="searchPastBills()"
+                       placeholder="Search by bill number, customer name or phone..."
+                       class="w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                       style="border-color: var(--pos-border); --tw-ring-color: var(--pos-primary);">
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-3">
+                <div x-show="pastBills.length === 0" class="text-center py-8">
+                    <p class="text-sm" style="color: var(--pos-text-muted);">No past bills found.</p>
+                </div>
+                <div class="space-y-2">
+                    <template x-for="bill in pastBills" :key="bill.id">
+                        <button @click="window.open(bill.receipt_url, '_blank')"
+                                class="w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors"
+                                style="border: 1px solid var(--pos-border);"
+                                @mouseenter="$el.style.borderColor='var(--pos-primary)'" @mouseleave="$el.style.borderColor='var(--pos-border)'">
+                            <div>
+                                <div class="text-sm font-medium" style="color: var(--pos-text);" x-text="bill.sale_number"></div>
+                                <div class="text-xs" style="color: var(--pos-text-muted);">
+                                    <span x-text="bill.customer"></span> · <span x-text="bill.date"></span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold pos-mono" x-text="'£' + bill.total.toFixed(2)"></div>
+                                <div class="text-xs uppercase" style="color: var(--pos-text-muted);" x-text="bill.payment_method"></div>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══════ MOBILE CART FAB ═══════ --}}
+    <button x-show="cart.items.length > 0" @click="mobileCartOpen = true"
+            class="lg:hidden fixed bottom-5 right-5 rounded-full flex items-center justify-center shadow-lg"
+            style="width: 60px; height: 60px; background: var(--pos-primary); color: white; z-index: 90;"
+            aria-label="Open cart">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
+        </svg>
+        <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold"
+              style="background: var(--pos-accent); color: white;" x-text="cart.items.length"></span>
+    </button>
+
 </div>
 
 @push('scripts')
@@ -880,12 +1099,43 @@ function posBilling() {
             items: [],
             customer: null,
             coupon: null,
+            manual_discount: null,
             subtotal: 0,
             discount: 0,
             tax: 0,
             total: 0,
         },
         couponCode: '',
+
+        // ── Manual Discount ──
+        discountRules: [],
+        freeDiscountPercent: '',
+
+        // ── Salesperson ──
+        staffList: [],
+        salespersonId: '',
+
+        // ── Manager Authorization ──
+        showAuthModal: false,
+        authPin: '',
+        authError: '',
+        authShake: false,
+        _authResolve: null,
+        _authReject: null,
+        _authAction: '',
+
+        // ── Camera Scanner ──
+        showScannerModal: false,
+        scannerError: '',
+        _scannerControls: null,
+
+        // ── Past Bills ──
+        showPastBillsModal: false,
+        pastBillsSearch: '',
+        pastBills: [],
+
+        // ── Mobile ──
+        mobileCartOpen: false,
 
         // ── Variants ──
         showVariantPicker: false,
@@ -945,6 +1195,8 @@ function posBilling() {
                 this.loadProducts(),
                 this.loadCart(),
                 this.loadHeldBillsCount(),
+                this.loadDiscountRules(),
+                this.loadStaffList(),
             ]);
             this.$refs.searchInput?.focus();
         },
@@ -1010,6 +1262,37 @@ function posBilling() {
             } catch (e) {
                 console.error('Barcode not found:', code);
             }
+        },
+
+        // ═══════ CAMERA BARCODE SCANNER ═══════
+        async openCameraScanner() {
+            this.showScannerModal = true;
+            this.scannerError = '';
+            await this.$nextTick();
+            this.startCameraScanner();
+        },
+
+        async startCameraScanner() {
+            this.scannerError = '';
+            try {
+                const { BrowserMultiFormatReader } = await import('@zxing/browser');
+                const reader = new BrowserMultiFormatReader();
+                this._scannerControls = await reader.decodeFromVideoDevice(undefined, this.$refs.scannerVideo, (result) => {
+                    if (result) {
+                        this.scanBarcode(result.getText());
+                        this.closeCameraScanner();
+                    }
+                });
+            } catch (e) {
+                console.error('Camera scanner failed', e);
+                this.scannerError = 'Camera unavailable. Check permissions and try again.';
+            }
+        },
+
+        closeCameraScanner() {
+            this._scannerControls?.stop();
+            this._scannerControls = null;
+            this.showScannerModal = false;
         },
 
         // ═══════ CART MANAGEMENT ═══════
@@ -1120,10 +1403,12 @@ function posBilling() {
             this.cart.items = data.items || [];
             this.cart.customer = data.customer || null;
             this.cart.coupon = data.coupon || null;
+            this.cart.manual_discount = data.manual_discount || null;
             this.cart.subtotal = parseFloat(data.subtotal) || 0;
             this.cart.discount = parseFloat(data.discount) || 0;
             this.cart.tax = parseFloat(data.tax) || 0;
             this.cart.total = parseFloat(data.total) || 0;
+            this.salespersonId = data.salesperson_id || '';
         },
 
         scrollCartToBottom() {
@@ -1154,6 +1439,128 @@ function posBilling() {
             } catch (e) {
                 console.error('Remove coupon failed', e);
             }
+        },
+
+        // ═══════ MANUAL DISCOUNT ═══════
+        async loadDiscountRules() {
+            try {
+                const res = await axios.get('{{ route("pos.discount-rules") }}');
+                this.discountRules = res.data.rules || [];
+            } catch (e) { console.error('Failed to load discount rules', e); }
+        },
+
+        async applyDiscountRule(rule) {
+            if (rule.max_cart_value && this.cart.subtotal > rule.max_cart_value) return;
+
+            let managerPin = null;
+            if (rule.requires_pin) {
+                try {
+                    const auth = await this.requireAuthorization('discount: ' + rule.label);
+                    managerPin = auth.pin;
+                } catch (e) { return; } // cancelled
+            }
+
+            try {
+                const res = await axios.post('{{ route("pos.cart.discount") }}', {
+                    type: 'percentage',
+                    value: rule.percent,
+                    rule_id: rule.id,
+                    manager_pin: managerPin,
+                });
+                if (res.data.cart) this.updateCartData(res.data.cart);
+            } catch (e) {
+                alert(e.response?.data?.message || 'Failed to apply discount.');
+            }
+        },
+
+        async applyFreeDiscount() {
+            const val = parseFloat(this.freeDiscountPercent);
+            if (!val || val <= 0) return;
+            try {
+                const res = await axios.post('{{ route("pos.cart.discount") }}', {
+                    type: 'percentage',
+                    value: val,
+                    reason: 'Manual discount',
+                });
+                if (res.data.cart) {
+                    this.updateCartData(res.data.cart);
+                    this.freeDiscountPercent = '';
+                }
+            } catch (e) {
+                alert(e.response?.data?.message || 'Failed to apply discount.');
+            }
+        },
+
+        async removeManualDiscount() {
+            try {
+                const res = await axios.delete('{{ route("pos.cart.discount.remove") }}');
+                if (res.data.cart) this.updateCartData(res.data.cart);
+            } catch (e) {
+                console.error('Remove discount failed', e);
+            }
+        },
+
+        // ═══════ SALESPERSON ═══════
+        async loadStaffList() {
+            try {
+                const res = await axios.get('{{ route("pos.staff.active") }}');
+                this.staffList = res.data.staff || [];
+            } catch (e) { console.error('Failed to load staff list', e); }
+        },
+
+        async setSalesperson() {
+            try {
+                const res = await axios.post('{{ route("pos.cart.salesperson") }}', {
+                    salesperson_id: this.salespersonId || null,
+                });
+                if (res.data.cart) this.updateCartData(res.data.cart);
+            } catch (e) {
+                console.error('Failed to set salesperson', e);
+            }
+        },
+
+        // ═══════ MANAGER AUTHORIZATION ═══════
+        requireAuthorization(action = 'action') {
+            this.authPin = '';
+            this.authError = '';
+            this._authAction = action;
+            this.showAuthModal = true;
+            return new Promise((resolve, reject) => {
+                this._authResolve = resolve;
+                this._authReject = reject;
+            });
+        },
+
+        addAuthDigit(d) {
+            if (this.authPin.length < 4) {
+                this.authPin += d;
+                this.authError = '';
+                if (this.authPin.length === 4) this.$nextTick(() => this.submitAuth());
+            }
+        },
+
+        async submitAuth() {
+            if (this.authPin.length < 4) return;
+            try {
+                const res = await axios.post('{{ route("pos.authorize") }}', {
+                    pin: this.authPin,
+                    action: this._authAction || 'action',
+                });
+                if (res.data.success) {
+                    const pin = this.authPin;
+                    this.showAuthModal = false;
+                    this._authResolve?.({ authorized_by: res.data.authorized_by, manager_name: res.data.manager_name, pin });
+                }
+            } catch (e) {
+                this.authError = e.response?.data?.message || 'Invalid manager PIN.';
+                this.authShake = true;
+                this.authPin = '';
+            }
+        },
+
+        cancelAuth() {
+            this.showAuthModal = false;
+            this._authReject?.(new Error('Authorization cancelled'));
         },
 
         // ═══════ CUSTOMER ═══════
@@ -1371,6 +1778,20 @@ function posBilling() {
             } catch (e) {}
         },
 
+        // ═══════ PAST BILLS ═══════
+        async showPastBills() {
+            this.pastBillsSearch = '';
+            await this.searchPastBills();
+            this.showPastBillsModal = true;
+        },
+
+        async searchPastBills() {
+            try {
+                const res = await axios.get('{{ route("pos.sale.past") }}', { params: { q: this.pastBillsSearch } });
+                this.pastBills = res.data.sales || [];
+            } catch (e) { console.error('Failed to load past bills', e); }
+        },
+
         // ═══════ RETURNS ═══════
         async searchForReturn() {
             if (this.returnSearch.length < 3) { this.returnSales = []; return; }
@@ -1511,11 +1932,15 @@ function posBilling() {
                     this.showHeldBillsModal = false;
                     this.showSuccessModal = false;
                     this.showReturnsModal = false;
+                    if (this.showAuthModal) this.cancelAuth();
+                    if (this.showScannerModal) this.closeCameraScanner();
+                    this.showPastBillsModal = false;
+                    this.mobileCartOpen = false;
                     break;
             }
 
             // Barcode scanner detection (rapid keypresses ending with Enter)
-            if (!this.showPaymentModal && !this.showCustomerModal) {
+            if (!this.showPaymentModal && !this.showCustomerModal && !this.showAuthModal && !this.showScannerModal) {
                 if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
                     this.barcodeBuffer += e.key;
                     clearTimeout(this.barcodeTimeout);
