@@ -6,6 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reset Password - {{ \App\Models\Setting::get('site_name', config('app.name')) }}</title>
 
+    <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg?v=3">
+    <link rel="shortcut icon" href="/images/icons/favicon.svg?v=3">
+
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800|poppins:300,400,500,600,700&display=swap" rel="stylesheet" />
 
