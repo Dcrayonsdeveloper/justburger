@@ -8,6 +8,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>{{ \App\Models\Setting::get('site_name', config('app.name')) }} — POS</title>
 
+    <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg?v=3">
+    <link rel="shortcut icon" href="/images/icons/favicon.svg?v=3">
+
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=poppins:300,400,500,600,700|jetbrains-mono:400,500&display=swap" rel="stylesheet">
 
