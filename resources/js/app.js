@@ -48,6 +48,15 @@ window.debounce = function(func, wait) {
 };
 
 /**
+ * Lazy-load the camera barcode scanner library (POS only).
+ * Kept as a dynamic import here so Vite code-splits it into its own
+ * chunk instead of bundling it into the main app.js.
+ */
+window.loadBarcodeScanner = function() {
+    return import('@zxing/browser');
+};
+
+/**
  * Throttle function
  */
 window.throttle = function(func, limit) {

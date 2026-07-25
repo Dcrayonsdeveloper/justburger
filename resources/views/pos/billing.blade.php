@@ -1275,7 +1275,7 @@ function posBilling() {
         async startCameraScanner() {
             this.scannerError = '';
             try {
-                const { BrowserMultiFormatReader } = await import('@zxing/browser');
+                const { BrowserMultiFormatReader } = await window.loadBarcodeScanner();
                 const reader = new BrowserMultiFormatReader();
                 this._scannerControls = await reader.decodeFromVideoDevice(undefined, this.$refs.scannerVideo, (result) => {
                     if (result) {
