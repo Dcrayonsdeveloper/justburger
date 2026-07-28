@@ -1,9 +1,9 @@
 <x-layouts.app>
     @php
         $siteName = \App\Models\Setting::get('site_name', config('app.name'));
-        $phone = \App\Models\Setting::get('site_phone', '020 8890 5008');
-        $mobile = \App\Models\Setting::get('site_mobile', '07368 998 035');
-        $waNumber = \App\Models\Setting::get('whatsapp_number', '447368998035');
+        $phone = \App\Models\Setting::get('site_phone', '+44 20889 05008');
+        $mobile = \App\Models\Setting::get('site_mobile', '+44 7368 429 896');
+        $waNumber = \App\Models\Setting::get('whatsapp_number', '447368429896');
         $email = \App\Models\Setting::get('contact_email', 'info@justburgers.com');
         $address = \App\Models\Setting::get('company_address', '525 Staines Road, Bedfont, TW14 8BP');
         $businessHours = \App\Models\Setting::get('business_hours', 'Mon-Thu 12-10PM, Fri-Sat 12-11PM, Sun 12-10PM');

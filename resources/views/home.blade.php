@@ -13,7 +13,7 @@
         @endif
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
-        <?php $homeSchema = ['@context'=>'https://schema.org','@graph'=>[['@type'=>'Restaurant','@id'=>url('/').'#business','name'=>\App\Models\Setting::get('site_name','Just Burgers Plus'),'url'=>url('/'),'telephone'=>'+44'.\App\Models\Setting::get('site_phone','020 8890 5008'),'foundingDate'=>'1989','address'=>['@type'=>'PostalAddress','streetAddress'=>'525 Staines Road','addressLocality'=>'Bedfont','addressRegion'=>'Middlesex','postalCode'=>'TW14 8BP','addressCountry'=>'GB'],'servesCuisine'=>['Burgers','American','Fast Food'],'priceRange'=>'£'],['@type'=>'WebSite','@id'=>url('/').'#website','name'=>\App\Models\Setting::get('site_name','Just Burgers Plus'),'url'=>url('/')]]]; ?>
+        <?php $homeSchema = ['@context'=>'https://schema.org','@graph'=>[['@type'=>'Restaurant','@id'=>url('/').'#business','name'=>\App\Models\Setting::get('site_name','Just Burgers Plus'),'url'=>url('/'),'telephone'=>\App\Models\Setting::get('site_phone','+44 20889 05008'),'foundingDate'=>'1989','address'=>['@type'=>'PostalAddress','streetAddress'=>'525 Staines Road','addressLocality'=>'Bedfont','addressRegion'=>'Middlesex','postalCode'=>'TW14 8BP','addressCountry'=>'GB'],'servesCuisine'=>['Burgers','American','Fast Food'],'priceRange'=>'£'],['@type'=>'WebSite','@id'=>url('/').'#website','name'=>\App\Models\Setting::get('site_name','Just Burgers Plus'),'url'=>url('/')]]]; ?>
         <script type="application/ld+json">{!! json_encode($homeSchema, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
     @endpush
 
@@ -550,8 +550,8 @@
                 </div>
                 <p class="op-title">Call Us</p>
                 <p class="op-desc">Ring your order through and collect when ready. Telephone orders always welcome.</p>
-                <a href="tel:{{ \App\Models\Setting::get('site_phone','02088905008') }}" class="op-btn">
-                    {{ \App\Models\Setting::get('site_phone','020 8890 5008') }}
+                <a href="tel:{{ \App\Models\Setting::get('site_phone','+4420889 05008') }}" class="op-btn">
+                    {{ \App\Models\Setting::get('site_phone','+44 20889 05008') }}
                 </a>
             </div>
 
@@ -564,7 +564,7 @@
                 </div>
                 <p class="op-title">WhatsApp</p>
                 <p class="op-desc">Message us your order on WhatsApp &mdash; quick, easy, confirmed.</p>
-                <a href="https://wa.me/{{ \App\Models\Setting::get('whatsapp_number','447368998035') }}?text={{ urlencode('Hi! I\'d like to place an order please.') }}"
+                <a href="https://wa.me/{{ \App\Models\Setting::get('whatsapp_number','447368429896') }}?text={{ urlencode('Hi! I\'d like to place an order please.') }}"
                    target="_blank" rel="noopener" class="op-btn op-btn--wa">
                     Order on WhatsApp
                 </a>

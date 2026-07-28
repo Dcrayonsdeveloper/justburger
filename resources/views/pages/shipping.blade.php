@@ -42,7 +42,7 @@
                             <div>
                                 <h3 class="text-sm font-semibold text-neutral-900">Call to Order</h3>
                                 <p class="text-xs text-neutral-600 mt-0.5">Phone us directly</p>
-                                <a href="tel:{{ \App\Models\Setting::get('site_phone', '02088905008') }}" class="text-sm font-bold text-[#C8102E] mt-1.5 block">{{ \App\Models\Setting::get('site_phone', '020 8890 5008') }}</a>
+                                <a href="tel:{{ \App\Models\Setting::get('site_phone', '+4420889 05008') }}" class="text-sm font-bold text-[#C8102E] mt-1.5 block">{{ \App\Models\Setting::get('site_phone', '+44 20889 05008') }}</a>
                             </div>
                         </div>
                     </div>
@@ -55,7 +55,7 @@
                             <div>
                                 <h3 class="text-sm font-semibold text-neutral-900">WhatsApp Order</h3>
                                 <p class="text-xs text-neutral-600 mt-0.5">Message us your order</p>
-                                <a href="https://wa.me/{{ \App\Models\Setting::get('whatsapp_number', '447368998035') }}" target="_blank" class="text-sm font-bold text-green-600 mt-1.5 block">{{ \App\Models\Setting::get('site_mobile', '07368 998 035') }}</a>
+                                <a href="https://wa.me/{{ \App\Models\Setting::get('whatsapp_number', '447368429896') }}" target="_blank" class="text-sm font-bold text-green-600 mt-1.5 block">{{ \App\Models\Setting::get('site_mobile', '+44 7368 429 896') }}</a>
                             </div>
                         </div>
                     </div>
@@ -172,7 +172,7 @@
                     </button>
                     <div x-show="open === 5" x-collapse>
                         <div class="px-5 pb-4 text-[16px] text-neutral-600 leading-relaxed border-t border-neutral-50">
-                            <p class="pt-3">If anything isn't right with your order, please let us know straight away. Call us on {{ \App\Models\Setting::get('site_phone', '020 8890 5008') }} or WhatsApp {{ \App\Models\Setting::get('site_mobile', '07368 998 035') }} and we'll sort it out for you.</p>
+                            <p class="pt-3">If anything isn't right with your order, please let us know straight away. Call us on {{ \App\Models\Setting::get('site_phone', '+44 20889 05008') }} or WhatsApp {{ \App\Models\Setting::get('site_mobile', '+44 7368 429 896') }} and we'll sort it out for you.</p>
                         </div>
                     </div>
                 </div>
