@@ -18,6 +18,15 @@ class GuestReviewController extends Controller
             'title' => 'nullable|string|max:255',
             'content' => 'required|string|min:20|max:2000',
             'honeypot' => 'max:0', // anti-spam: must be empty
+        ], [
+            'rating.required' => 'Please select a star rating.',
+            'rating.min' => 'Please select a star rating.',
+            'guest_name.required' => 'Please enter your name.',
+            'guest_email.required' => 'Please enter your email address.',
+            'guest_email.email' => 'Please enter a valid email address.',
+            'content.required' => 'Please write your review.',
+            'content.min' => 'Your review must be at least 20 characters long.',
+            'honeypot.max' => 'Something went wrong — please try again.',
         ]);
 
         // Check for duplicate guest review on same product
