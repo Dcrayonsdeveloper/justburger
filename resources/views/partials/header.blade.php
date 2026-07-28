@@ -28,7 +28,7 @@
                 <!-- Shop dropdown -->
                 <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                     <button @click="open = !open" class="px-4 py-2 text-[16px] text-white font-semibold tracking-wide transition-colors flex items-center gap-1.5 rounded" :class="open ? 'border border-white' : 'border border-transparent hover:text-white/70'">
-                        Order
+                        Categories
                         <svg class="w-3 h-3 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="absolute top-full left-0 z-50 pt-0">
@@ -48,8 +48,8 @@
                     </div>
                 </div>
 
-                <!-- About -->
-                <a href="{{ route('about') }}" class="px-4 py-2 text-[16px] text-white font-semibold tracking-wide transition-colors hover:text-white/70">About</a>
+                <!-- About Us -->
+                <a href="{{ route('about') }}" class="px-4 py-2 text-[16px] text-white font-semibold tracking-wide transition-colors hover:text-white/70">About Us</a>
 
                 <!-- Contact Us -->
                 <a href="{{ route('contact') }}" class="px-4 py-2 text-[16px] text-white font-semibold tracking-wide transition-colors hover:text-white/70">Contact Us</a>
