@@ -50,6 +50,10 @@ class HomeController extends Controller
         $bestsellers = Product::query()
             ->where('is_active', true)
             ->where('stock_quantity', '>', 0)
+            ->where(function ($query) {
+                $query->whereDoesntHave('category')
+                    ->orWhereHas('category', fn ($q) => $q->where('exclude_from_bestsellers', false));
+            })
             ->with($productEager)
             ->orderBy('sales_count', 'desc')
             ->take($bestsellersCount)

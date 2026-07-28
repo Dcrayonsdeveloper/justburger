@@ -24,6 +24,7 @@ class Category extends Model
         'path',
         'is_active',
         'is_featured',
+        'exclude_from_bestsellers',
         'seo_data',
         'attributes_schema',
     ];
@@ -33,6 +34,7 @@ class Category extends Model
         return [
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'exclude_from_bestsellers' => 'boolean',
             'seo_data' => 'array',
             'attributes_schema' => 'array',
         ];

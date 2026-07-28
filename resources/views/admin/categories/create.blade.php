@@ -128,6 +128,15 @@
                             <span class="text-xs text-neutral-600">Category will be visible on the storefront</span>
                         </label>
                     </div>
+
+                    <div>
+                        <label class="flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" name="exclude_from_bestsellers" value="1" {{ old('exclude_from_bestsellers') ? 'checked' : '' }}
+                                   class="form-checkbox">
+                            <span class="text-sm text-neutral-700">Exclude from "Most Popular"</span>
+                            <span class="text-xs text-neutral-600">Keep products in this category out of the homepage bestsellers carousel (e.g. sauces, sides, add-ons)</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 

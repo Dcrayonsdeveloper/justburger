@@ -44,6 +44,10 @@ class HomeController extends Controller
 
                 'bestsellers' => Product::where('is_active', true)
                     ->whereNull('deleted_at')
+                    ->where(function ($query) {
+                        $query->whereDoesntHave('category')
+                            ->orWhereHas('category', fn ($q) => $q->where('exclude_from_bestsellers', false));
+                    })
                     ->with(['images' => fn ($q) => $q->orderBy('position')->limit(1)])
                     ->orderByDesc('sales_count')
                     ->limit(10)
