@@ -16,6 +16,16 @@ class CacheResponse
             return $next($request);
         }
 
+        // Never serve or store a cached copy when there's flashed feedback in the
+        // session (a form success message or validation errors). Otherwise the
+        // message would be stripped from the redirected page — or worse, a cached
+        // copy carrying one visitor's message could be shown to everyone else.
+        if ($request->session()->has('errors')
+            || $request->session()->has('success')
+            || $request->session()->has('error')) {
+            return $next($request);
+        }
+
         $key = 'response_cache.' . md5($request->fullUrl());
 
         if (Cache::has($key)) {
