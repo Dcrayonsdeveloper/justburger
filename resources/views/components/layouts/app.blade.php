@@ -123,6 +123,14 @@
         </template>
     </div>
 
+    {{-- Server flash messages → toast notifications --}}
+    @if(session('success'))
+        <div x-data x-init="$nextTick(() => $store.toast.success(@js(session('success'))))"></div>
+    @endif
+    @if(session('error'))
+        <div x-data x-init="$nextTick(() => $store.toast.error(@js(session('error'))))"></div>
+    @endif
+
     <!-- Auth Login/Signup Modal -->
     @guest
     <div x-show="$store.authModal.isOpen" x-cloak

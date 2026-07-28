@@ -632,7 +632,9 @@
                         @endforelse
 
                         {{-- Write a review --}}
-                        <div style="margin-top:1.25rem;" x-data="{ open: false }">
+                        @php $reviewErrors = $errors->hasAny(['guest_name','guest_email','rating','content','honeypot']); @endphp
+                        <div style="margin-top:1.25rem;" x-data="{ open: {{ $reviewErrors ? 'true' : 'false' }} }"
+                             @if($reviewErrors) x-init="$nextTick(() => $el.scrollIntoView({ behavior:'smooth', block:'center' }))" @endif>
                             <button @click="open = !open" class="btn-outline" style="width:auto;padding:.55rem 1.25rem;font-size:.85rem;">
                                 ✍ Write a Review
                             </button>
@@ -645,19 +647,26 @@
                                   style="margin-top:1.1rem;padding:1.25rem;border-radius:.85rem;background:#f5f3f0;border:1px solid rgba(0,0,0,.09);">
                                 @csrf
                                 <input type="text" name="honeypot" class="hidden" value="" tabindex="-1" autocomplete="off">
+                                @if($reviewErrors)
+                                    <div style="margin-bottom:1rem;padding:.7rem .9rem;border-radius:.6rem;background:#fdecea;border:1px solid #f5c2c0;">
+                                        @foreach($errors->all() as $reviewError)
+                                            <p style="font-size:.8rem;color:#b3261e;line-height:1.5;">{{ $reviewError }}</p>
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
                                     <div>
                                         <label class="r-label">Your Name</label>
-                                        <input type="text" name="guest_name" required class="r-input" placeholder="e.g. James T.">
+                                        <input type="text" name="guest_name" value="{{ old('guest_name') }}" required class="r-input" placeholder="e.g. James T.">
                                     </div>
                                     <div>
                                         <label class="r-label">Email Address</label>
-                                        <input type="email" name="guest_email" required class="r-input" placeholder="your@email.com">
+                                        <input type="email" name="guest_email" value="{{ old('guest_email') }}" required class="r-input" placeholder="your@email.com">
                                     </div>
                                 </div>
                                 <div style="margin-bottom:1rem;">
                                     <label class="r-label">Rating</label>
-                                    <div x-data="{ rating:0, hover:0 }" style="display:flex;gap:.4rem;">
+                                    <div x-data="{ rating:{{ (int) old('rating', 0) }}, hover:0 }" style="display:flex;gap:.4rem;">
                                         @for($i = 1; $i <= 5; $i++)
                                         <button type="button" @click="rating = {{ $i }}" @mouseenter="hover = {{ $i }}" @mouseleave="hover = 0">
                                             <svg style="width:30px;height:30px;cursor:pointer;transition:fill .1s;"
@@ -674,7 +683,7 @@
                                     <label class="r-label">Your Review</label>
                                     <textarea name="content" required rows="4" minlength="20"
                                               class="r-input" style="resize:none;"
-                                              placeholder="Tell us what you thought of this dish..."></textarea>
+                                              placeholder="Tell us what you thought of this dish...">{{ old('content') }}</textarea>
                                 </div>
                                 <button type="submit" class="btn-add" style="width:auto;padding:.65rem 1.5rem;">
                                     Submit Review
