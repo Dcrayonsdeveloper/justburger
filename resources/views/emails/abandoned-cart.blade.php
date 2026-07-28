@@ -30,7 +30,7 @@
 <a href="{{ $cartUrl }}" style="background:#F8931D;color:#fff;text-decoration:none;padding:14px 40px;border-radius:6px;font-size:15px;font-weight:600;display:inline-block;">Complete Your Order</a>
 </div>
 
-<p style="font-size:11px;color:#999;text-align:center;">Need help? Reply to this email or WhatsApp {{ \App\Models\Setting::get('site_mobile', '07368 998 035') }}</p>
+<p style="font-size:11px;color:#999;text-align:center;">Need help? Reply to this email or WhatsApp {{ \App\Models\Setting::get('site_mobile', '+44 7368 429 896') }}</p>
 </td></tr>
 
 <tr><td style="background:#1b454a;padding:12px 20px;text-align:center;">

@@ -1,5 +1,5 @@
 @php
-    $whatsappNumber = \App\Models\Setting::get('whatsapp_number', '447368998035');
+    $whatsappNumber = \App\Models\Setting::get('whatsapp_number', '447368429896');
     $whatsappMessage = \App\Models\Setting::get('whatsapp_message', 'Hi! I\'d like to place an order please.');
 @endphp
 
