@@ -31,7 +31,7 @@
                         Categories
                         <svg class="w-3 h-3 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="absolute top-full left-0 z-50 pt-0">
+                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="absolute top-full left-1/2 -translate-x-1/2 z-50 pt-0">
                         <div class="w-[760px] bg-white shadow-xl border-b-[3px] border-b-[#C8102E] overflow-hidden">
                             <div class="px-8 py-3" style="background:#FAFAFA;border-bottom:1px solid #F0F0F0;">
                                 <span class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Shop by Category</span>
