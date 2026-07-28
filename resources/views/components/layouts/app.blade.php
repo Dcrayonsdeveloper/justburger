@@ -932,6 +932,5 @@
     </script>
 
     <x-whatsapp-button />
-    <x-exit-intent-popup />
 </body>
 </html>
