@@ -366,12 +366,12 @@
             : asset('images/products/product-' . (($product->id % 27) + 1) . '.jpg');
         $fallback = asset('images/products/product-' . (($product->id % 27) + 1) . '.jpg');
         $phone    = \App\Models\Setting::get('site_phone', '');
-        $waPhone  = preg_replace('/[^0-9]/', '', \App\Models\Setting::get('site_mobile', ''));
+        $waPhone  = preg_replace('/[^0-9]/', '', \App\Models\Setting::get('whatsapp_number', '447368998035'));
         $waMsg    = urlencode('Hi! I\'d like to order: ' . $product->name);
         $openHoursArr = [
-            'Mon–Tue' => \App\Models\Setting::get('hours_monday', '12:00 – 9:00 PM'),
-            'Wed–Thu' => \App\Models\Setting::get('hours_wednesday', '12:00 – 10:00 PM'),
-            'Fri–Sat' => \App\Models\Setting::get('hours_friday', '12:00 – 11:00 PM'),
+            'Mon–Tue' => \App\Models\Setting::get('hours_monday', '12:00 – 10:00 PM'),
+            'Wed–Thu' => \App\Models\Setting::get('hours_wednesday', '12:00 – 10:30 PM'),
+            'Fri–Sat' => \App\Models\Setting::get('hours_friday', '11:45 AM – 11:00 PM'),
             'Sun'     => \App\Models\Setting::get('hours_sunday', '4:00 – 10:00 PM'),
         ];
     @endphp
