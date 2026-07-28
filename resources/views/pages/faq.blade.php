@@ -13,12 +13,12 @@
         <meta name="twitter:description" content="Find answers about ordering, collection, delivery, and more at {{ \App\Models\Setting::get('site_name', config('app.name')) }}.">
 
         @php
-            $faqPhone = \App\Models\Setting::get('site_phone', '+44 20889 05008');
-            $faqMobile = \App\Models\Setting::get('site_mobile', '+44 7368 429 896');
+            $faqPhone = \App\Models\Setting::get('site_phone', '02088905008');
+            $faqMobile = \App\Models\Setting::get('site_mobile', '07368998035');
             $faqAddress = \App\Models\Setting::get('site_address', '525 Staines Road, Bedfont, Middlesex, TW14 8BP');
             $faqHoursMon = \App\Models\Setting::get('hours_monday', '12:00 - 10:00 PM');
-            $faqHoursFri = \App\Models\Setting::get('hours_friday', '12:00 - 11:00 PM');
-            $faqHoursSun = \App\Models\Setting::get('hours_sunday', '12:00 - 10:00 PM');
+            $faqHoursFri = \App\Models\Setting::get('hours_friday', '11:45 AM - 11:00 PM');
+            $faqHoursSun = \App\Models\Setting::get('hours_sunday', '4:00 - 10:00 PM');
         @endphp
         <script type="application/ld+json">
         {!! json_encode([
@@ -72,7 +72,7 @@
                             </button>
                             <div x-show="open === 1" x-collapse>
                                 <div class="px-6 pb-6 text-[16px] text-white/55 leading-relaxed" style="border-top:1px solid rgba(255,255,255,.06)">
-                                    <p class="pt-5">You can order in three ways: call us on {{ \App\Models\Setting::get('site_phone', '+44 20889 05008') }}, message us on WhatsApp at {{ \App\Models\Setting::get('site_mobile', '+44 7368 429 896') }}, or order online through our website. We'll prepare your food fresh and have it ready for collection.</p>
+                                    <p class="pt-5">You can order in three ways: call us on {{ \App\Models\Setting::get('site_phone', '02088905008') }}, message us on WhatsApp at {{ \App\Models\Setting::get('site_mobile', '07368998035') }}, or order online through our website. We'll prepare your food fresh and have it ready for collection.</p>
                                 </div>
                             </div>
                         </div>
@@ -143,8 +143,8 @@
                             <div x-show="open === 5" x-collapse>
                                 <div class="px-6 pb-6 text-[16px] text-white/55 leading-relaxed" style="border-top:1px solid rgba(255,255,255,.06)">
                                     <p class="pt-5">Monday to Thursday: {{ \App\Models\Setting::get('hours_monday', '12:00 – 10:00 PM') }}<br>
-                                    Friday to Saturday: {{ \App\Models\Setting::get('hours_friday', '12:00 – 11:00 PM') }}<br>
-                                    Sunday: {{ \App\Models\Setting::get('hours_sunday', '12:00 – 10:00 PM') }}</p>
+                                    Friday to Saturday: {{ \App\Models\Setting::get('hours_friday', '11:45 AM – 11:00 PM') }}<br>
+                                    Sunday: {{ \App\Models\Setting::get('hours_sunday', '4:00 – 10:00 PM') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                             </button>
                             <div x-show="open === 6" x-collapse>
                                 <div class="px-6 pb-6 text-[16px] text-white/55 leading-relaxed" style="border-top:1px solid rgba(255,255,255,.06)">
-                                    <p class="pt-5">If anything isn't right with your order, please let us know straight away. Call us on {{ \App\Models\Setting::get('site_phone', '+44 20889 05008') }} or WhatsApp {{ \App\Models\Setting::get('site_mobile', '+44 7368 429 896') }} and we'll sort it out for you. Your satisfaction is our priority.</p>
+                                    <p class="pt-5">If anything isn't right with your order, please let us know straight away. Call us on {{ \App\Models\Setting::get('site_phone', '02088905008') }} or WhatsApp {{ \App\Models\Setting::get('site_mobile', '07368998035') }} and we'll sort it out for you. Your satisfaction is our priority.</p>
                                 </div>
                             </div>
                         </div>

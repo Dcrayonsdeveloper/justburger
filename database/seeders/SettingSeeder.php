@@ -13,8 +13,8 @@ class SettingSeeder extends Seeder
             // General Settings
             ['group' => 'general', 'key' => 'site_name', 'value' => 'JustBurgers', 'type' => 'string'],
             ['group' => 'general', 'key' => 'site_tagline', 'value' => 'Your Go-To Store for Mobile Accessories', 'type' => 'string'],
-            ['group' => 'general', 'key' => 'site_email', 'value' => 'support@justburgers.com', 'type' => 'string'],
-            ['group' => 'general', 'key' => 'site_phone', 'value' => '+91 98765 43210', 'type' => 'string'],
+            ['group' => 'general', 'key' => 'site_email', 'value' => 'justburgersplus@gmail.com', 'type' => 'string'],
+            ['group' => 'general', 'key' => 'site_phone', 'value' => '02088905008', 'type' => 'string'],
             ['group' => 'general', 'key' => 'site_address', 'value' => 'Mumbai, Maharashtra, India', 'type' => 'string'],
             ['group' => 'general', 'key' => 'timezone', 'value' => 'Asia/Kolkata', 'type' => 'string'],
             ['group' => 'general', 'key' => 'date_format', 'value' => 'M d, Y', 'type' => 'string'],

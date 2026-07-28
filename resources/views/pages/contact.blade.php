@@ -1,12 +1,12 @@
 <x-layouts.app>
     @php
         $siteName = \App\Models\Setting::get('site_name', config('app.name'));
-        $phone = \App\Models\Setting::get('site_phone', '+44 20889 05008');
-        $mobile = \App\Models\Setting::get('site_mobile', '+44 7368 429 896');
-        $waNumber = \App\Models\Setting::get('whatsapp_number', '447368429896');
-        $email = \App\Models\Setting::get('contact_email', 'info@justburgers.com');
+        $phone = \App\Models\Setting::get('site_phone', '02088905008');
+        $mobile = \App\Models\Setting::get('site_mobile', '07368998035');
+        $waNumber = \App\Models\Setting::get('whatsapp_number', '447368998035');
+        $email = \App\Models\Setting::get('contact_email', 'justburgersplus@gmail.com');
         $address = \App\Models\Setting::get('company_address', '525 Staines Road, Bedfont, TW14 8BP');
-        $businessHours = \App\Models\Setting::get('business_hours', 'Mon-Thu 12-10PM, Fri-Sat 12-11PM, Sun 12-10PM');
+        $businessHours = \App\Models\Setting::get('business_hours', 'Mon–Tue 12:00–10:00 PM, Wed–Thu 12:00–10:30 PM, Fri–Sat 11:45 AM–11:00 PM, Sun 4:00–10:00 PM');
         $openHours = \App\Models\Setting::get('opening_hours', '');
         $openHoursArr = is_array($openHours) ? $openHours : [];
         $mapEmbed = \App\Models\Setting::get('google_map_embed', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2486.5!2d-0.4517!3d51.4538!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s525+Staines+Road%2C+Bedfont%2C+TW14+8BP!5e0!3m2!1sen!2suk!4v1700000000000');

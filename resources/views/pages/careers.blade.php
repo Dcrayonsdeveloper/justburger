@@ -42,7 +42,7 @@
                         <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
-                        <a href="mailto:{{ \App\Models\Setting::get('site_email', 'hello@justburgers.com') }}" class="text-sm font-bold text-[#C8102E] hover:underline">{{ \App\Models\Setting::get('site_email', 'hello@justburgers.com') }}</a>
+                        <a href="mailto:{{ \App\Models\Setting::get('site_email', 'justburgersplus@gmail.com') }}" class="text-sm font-bold text-[#C8102E] hover:underline">{{ \App\Models\Setting::get('site_email', 'justburgersplus@gmail.com') }}</a>
                     </div>
                 </div>
 

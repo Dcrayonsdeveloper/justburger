@@ -121,7 +121,7 @@
                         </div>
                         <h3 class="text-sm font-semibold text-neutral-900 mb-1">Phone / WhatsApp</h3>
                         <p class="text-xs text-neutral-600 mb-3">Mon–Tue {{ \App\Models\Setting::get('hours_monday', '12:00 – 9:00 PM') }}, Wed–Thu {{ \App\Models\Setting::get('hours_wednesday', '12:00 – 10:00 PM') }}, Fri–Sat {{ \App\Models\Setting::get('hours_friday', '12:00 – 11:00 PM') }}, Sun {{ \App\Models\Setting::get('hours_sunday', '4:00 – 10:00 PM') }}</p>
-                        <a href="https://wa.me/{{ \App\Models\Setting::get('whatsapp_number', '447368429896') }}" target="_blank" class="inline-flex items-center px-4 py-2 text-[16px] font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors">{{ \App\Models\Setting::get('site_phone', '+44 20889 05008') }}</a>
+                        <a href="https://wa.me/{{ \App\Models\Setting::get('whatsapp_number', '447368998035') }}" target="_blank" class="inline-flex items-center px-4 py-2 text-[16px] font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors">{{ \App\Models\Setting::get('site_phone', '02088905008') }}</a>
                     </div>
                 </div>
             </div>

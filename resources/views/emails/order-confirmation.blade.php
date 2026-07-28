@@ -90,7 +90,7 @@
 <a href="{{ url('/account/orders') }}" style="background:#F8931D;color:#fff;text-decoration:none;padding:12px 32px;border-radius:6px;font-size:14px;font-weight:600;display:inline-block;">Track Your Order</a>
 </div>
 
-<p style="font-size:11px;color:#999;text-align:center;margin:16px 0 0;">Need help? Reply to this email or WhatsApp us at {{ \App\Models\Setting::get('site_mobile', '+44 7368 429 896') }}</p>
+<p style="font-size:11px;color:#999;text-align:center;margin:16px 0 0;">Need help? Reply to this email or WhatsApp us at {{ \App\Models\Setting::get('site_mobile', '07368998035') }}</p>
 
 </td></tr>
 

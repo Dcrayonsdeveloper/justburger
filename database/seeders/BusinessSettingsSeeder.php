@@ -11,11 +11,11 @@ class BusinessSettingsSeeder extends Seeder
     {
         $settings = [
             // Contact Information
-            ['group' => 'contact', 'key' => 'contact_phone', 'value' => '+91 93545 67705', 'type' => 'string'],
-            ['group' => 'contact', 'key' => 'contact_email', 'value' => 'support@justburgers.com', 'type' => 'string'],
-            ['group' => 'contact', 'key' => 'contact_whatsapp', 'value' => '919354567705', 'type' => 'string'],
-            ['group' => 'contact', 'key' => 'company_address', 'value' => 'JustBurgers, G118 Deep Vihar, Rohini Sector 24, Delhi 110084', 'type' => 'string'],
-            ['group' => 'contact', 'key' => 'business_hours', 'value' => 'Mon-Fri 9AM-6PM, Sat 10AM-4PM', 'type' => 'string'],
+            ['group' => 'contact', 'key' => 'contact_phone', 'value' => '02088905008', 'type' => 'string'],
+            ['group' => 'contact', 'key' => 'contact_email', 'value' => 'justburgersplus@gmail.com', 'type' => 'string'],
+            ['group' => 'contact', 'key' => 'contact_whatsapp', 'value' => '447368998035', 'type' => 'string'],
+            ['group' => 'contact', 'key' => 'company_address', 'value' => '525 Staines Road, Bedfont, Middx. TW14 8BP', 'type' => 'string'],
+            ['group' => 'contact', 'key' => 'business_hours', 'value' => 'Mon–Tue 12:00–10:00 PM, Wed–Thu 12:00–10:30 PM, Fri–Sat 11:45 AM–11:00 PM, Sun 4:00–10:00 PM', 'type' => 'string'],
 
             // Shipping
             ['group' => 'shipping', 'key' => 'free_shipping_threshold', 'value' => '499', 'type' => 'integer'],

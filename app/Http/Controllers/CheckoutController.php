@@ -975,7 +975,7 @@ class CheckoutController extends Controller
             // Send credentials via email
             \Illuminate\Support\Facades\Mail::send([], [], function ($m) use ($email, $name, $password, $order) {
                 $m->to($email)
-                  ->from(config('mail.from.address', 'hello@justburgers.com'), \App\Models\Setting::get('site_name', config('app.name')))
+                  ->from(config('mail.from.address', 'justburgersplus@gmail.com'), \App\Models\Setting::get('site_name', config('app.name')))
                   ->subject('Your ' . \App\Models\Setting::get('site_name', config('app.name')) . ' Account is Ready!')
                   ->html("<div style='font-family:sans-serif;max-width:450px;margin:0 auto;padding:20px;'>
                     <h2 style='color:#205258;'>Welcome to " . \App\Models\Setting::get('site_name', config('app.name')) . ", {$name}!</h2>
