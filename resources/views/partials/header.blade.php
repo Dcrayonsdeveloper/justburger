@@ -32,17 +32,20 @@
                         <svg class="w-3 h-3 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="absolute top-full left-0 z-50 pt-0">
-                        <div class="w-[640px] bg-white shadow-xl border-b-[3px] border-b-[#C8102E] overflow-hidden">
-                            <div class="columns-3 gap-x-6 px-5 py-4">
+                        <div class="w-[760px] bg-white shadow-xl border-b-[3px] border-b-[#C8102E] overflow-hidden">
+                            <div class="px-8 py-3" style="background:#FAFAFA;border-bottom:1px solid #F0F0F0;">
+                                <span class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Shop by Category</span>
+                            </div>
+                            <div class="columns-4 gap-x-8 px-8 py-6">
                                 @foreach($navCategories ?? [] as $cat)
-                                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}" class="block py-2 text-sm text-neutral-700 hover:text-[#C8102E] transition-colors break-inside-avoid">{{ $cat->name }}</a>
+                                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}" class="block py-2.5 text-sm text-neutral-700 hover:text-[#C8102E] transition-colors break-inside-avoid">{{ $cat->name }}</a>
                                 @endforeach
                             </div>
                             <hr class="border-neutral-100">
-                            <a href="{{ route('products.index') }}" class="block px-5 py-3.5 text-sm font-bold text-[#C8102E] hover:bg-neutral-50 transition-colors">Full Menu</a>
+                            <a href="{{ route('products.index') }}" class="block px-8 py-4 text-sm font-bold text-[#C8102E] hover:bg-neutral-50 transition-colors">Full Menu</a>
                             @if(config('app.wholesale_enabled'))
                                 <hr class="border-neutral-100">
-                                <a href="{{ route('wholesale') }}" class="block px-5 py-3.5 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#C8102E] transition-colors">Wholesale</a>
+                                <a href="{{ route('wholesale') }}" class="block px-8 py-4 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#C8102E] transition-colors">Wholesale</a>
                             @endif
                         </div>
                     </div>
