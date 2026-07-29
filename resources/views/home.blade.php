@@ -95,6 +95,8 @@
         .cat-tile          { border-radius: .875rem; display: flex; align-items: center; gap: .75rem; padding: 1rem 1.1rem; text-decoration: none; transition: transform .25s, box-shadow .25s; }
         .cat-tile:hover    { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
         .cat-emoji         { font-size: 2rem; line-height: 1; flex-shrink: 0; width: 2.5rem; text-align: center; }
+        .cat-img           { width: 2.75rem; height: 2.75rem; border-radius: .55rem; object-fit: cover; flex-shrink: 0; background: rgba(255,255,255,.06); transition: transform .3s ease; }
+        .cat-tile:hover .cat-img { transform: scale(1.08); }
         .cat-info          { flex: 1; }
         .cat-name          { color: #fff; font-weight: 700; font-size: .9rem; line-height: 1.3; margin-bottom: .15rem; }
         .cat-price         { font-size: .8rem; font-weight: 600; }
@@ -195,6 +197,7 @@
         @media (min-width: 1280px) {
             .cat-grid { grid-template-columns: repeat(6, 1fr); }
             .cat-tile { flex-direction: column; text-align: center; padding: 2rem 1rem; gap: .75rem; }
+            .cat-img  { width: 4rem; height: 4rem; border-radius: .7rem; }
             .cat-arr  { display: none; }
         }
 
@@ -710,9 +713,30 @@
             @endphp
             <div class="cat-grid">
                 @forelse($carouselCategories->take(6) as $idx => $category)
+                    @php
+                        // Prefer the category's own thumbnail, then its first product's photo, then emoji.
+                        $catImg = null;
+                        if (!empty($category->image_url)) {
+                            $catImg = \Illuminate\Support\Str::startsWith($category->image_url, ['http://', 'https://', '/'])
+                                ? $category->image_url
+                                : asset('storage/' . ltrim($category->image_url, '/'));
+                        }
+                        if (!$catImg) {
+                            $catFirstImg = optional(optional($category->products->first())->primaryImage)->first();
+                            if ($catFirstImg && $catFirstImg->url && !\Illuminate\Support\Str::endsWith(strtolower($catFirstImg->url), '.svg')) {
+                                $catImg = $catFirstImg->url;
+                            }
+                        }
+                    @endphp
                     <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                        class="cat-tile cat-{{ $catPalette[$idx % count($catPalette)] }}">
-                        <span class="cat-emoji">{{ $pickEmoji($category->name) }}</span>
+                        @if($catImg)
+                            <img src="{{ $catImg }}" alt="{{ $category->name }}" class="cat-img" loading="lazy"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+                            <span class="cat-emoji" style="display:none;">{{ $pickEmoji($category->name) }}</span>
+                        @else
+                            <span class="cat-emoji">{{ $pickEmoji($category->name) }}</span>
+                        @endif
                         <div class="cat-info">
                             <p class="cat-name">{{ $category->name }}</p>
                             <p class="cat-price">{{ $category->products_count }} {{ Str::plural('item', $category->products_count) }}</p>
