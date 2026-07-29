@@ -716,7 +716,8 @@
                     @php
                         // Prefer the category's own thumbnail, then its first product's photo, then emoji.
                         $catImg = null;
-                        if (!empty($category->image_url)) {
+                        // Use the category thumbnail only if it's a real photo (skip the .svg line-icons).
+                        if (!empty($category->image_url) && !\Illuminate\Support\Str::endsWith(strtolower($category->image_url), '.svg')) {
                             $catImg = \Illuminate\Support\Str::startsWith($category->image_url, ['http://', 'https://', '/'])
                                 ? $category->image_url
                                 : asset('storage/' . ltrim($category->image_url, '/'));
