@@ -42,6 +42,17 @@
             @csrf
             @method('PUT')
 
+            @if($errors->any())
+                <div style="margin-bottom:1.25rem;padding:1rem 1.25rem;border:1px solid #fca5a5;background:#fef2f2;border-radius:.6rem;">
+                    <p style="font-weight:700;color:#b91c1c;margin-bottom:.4rem;">Couldn't save — please fix the following:</p>
+                    <ul style="list-style:disc;padding-left:1.25rem;color:#b91c1c;font-size:.875rem;line-height:1.6;">
+                        @foreach($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="flex gap-5" style="align-items: flex-start;">
                 {{-- ============================================
                      LEFT COLUMN (~65%)
