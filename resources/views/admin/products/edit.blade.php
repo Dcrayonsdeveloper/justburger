@@ -97,7 +97,7 @@
 
                             <div>
                                 <label for="description" class="form-label form-label-required">Description</label>
-                                <textarea name="description" id="description" rows="6" required
+                                <textarea name="description" id="description" rows="6"
                                           class="form-input w-full @error('description') form-input-error @enderror">{!! old('description', $product->description) !!}</textarea>
                                 @error('description')
                                     <p class="form-error">{{ $message }}</p>
@@ -708,6 +708,10 @@
                         { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
                     ]
                 }
+            })
+            .then(editor => {
+                // Keep the hidden textarea in sync so the description is always submitted
+                editor.model.document.on('change:data', () => editor.updateSourceElement());
             })
             .catch(error => console.error(error));
     </script>
