@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
@@ -46,10 +47,20 @@ class RegisterController extends Controller
             'is_active' => true,
         ]);
 
-        event(new Registered($user));
+        // Post-registration side effects (verification email, analytics) must never
+        // break sign-up if they fail — e.g. the mail server rejecting the message.
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            Log::warning('Registration verification email/event failed: ' . $e->getMessage());
+        }
 
-        // Facebook CAPI: CompleteRegistration
-        app(AnalyticsService::class)->trackCompleteRegistration($user, $request);
+        try {
+            // Facebook CAPI: CompleteRegistration
+            app(AnalyticsService::class)->trackCompleteRegistration($user, $request);
+        } catch (\Throwable $e) {
+            Log::warning('trackCompleteRegistration failed: ' . $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
