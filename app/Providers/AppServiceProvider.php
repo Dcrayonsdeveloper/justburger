@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Setting;
 use App\Models\UserAddress;
+use App\Support\PageCache;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -59,5 +61,16 @@ class AppServiceProvider extends ServiceProvider
                 ->orderBy('position')
                 ->get());
         });
+
+        // Invalidate the full-page response cache whenever catalogue or business
+        // data changes, so admin edits (add/edit/delete product, category, price,
+        // settings) appear on the storefront immediately instead of after the TTL.
+        $bustPageCache = fn () => PageCache::bump();
+        Product::saved($bustPageCache);
+        Product::deleted($bustPageCache);
+        Product::restored($bustPageCache);
+        Category::saved($bustPageCache);
+        Category::deleted($bustPageCache);
+        Setting::saved($bustPageCache);
     }
 }

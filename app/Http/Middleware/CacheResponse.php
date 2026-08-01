@@ -26,7 +26,7 @@ class CacheResponse
             return $next($request);
         }
 
-        $key = 'response_cache.' . md5($request->fullUrl());
+        $key = 'response_cache.v' . \App\Support\PageCache::version() . '.' . md5($request->fullUrl());
 
         if (Cache::has($key)) {
             $cached = Cache::get($key);
