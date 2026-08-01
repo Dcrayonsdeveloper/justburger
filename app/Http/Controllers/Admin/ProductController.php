@@ -151,6 +151,9 @@ class ProductController extends Controller
         // "Compare at price / MRP" is optional; default it to the price (no discount) so the
         // non-nullable mrp column always has a value.
         $validated['mrp'] = $validated['mrp'] ?? $validated['price'];
+        // Admin-managed products are published — visible on the storefront AND the POS
+        // (the POS only lists products with status = 'approved').
+        $validated['status'] = 'approved';
 
         // Save attributes as JSON
         $productAttributes = collect($request->input('product_attributes', []))
@@ -253,6 +256,9 @@ class ProductController extends Controller
         // "Compare at price / MRP" is optional; default it to the price (no discount) so the
         // non-nullable mrp column always has a value.
         $validated['mrp'] = $validated['mrp'] ?? $validated['price'];
+        // Admin-managed products are published — visible on the storefront AND the POS
+        // (the POS only lists products with status = 'approved').
+        $validated['status'] = 'approved';
 
         // Save attributes as JSON
         $productAttributes = collect($request->input('product_attributes', []))
