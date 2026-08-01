@@ -557,7 +557,7 @@
             {{-- Sticky Save Bar --}}
             <div class="sticky bottom-0 z-40 mt-5 -mx-6 px-6 py-3 bg-white border-t border-neutral-200 flex items-center justify-end gap-3" style="margin-left: -1.5rem; margin-right: -1.5rem; padding-left: 1.5rem; padding-right: 1.5rem;">
                 <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">Discard</a>
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-primary" @click="submitProduct()">Save</button>
             </div>
         </form>
 
@@ -600,6 +600,48 @@
                 seoDescription: '{{ addslashes(old("meta_description", $product->meta_description ?? "")) }}',
                 seoManualTitle: {{ old('meta_title', $product->meta_title) ? 'true' : 'false' }},
                 seoManualDescription: {{ old('meta_description', $product->meta_description) ? 'true' : 'false' }},
+                submitProduct() {
+                    const form = this.$root.querySelector('form');
+                    if (window.productDescriptionEditor) {
+                        const de = document.getElementById('description');
+                        if (de) de.value = window.productDescriptionEditor.getData();
+                    }
+                    const required = [
+                        { name: 'name', label: 'Product name' },
+                        { name: 'description', label: 'Description' },
+                        { name: 'category_id', label: 'Category' },
+                        { name: 'price', label: 'Price' },
+                        { name: 'sku', label: 'SKU' },
+                        { name: 'stock_quantity', label: 'Stock quantity' },
+                    ];
+                    const missing = [];
+                    let firstEl = null;
+                    required.forEach(f => {
+                        const el = form.querySelector('[name="' + f.name + '"]');
+                        let val = el ? String(el.value).trim() : '';
+                        if (f.name === 'description') {
+                            val = val.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim();
+                        }
+                        if (val === '') {
+                            missing.push(f.label);
+                            if (!firstEl) firstEl = el;
+                        }
+                    });
+                    if (missing.length) {
+                        const msg = 'Please fill in: ' + missing.join(', ');
+                        if (window.toastr) { toastr.error(msg); } else { alert(msg); }
+                        if (firstEl) {
+                            firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            if (firstEl.id === 'description' && window.productDescriptionEditor) {
+                                window.productDescriptionEditor.editing.view.focus();
+                            } else {
+                                try { firstEl.focus(); } catch (e) {}
+                            }
+                        }
+                        return;
+                    }
+                    form.submit();
+                },
                 toSlug(text) {
                     return text
                         .toLowerCase()
@@ -710,7 +752,8 @@
                 }
             })
             .then(editor => {
-                // Keep the hidden textarea in sync so the description is always submitted
+                // Expose the editor so the Save handler can read/sync its content
+                window.productDescriptionEditor = editor;
                 editor.model.document.on('change:data', () => editor.updateSourceElement());
             })
             .catch(error => console.error(error));
