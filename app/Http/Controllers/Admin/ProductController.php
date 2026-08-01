@@ -148,6 +148,9 @@ class ProductController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
+        // "Compare at price / MRP" is optional; default it to the price (no discount) so the
+        // non-nullable mrp column always has a value.
+        $validated['mrp'] = $validated['mrp'] ?? $validated['price'];
 
         // Save attributes as JSON
         $productAttributes = collect($request->input('product_attributes', []))
@@ -247,6 +250,9 @@ class ProductController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
+        // "Compare at price / MRP" is optional; default it to the price (no discount) so the
+        // non-nullable mrp column always has a value.
+        $validated['mrp'] = $validated['mrp'] ?? $validated['price'];
 
         // Save attributes as JSON
         $productAttributes = collect($request->input('product_attributes', []))
