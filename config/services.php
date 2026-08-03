@@ -41,6 +41,12 @@ return [
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
+    'stripe' => [
+        'key'            => env('STRIPE_KEY'),            // pk_... publishable (front-end)
+        'secret'         => env('STRIPE_SECRET'),         // sk_... secret (server only)
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'), // whsec_... from the dashboard endpoint
+    ],
+
     'anthropic' => [
         'key'   => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
