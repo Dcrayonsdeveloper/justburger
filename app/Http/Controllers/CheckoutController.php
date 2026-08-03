@@ -13,6 +13,8 @@ use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\AnalyticsService;
 use App\Services\DelhiveryService;
+use App\Services\StripeOrderService;
+use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -430,6 +432,27 @@ class CheckoutController extends Controller
             abort_unless(session('guest_order_id') === $order->id, 403);
         }
 
+        // Stripe fallback confirmation: if the customer landed here from Stripe's hosted
+        // checkout and the webhook hasn't confirmed yet (or isn't configured), verify the
+        // session server-side and confirm now. StripeOrderService::confirm is idempotent,
+        // so this never double-processes an order the webhook already handled.
+        if (($order->metadata['payment_method'] ?? null) === 'stripe'
+            && $order->payment_status !== 'paid'
+            && !empty($order->metadata['stripe_session_id'])) {
+            try {
+                $session = app(StripeService::class)->retrieveSession($order->metadata['stripe_session_id']);
+                if ($session && ($session['payment_status'] ?? null) === 'paid') {
+                    app(StripeOrderService::class)->confirm($order, $session);
+                    $order->refresh();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Stripe success-page confirmation failed', [
+                    'order_id' => $order->id,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
+        }
+
         $order->load(['items.product']);
 
         // Generate event_id for Purchase dedup (shared between client fbq and server CAPI)
@@ -444,6 +467,282 @@ class CheckoutController extends Controller
     public function failed(): View
     {
         return view('checkout.failed');
+    }
+
+    /**
+     * Create a pending order + Stripe hosted Checkout Session, then return the Stripe
+     * URL for the browser to redirect to. Payment is confirmed later by the webhook
+     * and/or the success page (see StripeOrderService::confirm) — never here.
+     *
+     * NOTE: pricing below must stay in sync with process() (the COD path).
+     */
+    public function createStripeSession(Request $request): JsonResponse
+    {
+        $this->logActivity('payment_initiated', ['method' => 'stripe'], $request);
+        $isGuest = !auth()->check();
+
+        $rules = [
+            'same_billing_address' => ['nullable', 'boolean'],
+            'payment_method' => ['required', 'string', 'in:stripe'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'delivery_method' => ['required', 'string', 'in:delivery,collection'],
+        ];
+
+        if ($isGuest) {
+            $rules['guest_email'] = ['required', 'email', 'max:255'];
+            $rules['guest_name'] = ['required', 'string', 'max:255'];
+            $rules['guest_phone'] = ['required', 'string', 'max:20'];
+            $rules['shipping_name'] = ['required', 'string', 'max:255'];
+            $rules['shipping_address_line_1'] = ['required', 'string', 'max:255'];
+            $rules['shipping_address_line_2'] = ['nullable', 'string', 'max:255'];
+            $rules['shipping_city'] = ['required', 'string', 'max:100'];
+            $rules['shipping_state'] = ['required', 'string', 'max:100'];
+            $rules['shipping_postal_code'] = ['required', 'string', 'max:10'];
+        } else {
+            $rules['shipping_address_id'] = ['required', 'exists:user_addresses,id'];
+            $rules['billing_address_id'] = ['nullable', 'exists:user_addresses,id'];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Delivery window validation (mirrors process())
+        $isDelivery = ($validated['delivery_method'] ?? 'collection') === 'delivery';
+        if ($isDelivery) {
+            $ukNow = now('Europe/London');
+            if ((int) $ukNow->format('N') === 7) {
+                return response()->json(['error' => 'No delivery on Sundays. Please choose Collection.'], 422);
+            }
+            $hour = (int) $ukNow->format('G');
+            if ($hour < 10 || $hour >= 16) {
+                return response()->json(['error' => 'Delivery available Mon–Sat 10 AM – 4 PM only.'], 422);
+            }
+        }
+
+        $cart = $this->getCart(['items.product', 'items.variant', 'coupon']);
+        if (!$cart || $cart->items->isEmpty()) {
+            return response()->json(['error' => 'Your cart is empty.'], 422);
+        }
+
+        // Re-validate stock (final reservation happens at confirmation; fail fast here)
+        foreach ($cart->items as $item) {
+            $available = $item->variant_id ? $item->variant->stock_quantity : $item->product->stock_quantity;
+            if ($available < $item->quantity) {
+                return response()->json(['error' => "\"{$item->product->name}\" only has {$available} item(s) in stock."], 422);
+            }
+        }
+
+        // ── Pricing (must mirror process()) ──
+        $navratriDiscount = 0;
+        if (Setting::get('navratri_offer_active', '1') === '1') {
+            $navratriDiscount = round(($cart->subtotal - $cart->discount) * 0.05, 2);
+        }
+        $totalDiscount = $cart->discount + $navratriDiscount;
+
+        $loyaltyPointsUsed = 0;
+        $loyaltyDiscount = 0;
+        if (!$isGuest && $request->boolean('use_loyalty_points') && (bool) Setting::get('loyalty_enabled', true)) {
+            $user = auth()->user();
+            $pointsAvailable = $user->loyalty_points_balance ?? 0;
+            $redeemRate = (float) Setting::get('loyalty_redeem_rate', 0.25);
+            $maxDiscount = $pointsAvailable * $redeemRate;
+            $loyaltyDiscount = min($maxDiscount, $cart->subtotal - $totalDiscount);
+            $loyaltyPointsUsed = (int) ceil($loyaltyDiscount / $redeemRate);
+            $totalDiscount += $loyaltyDiscount;
+        }
+
+        $shippingFee = 0;
+        if ($isDelivery) {
+            $deliveryMinOrder = (float) Setting::get('delivery_min_order', 25);
+            if (($cart->subtotal - $totalDiscount) < $deliveryMinOrder) {
+                return response()->json(['error' => 'Minimum order for delivery is £' . number_format($deliveryMinOrder, 2) . '.'], 422);
+            }
+            $shippingFee = (float) Setting::get('delivery_fee', 5);
+        }
+
+        $finalTotal = max(0, $cart->subtotal - $totalDiscount + $shippingFee);
+
+        if ($finalTotal < 1) {
+            return response()->json(['error' => 'Order total is too low for online payment. Please choose another method.'], 422);
+        }
+
+        // ── Address snapshots ──
+        if ($isGuest) {
+            $shippingSnapshot = [
+                'name' => $validated['shipping_name'],
+                'phone' => $validated['guest_phone'] ?? '',
+                'address_line_1' => $validated['shipping_address_line_1'],
+                'address_line_2' => $validated['shipping_address_line_2'] ?? '',
+                'city' => $validated['shipping_city'],
+                'state' => $validated['shipping_state'],
+                'postal_code' => $validated['shipping_postal_code'],
+                'country' => 'United Kingdom',
+            ];
+            $billingSnapshot = $shippingSnapshot;
+            $shippingAddressId = null;
+            $billingAddressId = null;
+        } else {
+            $shippingAddress = UserAddress::where('user_id', auth()->id())->findOrFail($validated['shipping_address_id']);
+            $billingAddressId = ($validated['same_billing_address'] ?? true)
+                ? $shippingAddress->id
+                : ($validated['billing_address_id'] ?? $shippingAddress->id);
+            $billingAddress = UserAddress::where('user_id', auth()->id())->findOrFail($billingAddressId);
+
+            $shippingSnapshot = [
+                'name' => $shippingAddress->full_name,
+                'phone' => $shippingAddress->phone,
+                'address_line_1' => $shippingAddress->address_line_1,
+                'address_line_2' => $shippingAddress->address_line_2,
+                'city' => $shippingAddress->city,
+                'state' => $shippingAddress->state,
+                'postal_code' => $shippingAddress->postal_code,
+                'country' => $shippingAddress->country,
+            ];
+            $billingSnapshot = [
+                'name' => $billingAddress->full_name,
+                'address_line_1' => $billingAddress->address_line_1,
+                'city' => $billingAddress->city,
+                'state' => $billingAddress->state,
+                'postal_code' => $billingAddress->postal_code,
+                'country' => $billingAddress->country,
+            ];
+            $shippingAddressId = $shippingAddress->id;
+            $billingAddressId = $billingAddress->id;
+        }
+
+        // ── Affiliate resolution ──
+        $affiliateId = null;
+        $affiliateRefCode = null;
+        $refCode = session('affiliate_ref') ?? request()->cookie(config('affiliate.cookie_name', 'justburgers_ref'));
+        if ($refCode) {
+            $affiliate = Affiliate::where('referral_code', $refCode)->where('status', 'approved')->first();
+            if ($affiliate) {
+                $affiliateId = $affiliate->id;
+                $affiliateRefCode = $refCode;
+            }
+        }
+
+        $contactEmail = $isGuest ? ($validated['guest_email'] ?? null) : (auth()->user()->email ?? null);
+
+        // ── Create the pending order (stock decrement + cart clear are deferred to
+        //    confirmation, so abandoned Stripe sessions never lock stock) ──
+        $metadata = [
+            'payment_method' => 'stripe',
+            'cart_id' => $cart->id,
+        ];
+        if ($navratriDiscount > 0) {
+            $metadata['navratri_discount'] = $navratriDiscount;
+        }
+        if ($loyaltyPointsUsed > 0) {
+            $metadata['loyalty_points_used'] = $loyaltyPointsUsed;
+            $metadata['loyalty_discount'] = $loyaltyDiscount;
+        }
+        if ($affiliateRefCode) {
+            $metadata['affiliate_referral_code'] = $affiliateRefCode;
+        }
+
+        $order = DB::transaction(function () use ($cart, $shippingSnapshot, $billingSnapshot, $shippingAddressId, $billingAddressId, $validated, $isGuest, $finalTotal, $totalDiscount, $shippingFee, $affiliateId, $affiliateRefCode, $metadata) {
+            $order = Order::create([
+                'user_id' => $isGuest ? null : auth()->id(),
+                'guest_email' => $validated['guest_email'] ?? null,
+                'guest_name' => $validated['guest_name'] ?? null,
+                'guest_phone' => $validated['guest_phone'] ?? null,
+                'status' => 'pending',
+                'payment_status' => 'pending',
+                'subtotal' => $cart->subtotal,
+                'discount' => $totalDiscount,
+                'shipping_cost' => $shippingFee,
+                'tax' => 0,
+                'total' => $finalTotal,
+                'paid_amount' => 0,
+                'currency' => 'GBP',
+                'coupon_id' => $cart->coupon_id,
+                'affiliate_id' => $affiliateId,
+                'affiliate_referral_code' => $affiliateRefCode,
+                'shipping_address_id' => $shippingAddressId,
+                'billing_address_id' => $billingAddressId,
+                'shipping_address_snapshot' => $shippingSnapshot,
+                'billing_address_snapshot' => $billingSnapshot,
+                'notes' => $validated['notes'] ?? null,
+                'metadata' => $metadata,
+            ]);
+
+            foreach ($cart->items as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'variant_id' => $item->variant_id,
+                    'seller_id' => $item->product->seller_id,
+                    'product_name' => $item->product->name,
+                    'sku' => $item->product->sku ?? '',
+                    'variant_name' => $item->variant?->attributeValues->pluck('value')->join(' / '),
+                    'quantity' => $item->quantity,
+                    'mrp' => $item->product->mrp ?? $item->price,
+                    'price' => $item->price,
+                    'tax' => 0,
+                    'discount' => 0,
+                    'total' => $item->price * $item->quantity,
+                ]);
+            }
+
+            return $order;
+        });
+
+        // ── Create the Stripe Checkout Session ──
+        $siteName = Setting::get('site_name', config('app.name'));
+        $params = [
+            'mode' => 'payment',
+            'success_url' => route('checkout.success', $order) . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('checkout.index'),
+            'client_reference_id' => (string) $order->id,
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'gbp',
+                    'product_data' => ['name' => $siteName . ' — Order #' . $order->order_number],
+                    'unit_amount' => (int) round($finalTotal * 100), // GBP → pence
+                ],
+                'quantity' => 1,
+            ]],
+            'metadata' => [
+                'order_id' => (string) $order->id,
+                'order_number' => $order->order_number,
+            ],
+            'payment_intent_data' => [
+                'metadata' => ['order_id' => (string) $order->id],
+            ],
+        ];
+        if ($contactEmail) {
+            $params['customer_email'] = $contactEmail;
+        }
+
+        try {
+            $session = app(StripeService::class)->createCheckoutSession($params);
+        } catch (\Throwable $e) {
+            Log::error('Stripe session creation failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            $this->logActivity('payment_error', ['stage' => 'stripe_session_create', 'error' => $e->getMessage()], $request);
+            // Roll back the pending order — no stock/cart side-effects were applied yet.
+            $order->items()->delete();
+            $order->delete();
+            return response()->json(['error' => 'Payment could not be started. Please try again.'], 502);
+        }
+
+        // Store the session id so the success page can confirm independently of the webhook.
+        $order->update([
+            'metadata' => array_merge($order->metadata ?? [], ['stripe_session_id' => $session['id']]),
+        ]);
+
+        // Guests are authorised on the success page via this session key.
+        if ($isGuest) {
+            session()->put('guest_order_id', $order->id);
+        }
+
+        // Facebook CAPI: AddPaymentInfo
+        $fbEventId = AnalyticsService::generateEventId('api');
+        app(AnalyticsService::class)->trackAddPaymentInfo($finalTotal, 'stripe', $request, $fbEventId);
+
+        return response()->json([
+            'url' => $session['url'],
+            'order_id' => $order->id,
+        ]);
     }
 
     /**

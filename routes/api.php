@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\RazorpayWebhookController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Middleware\VerifyMetaWebhookSignature;
 use App\Http\Middleware\VerifyRazorpayWebhookSignature;
@@ -35,6 +36,11 @@ Route::match(['get', 'post'], 'instagram/delete', [\App\Http\Controllers\Api\Ins
 Route::post('webhook/razorpay', [RazorpayWebhookController::class, 'handle'])
     ->middleware(VerifyRazorpayWebhookSignature::class)
     ->name('webhook.razorpay');
+
+// ─── Stripe Webhooks (Payment Events) ───────────────────────────────────
+// Signature is verified inside the controller against the raw request body.
+Route::post('webhook/stripe', [StripeWebhookController::class, 'handle'])
+    ->name('webhook.stripe');
 
 // API Version 1
 Route::prefix('v1')->name('api.v1.')->group(function () {

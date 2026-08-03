@@ -456,7 +456,7 @@
         @endif
 
         @php
-            $methodOrder = ['razorpay' => 'razorpay_enabled', 'cod' => 'cod_enabled'];
+            $methodOrder = ['stripe' => 'stripe_enabled', 'cod' => 'cod_enabled'];
             $firstMethod = 'cod';
             foreach ($methodOrder as $method => $key) {
                 if (($paymentSettings[$key] ?? '1') === '1') { $firstMethod = $method; break; }
@@ -838,19 +838,20 @@
                             <span class="ck-card-label">Payment</span>
                         </div>
                         <div class="ck-card-body" style="display:flex;flex-direction:column;gap:.55rem;">
-                            {{-- Razorpay --}}
-                            @if(($paymentSettings['razorpay_enabled'] ?? '1') === '1')
-                            <div @click="paymentMethod = 'razorpay'"
-                                 :class="paymentMethod === 'razorpay' ? 'active' : ''"
+                            {{-- Stripe (hosted card checkout) --}}
+                            @if(($paymentSettings['stripe_enabled'] ?? '1') === '1')
+                            <div @click="paymentMethod = 'stripe'"
+                                 :class="paymentMethod === 'stripe' ? 'active' : ''"
                                  class="ck-pay-opt">
                                 <div class="ck-pay-row">
-                                    <input type="radio" name="payment_method" value="razorpay" x-model="paymentMethod">
-                                    <div class="ck-pay-icon" style="background:rgba(0,0,0,.04);">
-                                        <img src="{{ asset('images/razorpay.png') }}" alt="Razorpay" style="height:1.1rem;width:auto;">
+                                    <input type="radio" name="payment_method" value="stripe" x-model="paymentMethod">
+                                    <div class="ck-pay-icon"
+                                         :style="paymentMethod === 'stripe' ? 'background:rgba(99,91,255,.10);color:#635BFF;' : 'background:rgba(0,0,0,.04);color:rgba(0,0,0,.4);'">
+                                        <svg style="width:1.1rem;height:1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9v9.75c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125V9m-19.5 0V6.375c0-.621.504-1.125 1.125-1.125h17.25c.621 0 1.125.504 1.125 1.125V9m-19.5 0h19.5"/></svg>
                                     </div>
                                     <div>
                                         <p class="ck-pay-name">Pay Online</p>
-                                        <p class="ck-pay-desc">Cards, UPI, Net Banking & more</p>
+                                        <p class="ck-pay-desc">Card, Apple Pay & Google Pay — secured by Stripe</p>
                                     </div>
                                 </div>
                             </div>
@@ -1126,7 +1127,7 @@
                         <div style="padding:0 1rem 1rem;">
                             <button type="submit" :disabled="processing" class="ck-submit-btn">
                                 <span x-show="!processing">
-                                    <template x-if="paymentMethod === 'razorpay'">
+                                    <template x-if="paymentMethod === 'stripe'">
                                         <span>Pay Now &middot;
                                             <span x-show="deliveryMethod === 'delivery'">@price($displayTotalDelivery)</span>
                                             <span x-show="deliveryMethod === 'collection'">@price($displayTotalCollection)</span>
@@ -1178,7 +1179,6 @@
     </div>
 
     <x-slot name="scripts">
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         <script>
             // ─── Shared reverse-geocoding helper ───
             function reverseGeocode(lat, lng) {
@@ -1443,16 +1443,20 @@
 
                     handleSubmit(e) {
                         this.error = '';
-                        this.initiateRazorpay(e.target);
+                        if (this.paymentMethod === 'stripe') {
+                            this.initiateStripe(e.target);
+                        } else {
+                            // COD / partial pay → standard server-side checkout (process())
+                            e.target.submit();
+                        }
                     },
 
-                    async initiateRazorpay(form) {
+                    async initiateStripe(form) {
                         this.processing = true;
-                        const formData = new FormData(form);
-                        const data = Object.fromEntries(formData.entries());
+                        const data = Object.fromEntries(new FormData(form).entries());
 
                         try {
-                            const response = await fetch('{{ route("checkout.razorpay.create") }}', {
+                            const response = await fetch('{{ route("checkout.stripe.create") }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1464,81 +1468,16 @@
 
                             const result = await response.json();
 
-                            if (!response.ok) {
+                            if (!response.ok || !result.url) {
                                 this.error = result.error || result.message || 'Something went wrong. Please try again.';
                                 this.processing = false;
                                 return;
                             }
 
-                            this.openRazorpayCheckout(result);
+                            // Redirect to Stripe's hosted checkout page.
+                            window.location.href = result.url;
                         } catch (err) {
                             this.error = 'Network error. Please check your connection and try again.';
-                            this.processing = false;
-                        }
-                    },
-
-                    openRazorpayCheckout(orderData) {
-                        const self = this;
-
-                        const options = {
-                            key: orderData.key,
-                            amount: orderData.amount,
-                            currency: orderData.currency,
-                            name: orderData.name,
-                            description: orderData.description,
-                            order_id: orderData.order_id,
-                            prefill: orderData.prefill,
-                            theme: {
-                                color: '#C8102E',
-                                backdrop_color: 'rgba(0, 0, 0, 0.5)',
-                            },
-                            modal: {
-                                ondismiss: function() {
-                                    self.processing = false;
-                                    self.error = 'Payment was cancelled. You can try again.';
-                                },
-                                confirm_close: true,
-                                escape: false,
-                            },
-                            handler: function(response) {
-                                self.verifyPayment(response);
-                            },
-                        };
-
-                        const rzp = new Razorpay(options);
-                        rzp.on('payment.failed', function(response) {
-                            self.processing = false;
-                            self.error = response.error.description || 'Payment failed. Please try again.';
-                        });
-                        rzp.open();
-                    },
-
-                    async verifyPayment(paymentResponse) {
-                        try {
-                            const response = await fetch('{{ route("checkout.razorpay.verify") }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    razorpay_order_id: paymentResponse.razorpay_order_id,
-                                    razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                                    razorpay_signature: paymentResponse.razorpay_signature,
-                                }),
-                            });
-
-                            const result = await response.json();
-
-                            if (result.success && result.redirect) {
-                                window.location.href = result.redirect;
-                            } else {
-                                this.error = result.error || 'Payment verification failed. Please contact support.';
-                                this.processing = false;
-                            }
-                        } catch (err) {
-                            this.error = 'Verification failed. If amount was deducted, it will be refunded. Please contact support.';
                             this.processing = false;
                         }
                     },
