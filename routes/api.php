@@ -4,11 +4,9 @@ use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
-use App\Http\Controllers\Api\RazorpayWebhookController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Middleware\VerifyMetaWebhookSignature;
-use App\Http\Middleware\VerifyRazorpayWebhookSignature;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,11 +29,6 @@ Route::prefix('webhook')->middleware(VerifyMetaWebhookSignature::class)->group(f
 // ─── Instagram Callbacks (required by Facebook App) ─────────────────────
 Route::match(['get', 'post'], 'instagram/deauthorize', [\App\Http\Controllers\Api\InstagramCallbackController::class, 'deauthorize'])->name('instagram.deauthorize');
 Route::match(['get', 'post'], 'instagram/delete', [\App\Http\Controllers\Api\InstagramCallbackController::class, 'delete'])->name('instagram.delete');
-
-// ─── Razorpay Webhooks (Payment Events) ─────────────────────────────────
-Route::post('webhook/razorpay', [RazorpayWebhookController::class, 'handle'])
-    ->middleware(VerifyRazorpayWebhookSignature::class)
-    ->name('webhook.razorpay');
 
 // ─── Stripe Webhooks (Payment Events) ───────────────────────────────────
 // Signature is verified inside the controller against the raw request body.

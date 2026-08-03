@@ -55,25 +55,20 @@ class SettingController extends Controller
     public function updatePayment(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'razorpay_key_id'     => 'nullable|string|max:255',
-            'razorpay_key_secret' => 'nullable|string|max:255',
-            'razorpay_mode'       => 'nullable|in:test,live',
-            'cod_instructions'    => 'nullable|string|max:1000',
+            'stripe_mode'      => 'nullable|in:test,live',
+            'cod_instructions' => 'nullable|string|max:1000',
         ]);
 
         // Boolean toggles — use request->boolean() so unchecked checkboxes save '0'
-        foreach (['razorpay_enabled', 'upi_enabled', 'cod_enabled'] as $key) {
+        foreach (['stripe_enabled', 'upi_enabled', 'cod_enabled'] as $key) {
             Setting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $request->boolean($key) ? '1' : '0', 'group' => 'payment']
             );
         }
 
-        // Credential / text fields — skip blank secrets to keep existing value
+        // Text fields
         foreach ($validated as $key => $value) {
-            if ($key === 'razorpay_key_secret' && empty($value)) {
-                continue; // Keep existing secret
-            }
             Setting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $value ?? '', 'group' => 'payment']

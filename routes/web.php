@@ -157,8 +157,6 @@ Route::post('/api/abandoned-capture', [App\Http\Controllers\CheckoutController::
 Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [App\Http\Controllers\CheckoutController::class, 'index'])->name('index');
     Route::post('/process', [App\Http\Controllers\CheckoutController::class, 'process'])->middleware('throttle:10,1')->name('process');
-    Route::post('/razorpay/create-order', [App\Http\Controllers\CheckoutController::class, 'createRazorpayOrder'])->middleware('throttle:10,1')->name('razorpay.create');
-    Route::post('/razorpay/verify', [App\Http\Controllers\CheckoutController::class, 'verifyRazorpayPayment'])->middleware('throttle:10,1')->name('razorpay.verify');
     Route::post('/stripe/create-session', [App\Http\Controllers\CheckoutController::class, 'createStripeSession'])->middleware('throttle:10,1')->name('stripe.create');
     Route::get('/success/{order}', [App\Http\Controllers\CheckoutController::class, 'success'])->name('success');
     Route::get('/failed', [App\Http\Controllers\CheckoutController::class, 'failed'])->name('failed');
