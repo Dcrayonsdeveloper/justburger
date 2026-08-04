@@ -180,53 +180,26 @@
 
     @stack('scripts')
 
-    {{-- CSRF Token Auto-Refresh (POS sessions are long-lived) --}}
+    {{-- Keep the POS session + CSRF token fresh (POS tabs stay open for hours).
+         The 419 auto-retry interceptor now lives in bootstrap.js so it is
+         guaranteed to register after window.axios exists. --}}
     <script>
-        // Refresh CSRF token every 30 minutes to prevent 419 errors
+        // Ping /csrf-token periodically: refreshes the token AND rolls the
+        // session idle-timeout, so a long-open POS tab never goes stale.
         setInterval(async () => {
+            if (!window.axios) return;
             try {
-                const res = await fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' });
-                if (res.ok) {
-                    // Also try refreshing from a simple endpoint
-                    const tokenRes = await fetch('/csrf-token', { credentials: 'same-origin' });
-                    if (tokenRes.ok) {
-                        const data = await tokenRes.json();
-                        if (data.token) {
-                            document.querySelector('meta[name="csrf-token"]').content = data.token;
-                            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = data.token;
-                        }
-                    }
+                const res = await fetch('/csrf-token', { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.token) {
+                    document.querySelector('meta[name="csrf-token"]').content = data.token;
+                    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = data.token;
                 }
             } catch (e) {
                 console.warn('[POS] CSRF refresh failed:', e);
             }
-        }, 30 * 60 * 1000); // 30 minutes
-
-        // Axios interceptor: auto-retry on 419 (CSRF mismatch)
-        window.axios.interceptors.response.use(
-            response => response,
-            async error => {
-                const originalRequest = error.config;
-                if (error.response?.status === 419 && !originalRequest._csrfRetried) {
-                    originalRequest._csrfRetried = true;
-                    try {
-                        const tokenRes = await fetch('/csrf-token', { credentials: 'same-origin' });
-                        if (tokenRes.ok) {
-                            const data = await tokenRes.json();
-                            if (data.token) {
-                                document.querySelector('meta[name="csrf-token"]').content = data.token;
-                                window.axios.defaults.headers.common['X-CSRF-TOKEN'] = data.token;
-                                originalRequest.headers['X-CSRF-TOKEN'] = data.token;
-                                return window.axios(originalRequest);
-                            }
-                        }
-                    } catch (e) {
-                        console.error('[POS] CSRF retry failed:', e);
-                    }
-                }
-                return Promise.reject(error);
-            }
-        );
+        }, 20 * 60 * 1000); // every 20 min (session lifetime is 120 min)
     </script>
 
     {{-- Service Worker for offline support --}}
