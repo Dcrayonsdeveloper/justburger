@@ -20,8 +20,6 @@ class Setting extends Model
      * Keys that should be encrypted at rest in the database.
      */
     protected static array $encryptedKeys = [
-        'razorpay_key_secret',
-        'razorpay_webhook_secret',
         'mail_password',
     ];
 

@@ -21,48 +21,40 @@
 
         <div class="space-y-4">
 
-            {{-- Razorpay --}}
-            <div class="card" x-data="{ enabled: {{ ($settings['razorpay_enabled'] ?? '0') === '1' ? 'true' : 'false' }} }">
+            {{-- Stripe --}}
+            <div class="card" x-data="{ enabled: {{ ($settings['stripe_enabled'] ?? '0') === '1' ? 'true' : 'false' }} }">
                 <div class="px-5 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="background:#072654;">
-                            <span class="text-white font-bold text-sm tracking-tight">R£</span>
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="background:#635BFF;">
+                            <span class="text-white font-bold text-base tracking-tight">S</span>
                         </div>
                         <div>
                             <h3 class="text-sm font-semibold text-neutral-900 flex items-center gap-2">
-                                Razorpay
+                                Stripe
                                 <span class="text-[10px] font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">Recommended</span>
                             </h3>
-                            <p class="text-xs text-neutral-600">Accept payments via Razorpay checkout</p>
+                            <p class="text-xs text-neutral-600">Accept card, Apple Pay &amp; Google Pay via Stripe Checkout</p>
                         </div>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="razorpay_enabled" value="1" x-model="enabled" class="sr-only peer">
+                        <input type="checkbox" name="stripe_enabled" value="1" x-model="enabled" class="sr-only peer">
                         <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                     </label>
                 </div>
                 <div class="px-5 pb-5 space-y-4 border-t border-neutral-100" x-show="enabled" x-collapse>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                        <div>
-                            <label class="form-label">Key ID</label>
-                            <input type="text" name="razorpay_key_id" value="{{ old('razorpay_key_id', $settings['razorpay_key_id'] ?? '') }}" placeholder="rzp_live_..." class="form-input">
-                        </div>
-                        <div>
-                            <label class="form-label">Key Secret</label>
-                            <input type="password" name="razorpay_key_secret" value="" placeholder="{{ !empty($settings['razorpay_key_secret']) ? '••••••••••••' : 'Enter key secret' }}" class="form-input">
-                            @if(!empty($settings['razorpay_key_secret']))
-                                <p class="text-xs text-neutral-600 mt-1">Secret is saved. Leave blank to keep current value.</p>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="max-w-xs">
+                    <div class="max-w-xs pt-4">
                         <label class="form-label">Mode</label>
-                        <select name="razorpay_mode" class="form-select">
-                            <option value="test" @selected(($settings['razorpay_mode'] ?? 'test') === 'test')>Test / Sandbox</option>
-                            <option value="live" @selected(($settings['razorpay_mode'] ?? '') === 'live')>Live / Production</option>
+                        <select name="stripe_mode" class="form-select">
+                            <option value="test" @selected(($settings['stripe_mode'] ?? 'test') === 'test')>Test / Sandbox</option>
+                            <option value="live" @selected(($settings['stripe_mode'] ?? '') === 'live')>Live / Production</option>
                         </select>
                     </div>
-                    <p class="text-xs text-neutral-600">Get your API keys from <span class="font-medium text-neutral-600">Razorpay Dashboard → Settings → API Keys</span></p>
+                    <div class="px-3 py-2 rounded-lg bg-info-50 border border-info-100 text-xs text-neutral-600">
+                        API keys are configured on the server in <span class="font-medium">.env</span> as
+                        <span class="font-medium">STRIPE_KEY</span>, <span class="font-medium">STRIPE_SECRET</span> and
+                        <span class="font-medium">STRIPE_WEBHOOK_SECRET</span> — not stored here.
+                    </div>
+                    <p class="text-xs text-neutral-600">Get your API keys from <span class="font-medium text-neutral-600">Stripe Dashboard → Developers → API keys</span>. Webhook endpoint: <span class="font-medium">/api/webhook/stripe</span></p>
                 </div>
             </div>
 

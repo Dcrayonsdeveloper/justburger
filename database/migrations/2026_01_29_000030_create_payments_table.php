@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->string('transaction_id', 100)->unique();
-            $table->string('gateway', 50)->default('razorpay');
+            $table->string('gateway', 50)->default('stripe');
             $table->string('gateway_transaction_id')->nullable();
             $table->enum('method', ['card', 'upi', 'netbanking', 'wallet', 'cod', 'emi', 'bnpl'])->default('card');
             $table->decimal('amount', 12, 2);

@@ -35,12 +35,6 @@ return [
         ],
     ],
 
-    'razorpay' => [
-        'key_id' => env('RAZORPAY_KEY_ID'),
-        'key_secret' => env('RAZORPAY_KEY_SECRET'),
-        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
-    ],
-
     'stripe' => [
         'key'            => env('STRIPE_KEY'),            // pk_... publishable (front-end)
         'secret'         => env('STRIPE_SECRET'),         // sk_... secret (server only)
