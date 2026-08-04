@@ -38,6 +38,7 @@ Route::prefix('pos')->name('pos.')->group(function () {
 
             // ── Products ─────────────────────────────────────────────
             Route::get('/products/search', [Pos\ProductController::class, 'search'])->name('products.search');
+            Route::get('/products/barcode/{code}', [Pos\ProductController::class, 'barcodeLookup'])->name('products.barcode');
             Route::get('/products', [Pos\ProductController::class, 'index'])->name('products.index');
             Route::get('/categories', [Pos\ProductController::class, 'categories'])->name('categories');
 
