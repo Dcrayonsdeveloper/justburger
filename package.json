@@ -16,7 +16,6 @@
     "dependencies": {
         "@alpinejs/collapse": "^3.15.8",
         "@alpinejs/focus": "^3.15.8",
-        "@alpinejs/intersect": "^3.15.8",
-        "@zxing/browser": "^0.1.5"
+        "@alpinejs/intersect": "^3.15.8"
     }
 }
