@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class ProductController extends Controller
         $query = Product::query()
             ->where('status', 'approved')
             ->where('is_active', true)
-            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,price,stock_quantity,attributes']);
+            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,barcode,price,stock_quantity,attributes']);
 
         // Category filter
         if ($request->filled('category')) {
@@ -44,7 +45,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Search products by name or SKU.
+     * Search products by name, SKU, or barcode.
      */
     public function search(Request $request): JsonResponse
     {
@@ -60,9 +61,10 @@ class ProductController extends Controller
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('sku', 'like', "%{$query}%")
-                  ->orWhereHas('variants', fn ($vq) => $vq->where('sku', 'like', "%{$query}%"));
+                  ->orWhere('barcode', 'like', "%{$query}%")
+                  ->orWhereHas('variants', fn ($vq) => $vq->where('barcode', 'like', "%{$query}%")->orWhere('sku', 'like', "%{$query}%"));
             })
-            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,price,stock_quantity,attributes'])
+            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,barcode,price,stock_quantity,attributes'])
             ->orderByDesc('sales_count')
             ->limit(20)
             ->get();
@@ -70,6 +72,82 @@ class ProductController extends Controller
         return response()->json([
             'products' => $products->map(fn ($p) => $this->formatProduct($p)),
         ]);
+    }
+
+    /**
+     * Lookup product by barcode (USB scanner or camera).
+     *
+     * Fallback chain: products.barcode -> product_variants.barcode ->
+     * products.sku -> product_variants.sku -> barcodes table -> products.marg_code.
+     */
+    public function barcodeLookup(Request $request, string $code): JsonResponse
+    {
+        $productQuery = fn () => Product::query()
+            ->where('status', 'approved')
+            ->where('is_active', true)
+            ->with(['primaryImage', 'category:id,name', 'variants:id,product_id,name,sku,barcode,price,stock_quantity,attributes']);
+
+        // Tier 1: product barcode
+        $product = $productQuery()->where('barcode', $code)->first();
+        if ($product) {
+            return response()->json(['found' => true, 'product' => $this->formatProduct($product)]);
+        }
+
+        // Tier 2: variant barcode
+        $variant = ProductVariant::where('barcode', $code)
+            ->where('is_active', true)
+            ->with(['product' => fn ($q) => $q->with(['primaryImage', 'category:id,name'])])
+            ->first();
+        if ($variant && $variant->product) {
+            return response()->json([
+                'found'      => true,
+                'product'    => $this->formatProduct($variant->product),
+                'variant_id' => $variant->id,
+            ]);
+        }
+
+        // Tier 3: product SKU
+        $product = $productQuery()->where('sku', $code)->first();
+        if ($product) {
+            return response()->json(['found' => true, 'product' => $this->formatProduct($product)]);
+        }
+
+        // Tier 4: variant SKU
+        $variant = ProductVariant::where('sku', $code)
+            ->where('is_active', true)
+            ->with(['product' => fn ($q) => $q->with(['primaryImage', 'category:id,name'])])
+            ->first();
+        if ($variant && $variant->product) {
+            return response()->json([
+                'found'      => true,
+                'product'    => $this->formatProduct($variant->product),
+                'variant_id' => $variant->id,
+            ]);
+        }
+
+        // Tier 5: barcodes table (alternate/legacy codes)
+        $barcode = \App\Models\Barcode::where('barcode', $code)->first();
+        if ($barcode) {
+            $product = $productQuery()->where('id', $barcode->product_id)->first();
+            if ($product) {
+                return response()->json([
+                    'found'      => true,
+                    'product'    => $this->formatProduct($product),
+                    'variant_id' => $barcode->variant_id,
+                ]);
+            }
+        }
+
+        // Tier 6: Marg ERP code
+        $product = $productQuery()->where('marg_code', $code)->first();
+        if ($product) {
+            return response()->json(['found' => true, 'product' => $this->formatProduct($product)]);
+        }
+
+        return response()->json([
+            'found'   => false,
+            'message' => "No product found for barcode: {$code}",
+        ], 404);
     }
 
     /**
@@ -105,6 +183,7 @@ class ProductController extends Controller
             'id'             => $product->id,
             'name'           => $product->name,
             'sku'            => $product->sku,
+            'barcode'        => $product->barcode,
             'marg_code'      => $product->marg_code,
             'price'          => (float) $product->price,
             'mrp'            => (float) ($product->mrp ?? $product->price),
@@ -121,6 +200,7 @@ class ProductController extends Controller
                 'id'         => $v->id,
                 'name'       => $v->name,
                 'sku'        => $v->sku,
+                'barcode'    => $v->barcode,
                 'price'      => (float) ($v->price ?? $product->price),
                 'stock'      => (int) $v->stock_quantity,
                 'in_stock'   => $v->stock_quantity > 0,
