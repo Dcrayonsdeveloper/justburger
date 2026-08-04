@@ -46,20 +46,14 @@
                 @input.debounce.300ms="searchProducts()"
                 @focus="showSearchResults = searchResults.length > 0"
                 @click.outside="showSearchResults = false"
-                placeholder="Search products by name, SKU, or barcode... (F2)"
+                placeholder="Search products by name or SKU... (F2)"
                 class="w-full pl-10 pr-10 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
                 style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.15); --tw-ring-color: var(--pos-primary);"
             >
             <button x-show="searchQuery" @click="searchQuery = ''; searchResults = []; showSearchResults = false"
-                    class="absolute right-9 top-1/2 -translate-y-1/2" aria-label="Clear search">
+                    class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search">
                 <svg class="w-4 h-4" style="color: #CBD5E1;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-            <button @click="openCameraScanner()" class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Scan barcode with camera">
-                <svg class="w-4 h-4" style="color: #CBD5E1;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
             </button>
 
@@ -77,7 +71,6 @@
                             <div class="text-sm font-medium truncate" x-text="product.name"></div>
                             <div class="text-xs" style="color: var(--pos-text-muted);">
                                 <span x-text="product.sku" class="pos-mono"></span>
-                                <span x-show="product.barcode"> · <span x-text="product.barcode" class="pos-mono"></span></span>
                             </div>
                         </div>
                         <div class="text-right">
@@ -322,7 +315,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
                         </svg>
                         <p class="text-sm font-medium" style="color: var(--pos-text-muted);">Cart is empty</p>
-                        <p class="text-xs mt-1" style="color: #CBD5E1;">Scan a barcode or click a product to add</p>
+                        <p class="text-xs mt-1" style="color: #CBD5E1;">Click a product to add to the cart</p>
                     </div>
                 </div>
 
@@ -997,31 +990,6 @@
         </div>
     </div>
 
-    {{-- ═══════ CAMERA BARCODE SCANNER MODAL ═══════ --}}
-    <div x-show="showScannerModal" x-transition.opacity class="fixed inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.8); z-index: 110;">
-        <div class="w-full max-w-md pos-fade-in">
-            <div class="flex items-center justify-between mb-3 px-1">
-                <h3 class="text-base font-semibold text-white">Scan Barcode</h3>
-                <button @click="closeCameraScanner()" class="p-1 rounded text-white" aria-label="Close scanner">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div class="relative rounded-lg overflow-hidden" style="background: black; aspect-ratio: 4/3;">
-                <video x-ref="scannerVideo" class="w-full h-full object-cover" muted playsinline></video>
-                {{-- Aiming reticle --}}
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div class="w-2/3 h-1/3 rounded-lg" style="border: 2px solid rgba(255,255,255,0.8);"></div>
-                </div>
-                <div x-show="scannerError" class="absolute inset-0 flex items-center justify-center p-6" style="background: rgba(0,0,0,0.85);">
-                    <div class="text-center">
-                        <p class="text-sm text-white mb-3" x-text="scannerError"></p>
-                        <button @click="startCameraScanner()" class="pos-btn pos-btn-primary text-sm px-6">Retry</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- ═══════ PAST BILLS MODAL ═══════ --}}
     <div x-show="showPastBillsModal" x-transition.opacity class="fixed inset-0 flex items-center justify-center" style="background: rgba(0,0,0,0.4); z-index: 100;" @click.self="showPastBillsModal = false">
         <div class="pos-card w-full max-w-lg pos-fade-in flex flex-col" style="max-height: 85vh;" @click.stop>
@@ -1124,11 +1092,6 @@ function posBilling() {
         _authReject: null,
         _authAction: '',
 
-        // ── Camera Scanner ──
-        showScannerModal: false,
-        scannerError: '',
-        _scannerControls: null,
-
         // ── Past Bills ──
         showPastBillsModal: false,
         pastBillsSearch: '',
@@ -1184,10 +1147,6 @@ function posBilling() {
         creditNoteCode: '',
         creditNote: null,
         creditNoteApplied: 0,
-
-        // ── Other ──
-        barcodeBuffer: '',
-        barcodeTimeout: null,
 
         async init() {
             await Promise.all([
@@ -1248,53 +1207,6 @@ function posBilling() {
             } catch (e) { console.error('Search failed', e); }
         },
 
-        // ═══════ BARCODE SCANNING ═══════
-        async scanBarcode(code) {
-            try {
-                const res = await axios.get('{{ url("/pos/products/barcode") }}/' + encodeURIComponent(code));
-                if (res.data.found) {
-                    if (res.data.variant_id) {
-                        this.addVariantToCartById(res.data.product, res.data.variant_id);
-                    } else {
-                        this.addToCart(res.data.product);
-                    }
-                }
-            } catch (e) {
-                console.error('Barcode not found:', code);
-            }
-        },
-
-        // ═══════ CAMERA BARCODE SCANNER ═══════
-        async openCameraScanner() {
-            this.showScannerModal = true;
-            this.scannerError = '';
-            await this.$nextTick();
-            this.startCameraScanner();
-        },
-
-        async startCameraScanner() {
-            this.scannerError = '';
-            try {
-                const { BrowserMultiFormatReader } = await window.loadBarcodeScanner();
-                const reader = new BrowserMultiFormatReader();
-                this._scannerControls = await reader.decodeFromVideoDevice(undefined, this.$refs.scannerVideo, (result) => {
-                    if (result) {
-                        this.scanBarcode(result.getText());
-                        this.closeCameraScanner();
-                    }
-                });
-            } catch (e) {
-                console.error('Camera scanner failed', e);
-                this.scannerError = 'Camera unavailable. Check permissions and try again.';
-            }
-        },
-
-        closeCameraScanner() {
-            this._scannerControls?.stop();
-            this._scannerControls = null;
-            this.showScannerModal = false;
-        },
-
         // ═══════ CART MANAGEMENT ═══════
         async addToCart(product) {
             if (!product.in_stock) return;
@@ -1346,16 +1258,6 @@ function posBilling() {
             } catch (e) {
                 console.error('Add variant to cart failed', e);
                 alert(e.response?.data?.message || 'Failed to add item');
-            }
-        },
-
-        addVariantToCartById(product, variantId) {
-            const variant = product.variants.find(v => v.id === variantId);
-            if (variant) {
-                this.selectedProductForVariant = product;
-                this.addVariantToCart(variant);
-            } else {
-                this.addToCart(product);
             }
         },
 
@@ -1888,10 +1790,8 @@ function posBilling() {
 
         // ═══════ KEYBOARD SHORTCUTS ═══════
         handleKeydown(e) {
-            // Don't capture in modals with text inputs
+            // Don't capture shortcuts while typing in text inputs
             if (e.target.tagName === 'INPUT' && e.target.type !== 'button') {
-                // Allow barcode scanning in search
-                if (e.target === this.$refs.searchInput) return;
                 return;
             }
 
@@ -1933,23 +1833,9 @@ function posBilling() {
                     this.showSuccessModal = false;
                     this.showReturnsModal = false;
                     if (this.showAuthModal) this.cancelAuth();
-                    if (this.showScannerModal) this.closeCameraScanner();
                     this.showPastBillsModal = false;
                     this.mobileCartOpen = false;
                     break;
-            }
-
-            // Barcode scanner detection (rapid keypresses ending with Enter)
-            if (!this.showPaymentModal && !this.showCustomerModal && !this.showAuthModal && !this.showScannerModal) {
-                if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                    this.barcodeBuffer += e.key;
-                    clearTimeout(this.barcodeTimeout);
-                    this.barcodeTimeout = setTimeout(() => { this.barcodeBuffer = ''; }, 100);
-                } else if (e.key === 'Enter' && this.barcodeBuffer.length >= 4) {
-                    e.preventDefault();
-                    this.scanBarcode(this.barcodeBuffer);
-                    this.barcodeBuffer = '';
-                }
             }
         },
     };
