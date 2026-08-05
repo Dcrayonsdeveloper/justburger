@@ -6,7 +6,6 @@ use App\Events\OrderDelivered;
 use App\Events\OrderPlaced;
 use App\Events\OrderShipped;
 use App\Events\OrderStatusChanged;
-use App\Events\PosSaleCompleted;
 use App\Events\RefundProcessed;
 use App\Events\ReturnRequested;
 use App\Listeners\AwardLoyaltyPoints;
@@ -45,9 +44,6 @@ class EventServiceProvider extends ServiceProvider
         ],
         RefundProcessed::class => [
             [SendOrderNotification::class, 'handleRefundProcessed'],
-        ],
-        PosSaleCompleted::class => [
-            [UpdateRecommendationData::class, 'handlePosSaleCompleted'],
         ],
     ];
 }

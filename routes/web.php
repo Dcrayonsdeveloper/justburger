@@ -293,9 +293,6 @@ require __DIR__.'/seller.php';
 // Load Delivery Partner Routes
 require __DIR__.'/delivery.php';
 
-// Load POS Routes
-require __DIR__.'/pos.php';
-
 // Load Affiliate Routes
 require __DIR__.'/affiliate.php';
 
