@@ -26,7 +26,6 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-600 uppercase">Store</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-600 uppercase">Code</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-600 uppercase">Contact</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-600 uppercase">Registers</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-600 uppercase">Status</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-neutral-600 uppercase">Actions</th>
                     </tr>
@@ -54,9 +53,6 @@
                                     <span class="text-neutral-600">--</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-center text-sm font-medium">
-                                {{ $store->registers_count }}
-                            </td>
                             <td class="px-4 py-3">
                                 @if($store->is_active)
                                     <span class="badge badge-success">Active</span>
@@ -77,7 +73,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-12 text-center text-neutral-600">
+                            <td colspan="5" class="px-4 py-12 text-center text-neutral-600">
                                 No stores found.
                                 <a href="{{ route('admin.stores.create') }}" class="text-primary-600 hover:text-primary-700 font-medium ml-1">Create one now</a>
                             </td>

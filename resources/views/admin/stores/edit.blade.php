@@ -75,27 +75,6 @@
                         </div>
                     </div>
                 </div>
-
-                @if($store->registers->count())
-                    <div class="card">
-                        <div class="p-4 border-b border-neutral-200">
-                            <h2 class="font-semibold text-neutral-900">POS Registers ({{ $store->registers->count() }})</h2>
-                        </div>
-                        <div class="divide-y divide-neutral-200">
-                            @foreach($store->registers as $register)
-                                <div class="px-4 py-3 flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium text-neutral-900">{{ $register->name }}</p>
-                                        <p class="text-sm text-neutral-600">{{ $register->code ?? '' }}</p>
-                                    </div>
-                                    <span class="badge {{ $register->is_active ? 'badge-success' : 'badge-warning' }}">
-                                        {{ $register->is_active ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
             </div>
 
             <div class="space-y-6">
@@ -122,10 +101,6 @@
                         <div class="flex justify-between">
                             <span class="text-neutral-600">Code</span>
                             <span class="font-medium font-mono">{{ $store->code }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-neutral-600">Registers</span>
-                            <span class="font-medium">{{ $store->registers->count() }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-neutral-600">Created</span>
