@@ -12,7 +12,7 @@ if (token) {
 /**
  * Auto-recover from CSRF token mismatch (HTTP 419).
  *
- * Long-lived pages (e.g. the POS, which stays open for hours) can end up with
+ * Long-lived admin/dashboard pages that stay open for hours can end up with
  * a stale token when the session rolls over. On the first 419 for a request,
  * fetch a fresh token, update the meta tag + axios defaults, and retry once so
  * the mismatch heals silently instead of surfacing to the user.

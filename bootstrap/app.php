@@ -35,9 +35,6 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('admin/*') || $request->is('admin')) {
                 return route('admin.login');
             }
-            if ($request->is('pos/*') || $request->is('pos')) {
-                return route('pos.login');
-            }
             return route('login');
         });
 
@@ -50,8 +47,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'delivery' => \App\Http\Middleware\EnsureUserIsDeliveryPartner::class,
             'affiliate' => \App\Http\Middleware\EnsureUserIsAffiliate::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-            'pos.auth' => \App\Http\Middleware\PosAuthenticate::class,
-            'pos.shift' => \App\Http\Middleware\PosShiftRequired::class,
             'cache.response' => \App\Http\Middleware\CacheResponse::class,
             'admin.audit' => \App\Http\Middleware\AdminAuditLog::class,
         ]);
