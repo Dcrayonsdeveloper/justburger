@@ -57,10 +57,6 @@ Route::get('/product/{slug}', function (string $slug) {
     return redirect()->route('products.show', $slug, 301);
 })->name('product.show');
 
-// Restaurants / Store Locator
-Route::get('/restaurants', [App\Http\Controllers\RestaurantController::class, 'index'])->name('restaurants');
-Route::get('/restaurants/{store}', [App\Http\Controllers\RestaurantController::class, 'show'])->name('restaurants.show');
-
 // Instagram Reels — redirect to home
 Route::get('/reels', fn () => redirect('/', 301))->name('reels.index');
 Route::get('/reels/{shortcode}', fn () => redirect('/', 301))->name('reels.show');
