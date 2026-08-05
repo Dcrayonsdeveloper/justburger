@@ -51,6 +51,9 @@
                     </div>
                 </div>
 
+                <!-- Restaurants -->
+                <a href="{{ route('restaurants') }}" class="px-4 py-2 text-[16px] text-white font-semibold tracking-wide transition-colors hover:text-white/70">Restaurants</a>
+
                 <!-- About Us -->
                 <a href="{{ route('about') }}" class="px-4 py-2 text-[16px] text-white font-semibold tracking-wide transition-colors hover:text-white/70">About Us</a>
 

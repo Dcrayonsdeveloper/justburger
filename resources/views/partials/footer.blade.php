@@ -95,6 +95,7 @@
                 <h4 class="text-[16px] font-bold text-white uppercase tracking-wider mb-5">Explore</h4>
                 <ul class="space-y-3">
                     <li><a href="{{ route('about') }}" class="text-sm text-white/60 hover:text-white transition-colors">Our Story</a></li>
+                    <li><a href="{{ route('restaurants') }}" class="text-sm text-white/60 hover:text-white transition-colors">Restaurants</a></li>
                     <li><a href="{{ route('contact') }}" class="text-sm text-white/60 hover:text-white transition-colors">Contact Us</a></li>
                 </ul>
             </div>
