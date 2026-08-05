@@ -13,7 +13,6 @@ class Order extends Model
         'order_number',
         'user_id',
         'seller_id',
-        'delivery_partner_id',
         'shipping_address_id',
         'billing_address_id',
         'coupon_id',
@@ -27,9 +26,6 @@ class Order extends Model
         'shipping_cost',
         'total',
         'paid_amount',
-        'payment_collected',
-        'payment_collected_at',
-        'payment_collected_by',
         'currency',
         'shipping_address_snapshot',
         'billing_address_snapshot',
@@ -45,7 +41,6 @@ class Order extends Model
         'out_for_delivery_at',
         'delivered_at',
         'cancelled_at',
-        'expected_delivery_date',
         'guest_email',
         'guest_name',
         'guest_phone',
@@ -69,9 +64,6 @@ class Order extends Model
             'out_for_delivery_at' => 'datetime',
             'delivered_at' => 'datetime',
             'cancelled_at' => 'datetime',
-            'payment_collected' => 'boolean',
-            'payment_collected_at' => 'datetime',
-            'expected_delivery_date' => 'date',
         ];
     }
 
@@ -117,11 +109,6 @@ class Order extends Model
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
-    }
-
-    public function deliveryPartner(): BelongsTo
-    {
-        return $this->belongsTo(DeliveryPartner::class);
     }
 
     public function affiliate(): BelongsTo

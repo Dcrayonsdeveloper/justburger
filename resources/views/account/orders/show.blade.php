@@ -63,9 +63,6 @@
                                 <h3 class="text-[14px] font-semibold text-emerald-800">Your order has been delivered!</h3>
                                 <p class="text-[16px] text-emerald-600 mt-0.5">
                                     Delivered on {{ $order->delivered_at ? $order->delivered_at->format('d M Y, h:i A') : 'N/A' }}
-                                    @if($order->payment_collected && ($order->metadata['payment_method'] ?? 'cod') === 'cod')
-                                        &mdash; Payment collected successfully
-                                    @endif
                                 </p>
                             </div>
                         </div>
@@ -268,87 +265,8 @@
                                             <dd class="font-medium text-neutral-700">{{ $order->delivered_at->format('d M Y') }}</dd>
                                         </div>
                                     @endif
-                                    @if($order->expected_delivery_date && !$order->delivered_at && !in_array($order->status, ['cancelled', 'returned']))
-                                        <div class="flex justify-between text-[16px]">
-                                            <dt class="text-neutral-600">Expected By</dt>
-                                            <dd class="font-semibold text-success-700">{{ $order->expected_delivery_date->format('d M Y') }}</dd>
-                                        </div>
-                                    @endif
                                 </dl>
                             </div>
-
-                            {{-- Expected Delivery Banner --}}
-                            @if($order->expected_delivery_date && !$order->delivered_at && !in_array($order->status, ['cancelled', 'returned']))
-                                <div class="bg-success-50 border border-success-100 rounded-xl p-4 flex items-start gap-3">
-                                    <svg class="w-5 h-5 text-success-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    <div>
-                                        <p class="text-[16px] font-semibold text-success-800">Expected Delivery</p>
-                                        <p class="text-[16px] text-success-700 mt-0.5">
-                                            {{ $order->expected_delivery_date->format('l, d M Y') }}
-                                            @if($order->expected_delivery_date->isToday())
-                                                <span class="font-bold">(Today!)</span>
-                                            @elseif($order->expected_delivery_date->isTomorrow())
-                                                <span class="font-bold">(Tomorrow)</span>
-                                            @endif
-                                        </p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Delivery Partner Info --}}
-                            @if($order->deliveryPartner && in_array($order->status, ['shipped', 'out_for_delivery', 'delivered']))
-                                <div class="bg-white rounded-xl border border-neutral-100 p-4">
-                                    <div class="flex items-center gap-2 mb-3">
-                                        <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-                                        </svg>
-                                        <h3 class="text-[16px] font-semibold text-neutral-900">Your Delivery Partner</h3>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-8 h-8 rounded-full bg-[#205258]/10 flex items-center justify-center">
-                                                <svg class="w-4 h-4 text-[#205258]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="text-[16px] font-medium text-neutral-800">{{ $order->deliveryPartner->user->full_name }}</p>
-                                                @if($order->deliveryPartner->vehicle_type)
-                                                    <p class="text-[11px] text-neutral-600">{{ ucfirst($order->deliveryPartner->vehicle_type) }}</p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        @if($order->deliveryPartner->phone)
-                                            <a href="tel:{{ $order->deliveryPartner->phone }}" class="flex items-center gap-1.5 text-[12px] text-primary-600 hover:text-primary-700 font-medium">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                                </svg>
-                                                {{ $order->deliveryPartner->phone }}
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Payment Collected (COD) --}}
-                            @if($order->payment_collected && ($order->metadata['payment_method'] ?? 'cod') === 'cod')
-                                <div class="bg-emerald-50 rounded-xl border border-emerald-100 p-4">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                        <h3 class="text-[16px] font-semibold text-emerald-800">Payment Collected</h3>
-                                    </div>
-                                    <p class="text-[12px] text-emerald-600 mt-1">
-                                        Cash on Delivery payment of @price($order->total) has been collected.
-                                        @if($order->payment_collected_at)
-                                            <br>{{ $order->payment_collected_at->format('d M Y, h:i A') }}
-                                        @endif
-                                    </p>
-                                </div>
-                            @endif
 
                             <!-- Actions -->
                             <div class="bg-white rounded-xl border border-neutral-100 p-4 space-y-2.5">

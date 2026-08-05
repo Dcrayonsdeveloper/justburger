@@ -12,7 +12,6 @@ use App\Models\OrderItem;
 use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\AnalyticsService;
-use App\Services\DelhiveryService;
 use App\Services\StripeOrderService;
 use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
@@ -782,16 +781,6 @@ class CheckoutController extends Controller
             'order_id' => $order->id,
             'recovered_at' => now(),
         ]);
-    }
-
-    /**
-     * Check pincode serviceability via Delhivery API.
-     */
-    public function checkPincode(string $pincode, DelhiveryService $delhivery): JsonResponse
-    {
-        $result = $delhivery->checkPincode($pincode);
-
-        return response()->json($result);
     }
 
     /**

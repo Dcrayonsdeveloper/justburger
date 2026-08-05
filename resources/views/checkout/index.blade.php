@@ -607,11 +607,6 @@
                                         <label class="ck-label">Postcode *</label>
                                         <input type="text" name="shipping_postal_code" x-model="pin" @input="fetchPinData()" value="{{ old('shipping_postal_code') }}" required maxlength="8" autocomplete="postal-code"
                                                class="ck-input" placeholder="E1 6AN">
-                                        <p x-show="pinError" x-text="pinError" class="ck-error" x-cloak></p>
-                                        <p x-show="pinServiceable === true" style="font-size:.68rem;color:#2E7D32;margin-top:.2rem;display:flex;align-items:center;gap:.2rem;" x-cloak>
-                                            <svg style="width:.75rem;height:.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                            Delivery available
-                                        </p>
                                         @error('shipping_postal_code') <p class="ck-error">{{ $message }}</p> @enderror
                                     </div>
                                     <div>
@@ -737,7 +732,6 @@
                                             <label class="ck-label">Postcode *</label>
                                             <input type="text" id="new_addr_pincode" x-model="pin" @input="fetchPinData()" maxlength="8"
                                                    class="ck-input" placeholder="E1 6AN">
-                                            <p x-show="pinError" x-text="pinError" class="ck-error" x-cloak></p>
                                         </div>
                                         <div>
                                             <label class="ck-label">City *</label>
@@ -1213,8 +1207,6 @@
                     pin: '',
                     city: '',
                     state: '',
-                    pinError: '',
-                    pinServiceable: null,
                     pinTimeout: null,
 
                     detectLocation() {
@@ -1278,8 +1270,6 @@
                     },
 
                     fetchPinData() {
-                        this.pinError = '';
-                        this.pinServiceable = null;
                         clearTimeout(this.pinTimeout);
                         if (this.pin.length < 5) return;
 
@@ -1292,17 +1282,6 @@
                                         const po = data[0].PostOffice[0];
                                         if (!this.city) this.city = po.District || po.Division || '';
                                         if (!this.state) this.state = po.State || '';
-                                    }
-                                })
-                                .catch(() => {});
-
-                            // Serviceability check
-                            fetch('/api/check-pincode/' + this.pin)
-                                .then(r => r.json())
-                                .then(data => {
-                                    this.pinServiceable = data.serviceable === true;
-                                    if (!data.serviceable) {
-                                        this.pinError = 'Delivery not available to this postcode';
                                     }
                                 })
                                 .catch(() => {});
@@ -1324,8 +1303,6 @@
                     state: '',
                     line1: '',
                     line2: '',
-                    pinError: '',
-                    pinServiceable: null,
                     pinTimeout: null,
 
                     detectLocation() {
@@ -1375,8 +1352,6 @@
                     },
 
                     fetchPinData() {
-                        this.pinError = '';
-                        this.pinServiceable = null;
                         clearTimeout(this.pinTimeout);
                         if (this.pin.length < 5) return;
 
@@ -1389,14 +1364,6 @@
                                         if (!this.city) this.city = po.District || po.Division || '';
                                         if (!this.state) this.state = po.State || '';
                                     }
-                                })
-                                .catch(() => {});
-
-                            fetch('/api/check-pincode/' + this.pin)
-                                .then(r => r.json())
-                                .then(data => {
-                                    this.pinServiceable = data.serviceable === true;
-                                    if (!data.serviceable) this.pinError = 'Delivery not available to this postcode';
                                 })
                                 .catch(() => {});
                         }, 400);

@@ -24,7 +24,6 @@ class OrderReturn extends Model
         'refund_method',
         'exchange_order_id',
         'processed_by',
-        'pickup_partner_id',
         'approved_at',
         'pickup_scheduled_at',
         'picked_up_at',
@@ -80,11 +79,6 @@ class OrderReturn extends Model
     public function processedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'processed_by');
-    }
-
-    public function pickupPartner(): BelongsTo
-    {
-        return $this->belongsTo(DeliveryPartner::class, 'pickup_partner_id');
     }
 
     public function approve(): void

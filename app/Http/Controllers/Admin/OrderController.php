@@ -6,10 +6,8 @@ use App\Events\OrderDelivered;
 use App\Events\OrderShipped;
 use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
-use App\Models\DeliveryPartner;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -67,14 +65,12 @@ class OrderController extends Controller
             'statusHistory',
             'shipments',
             'coupon',
-            'deliveryPartner.user',
         ]);
 
         $trackingSteps = $order->getTrackingSteps();
         $latestShipment = $order->shipments->first();
-        $activePartners = DeliveryPartner::with('user')->where('is_active', true)->get();
 
-        return view('admin.orders.show', compact('order', 'trackingSteps', 'latestShipment', 'activePartners'));
+        return view('admin.orders.show', compact('order', 'trackingSteps', 'latestShipment'));
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse
@@ -166,45 +162,6 @@ class OrderController extends Controller
         $order->load(['user', 'items.product']);
 
         return view('admin.orders.invoice', compact('order'));
-    }
-
-    public function assignPartner(Request $request, Order $order): RedirectResponse
-    {
-        $validated = $request->validate([
-            'delivery_partner_id' => 'nullable|exists:delivery_partners,id',
-        ]);
-
-        $order->update(['delivery_partner_id' => $validated['delivery_partner_id']]);
-
-        // Also update latest shipment
-        $shipment = $order->shipments()->latest()->first();
-        if ($shipment) {
-            $shipment->update(['delivery_partner_id' => $validated['delivery_partner_id']]);
-        }
-
-        if ($validated['delivery_partner_id']) {
-            $partner = DeliveryPartner::with('user')->find($validated['delivery_partner_id']);
-            $order->statusHistory()->create([
-                'status' => $order->status,
-                'comment' => "Delivery partner assigned: {$partner->user->full_name} ({$partner->partner_id})",
-                'created_by' => auth('admin')->id(),
-            ]);
-        }
-
-        return back()->with('success', 'Delivery partner assigned successfully.');
-    }
-
-    public function setExpectedDelivery(Request $request, Order $order): RedirectResponse
-    {
-        $request->validate([
-            'expected_delivery_date' => 'nullable|date|after_or_equal:today',
-        ]);
-
-        $order->update(['expected_delivery_date' => $request->expected_delivery_date ?: null]);
-
-        return back()->with('success', $request->expected_delivery_date
-            ? 'Expected delivery date set to ' . \Carbon\Carbon::parse($request->expected_delivery_date)->format('M d, Y') . '.'
-            : 'Expected delivery date cleared.');
     }
 
     public function packingSlip(Order $order): View

@@ -154,9 +154,6 @@ class ChatbotController extends Controller
             $prompt .= "## Customer's Recent Orders\n";
             foreach ($orders as $o) {
                 $line = "- Order #{$o['number']}: {$o['status']} | Total: {$o['total']} | Placed: {$o['date']}";
-                if (!empty($o['expected_delivery'])) {
-                    $line .= " | Expected delivery: {$o['expected_delivery']}";
-                }
                 $prompt .= $line . "\n";
             }
             $prompt .= "Direct the customer to Account → Orders for full tracking details.\n\n";
@@ -328,7 +325,6 @@ class ChatbotController extends Controller
                 'status'            => ucfirst(str_replace('_', ' ', $o->status)),
                 'total'             => format_price((float) $o->total),
                 'date'              => $o->created_at->format('d M Y'),
-                'expected_delivery' => $o->expected_delivery_date?->format('d M Y'),
             ])
             ->toArray();
     }

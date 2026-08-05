@@ -9,7 +9,6 @@ class OrderShipment extends Model
 {
     protected $fillable = [
         'order_id',
-        'delivery_partner_id',
         'tracking_number',
         'carrier',
         'carrier_code',
@@ -36,11 +35,6 @@ class OrderShipment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
-    }
-
-    public function deliveryPartner(): BelongsTo
-    {
-        return $this->belongsTo(DeliveryPartner::class);
     }
 
     public function addTrackingEvent(string $status, string $location, ?string $description = null): void

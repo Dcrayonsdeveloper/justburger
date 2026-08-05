@@ -6,7 +6,6 @@ use App\Events\RefundProcessed;
 use App\Events\ReturnRequested;
 use App\Http\Controllers\Controller;
 use App\Models\CreditNote;
-use App\Models\DeliveryPartner;
 use App\Models\OrderReturn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,11 +49,9 @@ class ReturnController extends Controller
 
     public function show(OrderReturn $return): View
     {
-        $return->load(['order', 'order.user', 'items.orderItem.product', 'pickupPartner.user', 'creditNote']);
+        $return->load(['order', 'order.user', 'items.orderItem.product', 'creditNote']);
 
-        $activePartners = DeliveryPartner::with('user')->where('is_active', true)->get();
-
-        return view('admin.returns.show', compact('return', 'activePartners'));
+        return view('admin.returns.show', compact('return'));
     }
 
     public function updateStatus(Request $request, OrderReturn $return): RedirectResponse
@@ -81,22 +78,6 @@ class ReturnController extends Controller
         ReturnRequested::dispatch($return);
 
         return back()->with('success', 'Return status updated');
-    }
-
-    public function assignPartner(Request $request, OrderReturn $return): RedirectResponse
-    {
-        $validated = $request->validate([
-            'pickup_partner_id' => 'nullable|exists:delivery_partners,id',
-        ]);
-
-        $return->update(['pickup_partner_id' => $validated['pickup_partner_id']]);
-
-        if ($validated['pickup_partner_id']) {
-            $partner = DeliveryPartner::with('user')->find($validated['pickup_partner_id']);
-            return back()->with('success', "Pickup partner assigned: {$partner->user->full_name}");
-        }
-
-        return back()->with('success', 'Pickup partner removed');
     }
 
     public function processRefund(Request $request, OrderReturn $return): RedirectResponse

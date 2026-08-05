@@ -85,11 +85,6 @@
                             <a href="{{ route('account.dashboard') }}" class="block px-5 py-3 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#C8102E] transition-colors">Dashboard</a>
                             <a href="{{ route('account.orders.index') }}" class="block px-5 py-3 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#C8102E] transition-colors">My Orders</a>
                             <a href="{{ route('account.profile') }}" class="block px-5 py-3 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#C8102E] transition-colors">Profile Settings</a>
-                            @if(auth()->user()->deliveryPartner)
-                                <a href="{{ route('delivery.login') }}" class="block px-5 py-3 text-sm text-[#C8102E] hover:bg-red-50 font-semibold transition-colors">Delivery Panel</a>
-                            @else
-                                <a href="{{ route('account.become-delivery-partner') }}" class="block px-5 py-3 text-sm text-[#C8102E] hover:bg-red-50 font-semibold transition-colors">Become a Delivery Partner</a>
-                            @endif
                             <hr class="border-neutral-100">
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
