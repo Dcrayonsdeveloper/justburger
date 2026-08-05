@@ -267,6 +267,19 @@
                                     @error('price')
                                         <p class="form-error">{{ $message }}</p>
                                     @enderror
+                                    <p class="text-xs text-neutral-400 mt-1">This is the <strong>Regular</strong> (base) price.</p>
+                                </div>
+                                <div>
+                                    <label for="large_price" class="form-label">Large price <span class="text-neutral-400 font-normal">(optional)</span></label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">£</span>
+                                        <input type="number" name="large_price" id="large_price"
+                                               value="{{ old('large_price', optional($product->variants->firstWhere('name', 'Large'))->price) }}"
+                                               step="0.01" min="0"
+                                               class="form-input w-full pl-7"
+                                               placeholder="e.g. 8.20">
+                                    </div>
+                                    <p class="text-xs text-neutral-400 mt-1">Fill this to add a <strong>Large</strong> size. Leave blank for a single size.</p>
                                 </div>
                                 <div>
                                     <label for="sale_price" class="form-label">Compare at price / MRP</label>
