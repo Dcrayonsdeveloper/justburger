@@ -345,9 +345,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 // Roles & Permissions
                 Route::resource('roles', App\Http\Controllers\Admin\RoleController::class);
             });
-
-            // Stores (POS)
-            Route::resource('stores', App\Http\Controllers\Admin\StoreController::class);
         });
 
         // Storefront / Homepage Manager
