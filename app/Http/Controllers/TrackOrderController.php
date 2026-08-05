@@ -23,7 +23,7 @@ class TrackOrderController extends Controller
 
             $order = Order::where('order_number', $validated['order_number'])
                 ->where('user_id', auth()->id())
-                ->with(['items.product', 'shipments', 'statusHistory', 'deliveryPartner.user'])
+                ->with(['items.product', 'shipments', 'statusHistory'])
                 ->first();
 
             $errorMsg = 'Order not found. Please check your order number.';
@@ -40,7 +40,7 @@ class TrackOrderController extends Controller
                     $q->where('guest_email', $validated['email'])
                       ->orWhereHas('user', fn($u) => $u->where('email', $validated['email']));
                 })
-                ->with(['items.product', 'shipments', 'statusHistory', 'deliveryPartner.user'])
+                ->with(['items.product', 'shipments', 'statusHistory'])
                 ->first();
 
             $errorMsg = 'Order not found. Please check your order number and email.';

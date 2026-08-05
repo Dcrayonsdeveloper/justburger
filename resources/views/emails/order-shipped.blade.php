@@ -25,9 +25,6 @@ View Order Details
 
 **Order Number:** #{{ $order->order_number }}
 **Out for Delivery:** {{ $order->shipped_at ? $order->shipped_at->format('M d, Y \a\t h:i A') : now()->format('M d, Y \a\t h:i A') }}
-@if($order->expected_delivery_date)
-**Expected Delivery:** {{ $order->expected_delivery_date->format('M d, Y') }}
-@endif
 
 @component('mail::table')
 | Item | Qty | Price |

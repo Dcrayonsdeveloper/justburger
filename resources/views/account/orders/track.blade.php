@@ -38,25 +38,6 @@
 
                 {{-- Order Tracking Card --}}
                 <div class="bg-white border border-neutral-100 rounded-xl mb-6 overflow-hidden">
-                    {{-- Expected Delivery Strip --}}
-                    @if($order->expected_delivery_date && !$order->delivered_at && !in_array($order->status, ['cancelled', 'returned']))
-                        <div class="bg-success-50 border-b border-success-100 px-5 py-3 flex items-center gap-3">
-                            <svg class="w-4.5 h-4.5 text-success-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs font-medium text-success-600">Estimated Delivery:</span>
-                                <span class="text-sm font-bold text-success-800">{{ $order->expected_delivery_date->format('l, d M Y') }}</span>
-                                @if($order->expected_delivery_date->isToday())
-                                    <span class="text-xs font-bold text-white bg-success-500 px-2 py-0.5 rounded-full">Today!</span>
-                                @elseif($order->expected_delivery_date->isTomorrow())
-                                    <span class="text-xs font-semibold text-success-700 bg-success-100 px-2 py-0.5 rounded-full">Tomorrow</span>
-                                @else
-                                    <span class="text-xs text-success-600">in {{ today()->diffInDays($order->expected_delivery_date) }} days</span>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
                     <div class="p-5 sm:p-6">
                         @if(in_array($order->status, ['cancelled', 'returned']))
                             {{-- Cancelled/Returned State --}}
@@ -206,36 +187,6 @@
                         @endif
                     </div>
                 </div>
-
-                {{-- Delivery Partner Info --}}
-                @if($order->deliveryPartner && in_array($order->status, ['shipped', 'out_for_delivery', 'delivered']))
-                    <div class="bg-white border border-neutral-100 rounded-xl mb-6">
-                        <div class="px-5 py-4 border-b border-neutral-100">
-                            <h2 class="text-[15px] font-semibold text-neutral-900">Your Delivery Partner</h2>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
-                                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-                                    </svg>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-semibold text-neutral-900">{{ $order->deliveryPartner->user->full_name }}</p>
-                                    @if($order->deliveryPartner->vehicle_type)
-                                        <p class="text-xs text-neutral-600 mt-0.5">{{ ucfirst($order->deliveryPartner->vehicle_type) }}{{ $order->deliveryPartner->vehicle_number ? ' - ' . $order->deliveryPartner->vehicle_number : '' }}</p>
-                                    @endif
-                                </div>
-                                @if($order->deliveryPartner->phone)
-                                    <a href="tel:{{ $order->deliveryPartner->phone }}" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors shrink-0">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                        {{ $order->deliveryPartner->phone }}
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endif
 
                 {{-- Order Items Summary --}}
                 <div class="bg-white border border-neutral-100 rounded-xl overflow-hidden">

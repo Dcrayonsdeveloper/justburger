@@ -26,9 +26,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
-            if ($request->is('delivery/*') || $request->is('delivery')) {
-                return route('delivery.login');
-            }
             if ($request->is('affiliate/*') || $request->is('affiliate')) {
                 return route('affiliate.login');
             }
@@ -44,7 +41,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'admin.section' => \App\Http\Middleware\CheckAdminSection::class,
-            'delivery' => \App\Http\Middleware\EnsureUserIsDeliveryPartner::class,
             'affiliate' => \App\Http\Middleware\EnsureUserIsAffiliate::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'cache.response' => \App\Http\Middleware\CacheResponse::class,

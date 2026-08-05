@@ -29,7 +29,7 @@ class OrderController extends Controller
         // Ensure user owns this order
         abort_if($order->user_id !== $request->user()->id, 403);
 
-        $order->load(['items.product', 'statusHistory', 'coupon', 'deliveryPartner.user']);
+        $order->load(['items.product', 'statusHistory', 'coupon']);
 
         return view('account.orders.show', compact('order'));
     }
@@ -70,7 +70,7 @@ class OrderController extends Controller
         // Ensure user owns this order
         abort_if($order->user_id !== $request->user()->id, 403);
 
-        $order->load(['statusHistory', 'shipments', 'items.product', 'deliveryPartner.user']);
+        $order->load(['statusHistory', 'shipments', 'items.product']);
 
         $trackingSteps = $order->getTrackingSteps();
         $latestShipment = $order->shipments->first();

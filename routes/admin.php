@@ -100,21 +100,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::post('/{order}/ship', [App\Http\Controllers\Admin\OrderController::class, 'ship'])->name('ship');
                 Route::get('/{order}/invoice', [App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('invoice');
                 Route::get('/{order}/packing-slip', [App\Http\Controllers\Admin\OrderController::class, 'packingSlip'])->name('packing-slip');
-                Route::post('/{order}/assign-partner', [App\Http\Controllers\Admin\OrderController::class, 'assignPartner'])->name('assign-partner');
-                Route::put('/{order}/expected-delivery', [App\Http\Controllers\Admin\OrderController::class, 'setExpectedDelivery'])->name('expected-delivery');
-            });
-
-            // Delivery (Delhivery Integration)
-            Route::prefix('delivery')->name('delivery.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Admin\DeliveryController::class, 'index'])->name('index');
-                Route::post('/orders/{order}/book', [App\Http\Controllers\Admin\DeliveryController::class, 'book'])->name('book');
-                Route::get('/orders/{order}/track', [App\Http\Controllers\Admin\DeliveryController::class, 'track'])->name('track');
-                Route::post('/orders/{order}/cancel', [App\Http\Controllers\Admin\DeliveryController::class, 'cancel'])->name('cancel');
-                Route::get('/orders/{order}/label', [App\Http\Controllers\Admin\DeliveryController::class, 'label'])->name('label');
-                Route::post('/orders/{order}/ndr', [App\Http\Controllers\Admin\DeliveryController::class, 'ndrAction'])->name('ndr');
-                Route::post('/pickup', [App\Http\Controllers\Admin\DeliveryController::class, 'requestPickup'])->name('pickup');
-                Route::get('/check-pincode', [App\Http\Controllers\Admin\DeliveryController::class, 'checkPincode'])->name('check-pincode');
-                Route::get('/calculate-cost', [App\Http\Controllers\Admin\DeliveryController::class, 'calculateCost'])->name('calculate-cost');
             });
 
             // Returns
@@ -123,7 +108,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('/{return}', [App\Http\Controllers\Admin\ReturnController::class, 'show'])->name('show');
                 Route::put('/{return}/status', [App\Http\Controllers\Admin\ReturnController::class, 'updateStatus'])->name('status');
                 Route::post('/{return}/refund', [App\Http\Controllers\Admin\ReturnController::class, 'processRefund'])->name('refund');
-                Route::post('/{return}/assign-partner', [App\Http\Controllers\Admin\ReturnController::class, 'assignPartner'])->name('assign-partner');
             });
 
             // Credit Notes
@@ -195,12 +179,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Staff (admin-only)
         Route::middleware('admin.section:staff')->group(function () {
             Route::resource('staff', App\Http\Controllers\Admin\StaffController::class);
-        });
-
-        // Delivery Partners
-        Route::middleware('admin.section:delivery_partners')->group(function () {
-            Route::resource('delivery-partners', App\Http\Controllers\Admin\DeliveryPartnerController::class);
-            Route::put('/delivery-partners/{deliveryPartner}/toggle-status', [App\Http\Controllers\Admin\DeliveryPartnerController::class, 'toggleStatus'])->name('delivery-partners.toggle-status');
         });
 
         // Marketing

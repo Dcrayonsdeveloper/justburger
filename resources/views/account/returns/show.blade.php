@@ -187,40 +187,6 @@
                         </div>
                     </div>
 
-                    {{-- Pickup Partner Info --}}
-                    @if($return->pickupPartner && in_array($return->status, ['pickup_scheduled', 'picked_up', 'received', 'processed', 'completed']))
-                        <div class="bg-white rounded-xl border border-neutral-200 mt-4 overflow-hidden">
-                            <div class="px-5 py-3 border-b border-neutral-100">
-                                <h2 class="text-sm font-bold text-neutral-900">Pickup Partner</h2>
-                            </div>
-                            <div class="px-5 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-[#205258]/10 rounded-full flex items-center justify-center shrink-0">
-                                        <svg class="w-5 h-5 text-[#205258]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-semibold text-neutral-900">{{ $return->pickupPartner->user->full_name }}</p>
-                                        @if($return->pickupPartner->phone)
-                                            <a href="tel:{{ $return->pickupPartner->phone }}" class="text-xs text-[#205258] hover:text-[#1b454a]">{{ $return->pickupPartner->phone }}</a>
-                                        @endif
-                                    </div>
-                                </div>
-                                @if($return->pickup_scheduled_at || $return->picked_up_at)
-                                    <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600">
-                                        @if($return->pickup_scheduled_at)
-                                            <span>Scheduled: <span class="font-medium text-neutral-700">{{ $return->pickup_scheduled_at->format('M d, Y') }}</span></span>
-                                        @endif
-                                        @if($return->picked_up_at)
-                                            <span>Picked up: <span class="font-medium text-neutral-700">{{ $return->picked_up_at->format('M d, Y') }}</span></span>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-
                     {{-- Refund Completed --}}
                     @if($return->status === 'completed' && $return->refund_amount)
                         <div class="bg-emerald-50 border border-emerald-200 rounded-xl mt-4 p-4">

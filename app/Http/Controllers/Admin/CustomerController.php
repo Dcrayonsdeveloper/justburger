@@ -58,7 +58,7 @@ class CustomerController extends Controller
 
     public function show(User $customer): View
     {
-        abort_if(!in_array($customer->role, ['customer', 'delivery_partner']), 404);
+        abort_if(!in_array($customer->role, ['customer']), 404);
 
         $customer->load(['orders.items', 'addresses', 'reviews']);
 
@@ -77,14 +77,14 @@ class CustomerController extends Controller
 
     public function edit(User $customer): View
     {
-        abort_if(!in_array($customer->role, ['customer', 'delivery_partner']), 404);
+        abort_if(!in_array($customer->role, ['customer']), 404);
 
         return view('admin.customers.edit', compact('customer'));
     }
 
     public function update(Request $request, User $customer): RedirectResponse
     {
-        abort_if(!in_array($customer->role, ['customer', 'delivery_partner']), 404);
+        abort_if(!in_array($customer->role, ['customer']), 404);
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -104,7 +104,7 @@ class CustomerController extends Controller
 
     public function toggleStatus(User $customer): RedirectResponse
     {
-        abort_if(!in_array($customer->role, ['customer', 'delivery_partner']), 404);
+        abort_if(!in_array($customer->role, ['customer']), 404);
 
         $customer->update(['is_active' => !$customer->is_active]);
 
@@ -115,7 +115,7 @@ class CustomerController extends Controller
 
     public function orders(User $customer): View
     {
-        abort_if(!in_array($customer->role, ['customer', 'delivery_partner']), 404);
+        abort_if(!in_array($customer->role, ['customer']), 404);
 
         $perPage = request()->input('per_page', 10);
         $orders = $customer->orders()

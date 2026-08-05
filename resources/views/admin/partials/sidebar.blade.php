@@ -60,14 +60,6 @@
         </div>
         @endif
 
-        <!-- Delivery -->
-        @if($user->canAccessSection('orders'))
-        <a href="{{ route('admin.delivery.index') }}" class="{{ $linkClass }} {{ $isActive(['admin.delivery.*']) ? $activeClass : $normalClass }}">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
-            Delivery
-        </a>
-        @endif
-
         <!-- Menu (Products) -->
         @if($user->canAccessSection('catalog'))
         <div x-data="{ open: {{ $isActive(['admin.products.*','admin.categories.*','admin.toppings.*']) ? 'true' : 'false' }} }">
@@ -150,14 +142,9 @@
         </div>
 
         <!-- Staff -->
-        @if($user->canAccessSection('staff') || $user->canAccessSection('delivery_partners'))
+        @if($user->canAccessSection('staff'))
         <div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,.08)">
-            @if($user->canAccessSection('staff'))
             <a href="{{ route('admin.staff.index') }}" class="{{ $subClass }} mb-px {{ $isActive('admin.staff.*') ? 'active' : '' }}">Staff</a>
-            @endif
-            @if($user->canAccessSection('delivery_partners'))
-            <a href="{{ route('admin.delivery-partners.index') }}" class="{{ $subClass }} mb-px {{ $isActive('admin.delivery-partners.*') ? 'active' : '' }}">Delivery Partners</a>
-            @endif
         </div>
         @endif
     </nav>

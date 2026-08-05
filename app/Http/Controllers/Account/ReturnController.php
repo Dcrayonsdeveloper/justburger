@@ -103,7 +103,7 @@ class ReturnController extends Controller
             abort(403);
         }
 
-        $return->load(['order', 'items.orderItem.product:id,name,slug', 'pickupPartner.user']);
+        $return->load(['order', 'items.orderItem.product:id,name,slug']);
 
         return view('account.returns.show', compact('return'));
     }

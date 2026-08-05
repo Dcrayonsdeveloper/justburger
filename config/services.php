@@ -87,10 +87,6 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URL', '/auth/google/callback'),
     ],
 
-    'delhivery' => [
-        'token' => env('DELHIVERY_API_TOKEN', 'f8095c3d8637611b23bf4af72743cc7586e5b256'),
-    ],
-
     'webpush' => [
         'public_key' => env('VAPID_PUBLIC_KEY'),
         'private_key' => env('VAPID_PRIVATE_KEY'),

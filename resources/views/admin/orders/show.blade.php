@@ -250,7 +250,6 @@
                                 <select name="carrier" class="form-select w-full">
                                     <option value="">Select carrier</option>
                                     <option value="BlueDart">BlueDart</option>
-                                    <option value="Delhivery">Delhivery</option>
                                     <option value="DTDC">DTDC</option>
                                     <option value="Ecom Express">Ecom Express</option>
                                     <option value="India Post">India Post</option>
@@ -277,105 +276,6 @@
                     </form>
                 </div>
             </div>
-
-            <!-- Delhivery Shipping -->
-            @if(in_array($order->status, ['confirmed', 'packed', 'shipped', 'out_for_delivery']))
-                <div class="card overflow-hidden">
-                    <div class="px-5 py-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Delhivery Shipping</h2>
-                    </div>
-                    <div class="p-5">
-                        @if($order->tracking_number && $order->carrier === 'Delhivery')
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-900">Shipment Booked</p>
-                                    <p class="text-xs text-neutral-600">AWB: <span class="font-mono font-medium text-primary-600">{{ $order->tracking_number }}</span></p>
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <a href="{{ route('admin.delivery.label', $order) }}" class="btn btn-outline text-xs flex-1">Download Label</a>
-                                <button onclick="fetch('{{ route('admin.delivery.track', $order) }}').then(r=>r.json()).then(d=>alert(d.success ? 'Status: ' + d.status + '\nLocation: ' + d.status_location : d.message))"
-                                        class="btn btn-outline text-xs flex-1">Track</button>
-                            </div>
-                            <form action="{{ route('admin.delivery.cancel', $order) }}" method="POST" class="mt-2" onsubmit="return confirm('Cancel Delhivery shipment?')">
-                                @csrf
-                                <button type="submit" class="text-xs text-red-500 hover:underline">Cancel Shipment</button>
-                            </form>
-                        @elseif(!$order->tracking_number)
-                            <form action="{{ route('admin.delivery.book', $order) }}" method="POST" onsubmit="return confirm('Book Delhivery shipment for this order?')">
-                                @csrf
-                                <button type="submit" class="btn btn-primary w-full">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25"/></svg>
-                                    Book via Delhivery
-                                </button>
-                            </form>
-                            <p class="text-[10px] text-neutral-500 mt-2 text-center">One-click shipment booking with auto-tracking</p>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            <!-- Assign Delivery Partner -->
-            @if(in_array($order->status, ['packed', 'shipped', 'out_for_delivery']))
-                <div class="card overflow-hidden">
-                    <div class="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
-                        <h2 class="font-semibold text-neutral-900">Delivery Partner</h2>
-                        @if($order->deliveryPartner)
-                            <span class="badge badge-success">Assigned</span>
-                        @endif
-                    </div>
-                    <div class="p-5">
-                        @if($order->deliveryPartner)
-                            <div class="flex items-center gap-3 mb-4 p-3 bg-neutral-50 rounded-lg">
-                                <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center">
-                                    <span class="text-sm font-bold text-primary-600">{{ strtoupper(substr($order->deliveryPartner->user->first_name, 0, 1) . substr($order->deliveryPartner->user->last_name, 0, 1)) }}</span>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-900">{{ $order->deliveryPartner->user->full_name }}</p>
-                                    <p class="text-xs text-neutral-600">{{ $order->deliveryPartner->partner_id }} &middot; {{ $order->deliveryPartner->phone }}</p>
-                                </div>
-                            </div>
-                        @endif
-                        <form action="{{ route('admin.orders.assign-partner', $order) }}" method="POST" class="space-y-3">
-                            @csrf
-                            <div>
-                                <label class="form-label">{{ $order->deliveryPartner ? 'Change Partner' : 'Select Partner' }}</label>
-                                <select name="delivery_partner_id" class="form-select w-full">
-                                    <option value="">-- None --</option>
-                                    @foreach($activePartners as $partner)
-                                        <option value="{{ $partner->id }}" @selected($order->delivery_partner_id == $partner->id)>
-                                            {{ $partner->user->full_name }} ({{ $partner->partner_id }}) - {{ ucfirst($partner->vehicle_type) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-full">
-                                {{ $order->delivery_partner_id ? 'Update Partner' : 'Assign Partner' }}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @elseif($order->deliveryPartner)
-                <div class="card overflow-hidden">
-                    <div class="px-5 py-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Delivery Partner</h2>
-                    </div>
-                    <div class="p-5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center">
-                                <span class="text-sm font-bold text-primary-600">{{ strtoupper(substr($order->deliveryPartner->user->first_name, 0, 1) . substr($order->deliveryPartner->user->last_name, 0, 1)) }}</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-neutral-900">{{ $order->deliveryPartner->user->full_name }}</p>
-                                <p class="text-xs text-neutral-600">{{ $order->deliveryPartner->partner_id }} &middot; {{ $order->deliveryPartner->phone }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
 
             <!-- Customer Info -->
             <div class="card overflow-hidden">
@@ -432,20 +332,6 @@
                         @endphp
                         <span class="badge {{ $payClass }}">{{ ucfirst($order->payment_status) }}</span>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-neutral-600">Payment Collected</span>
-                        @if($order->payment_collected)
-                            <span class="badge badge-success">Yes</span>
-                        @else
-                            <span class="badge badge-warning">No</span>
-                        @endif
-                    </div>
-                    @if($order->payment_collected_at)
-                        <div class="flex justify-between items-center">
-                            <span class="text-neutral-600">Collected At</span>
-                            <span class="font-medium text-neutral-700">{{ $order->payment_collected_at->format('M d, Y h:i A') }}</span>
-                        </div>
-                    @endif
                     @if($latestShipment)
                         <div class="flex justify-between items-center">
                             <span class="text-neutral-600">Carrier</span>
@@ -467,51 +353,6 @@
                             <span class="text-neutral-600">Delivered</span>
                             <span class="font-medium text-neutral-700">{{ $order->delivered_at->format('M d, Y') }}</span>
                         </div>
-                    @endif
-                </div>
-                {{-- Expected Delivery Date --}}
-                <div class="px-5 py-4 border-t border-neutral-200" x-data="{ editing: false }">
-                    <div x-show="!editing" class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-neutral-600">Expected Delivery</p>
-                            @if($order->expected_delivery_date)
-                                <p class="text-sm font-semibold text-success-700 mt-0.5">
-                                    {{ $order->expected_delivery_date->format('D, M d, Y') }}
-                                    @if($order->expected_delivery_date->isToday())
-                                        <span class="text-xs font-normal text-success-500">(Today)</span>
-                                    @elseif($order->expected_delivery_date->isTomorrow())
-                                        <span class="text-xs font-normal text-success-500">(Tomorrow)</span>
-                                    @endif
-                                </p>
-                            @else
-                                <p class="text-sm text-neutral-600 mt-0.5">Not set</p>
-                            @endif
-                        </div>
-                        @if(!in_array($order->status, ['delivered', 'cancelled', 'returned']))
-                            <button @click="editing = true" class="text-xs text-primary-600 hover:text-primary-700 font-medium">
-                                {{ $order->expected_delivery_date ? 'Change' : 'Set Date' }}
-                            </button>
-                        @endif
-                    </div>
-                    @if(!in_array($order->status, ['delivered', 'cancelled', 'returned']))
-                        <form x-show="editing" x-cloak action="{{ route('admin.orders.expected-delivery', $order) }}" method="POST" class="space-y-2 mt-2">
-                            @csrf
-                            @method('PUT')
-                            <label class="form-label">Expected Delivery Date</label>
-                            <input type="date" name="expected_delivery_date"
-                                   value="{{ $order->expected_delivery_date?->format('Y-m-d') }}"
-                                   min="{{ today()->format('Y-m-d') }}"
-                                   class="form-input w-full">
-                            <div class="flex gap-2 pt-1">
-                                <button type="submit" class="btn btn-primary btn-sm flex-1 text-xs">Save</button>
-                                <button type="button" @click="editing = false" class="btn btn-secondary btn-sm text-xs">Cancel</button>
-                            </div>
-                            @if($order->expected_delivery_date)
-                                <button type="submit" name="expected_delivery_date" value="" class="w-full text-xs text-error-500 hover:text-error-600 text-center py-1">
-                                    Clear date
-                                </button>
-                            @endif
-                        </form>
                     @endif
                 </div>
             </div>

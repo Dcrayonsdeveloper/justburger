@@ -19,7 +19,6 @@ Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))-
 // WhatsApp Webhook
 Route::get('/webhook/whatsapp', [App\Http\Controllers\WhatsAppWebhookController::class, 'verify']);
 Route::post('/webhook/whatsapp', [App\Http\Controllers\WhatsAppWebhookController::class, 'handle']);
-Route::post('/webhook/delhivery', [App\Http\Controllers\DelhiveryWebhookController::class, 'handle']);
 
 // XML Sitemap
 Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
@@ -138,12 +137,6 @@ Route::middleware(['guest', 'throttle:10,1'])->group(function () {
     Route::post('/password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
-// Pincode Serviceability Check (public AJAX)
-Route::get('/api/check-pincode/{pincode}', [App\Http\Controllers\CheckoutController::class, 'checkPincode'])
-    ->where('pincode', '[0-9]{6}')
-    ->middleware('throttle:30,1')
-    ->name('pincode.check');
-
 // Abandoned Checkout Capture (AJAX - captures email/phone before form submit)
 Route::post('/api/abandoned-capture', [App\Http\Controllers\CheckoutController::class, 'captureAbandoned'])
     ->middleware('throttle:20,1')
@@ -209,11 +202,6 @@ Route::middleware('auth')->group(function () {
         // Notification Preferences
         Route::get('/notification-preferences', [App\Http\Controllers\Account\NotificationPreferenceController::class, 'edit'])->name('notification-preferences');
         Route::put('/notification-preferences', [App\Http\Controllers\Account\NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
-
-        // Become a Delivery Partner
-        Route::get('/become-delivery-partner', [App\Http\Controllers\Account\DeliveryPartnerRegistrationController::class, 'create'])->name('become-delivery-partner');
-        Route::post('/become-delivery-partner', [App\Http\Controllers\Account\DeliveryPartnerRegistrationController::class, 'store'])->name('become-delivery-partner.store');
-        Route::post('/become-delivery-partner/documents', [App\Http\Controllers\Account\DeliveryPartnerRegistrationController::class, 'uploadDocuments'])->name('become-delivery-partner.documents');
     });
 });
 
@@ -285,9 +273,6 @@ require __DIR__.'/admin.php';
 
 // Load Seller Routes
 require __DIR__.'/seller.php';
-
-// Load Delivery Partner Routes
-require __DIR__.'/delivery.php';
 
 // Load Affiliate Routes
 require __DIR__.'/affiliate.php';
