@@ -376,7 +376,15 @@
         ];
     @endphp
 
-    <div class="dish-page">
+    @php
+        $sizeVariants = $product->variants->where('is_active', true)->values();
+        $sizes = $sizeVariants->map(fn ($v) => ['id' => $v->id, 'name' => $v->name, 'price' => (float) $v->price])->values();
+        $regularVariant = $sizeVariants->firstWhere('name', 'Regular') ?? $sizeVariants->first();
+        $defaultVariantId = $regularVariant?->id;
+        $basePrice = $regularVariant ? (float) $regularVariant->price : (float) $product->price;
+    @endphp
+    <div class="dish-page"
+         x-data="{ sizes: {{ \Illuminate\Support\Js::from($sizes) }}, sel: { variantId: {{ $defaultVariantId ? $defaultVariantId : 'null' }}, unitPrice: {{ $basePrice }} } }">
 
         {{-- Breadcrumb --}}
         <div class="dish-bc-bar">
@@ -468,10 +476,22 @@
 
                 {{-- Order panel --}}
                 <div class="order-panel" x-data="{ qty:1, adding:false, added:false }">
+                    {{-- Size selector (Regular / Large) --}}
+                    <template x-if="sizes.length > 1">
+                        <div style="display:flex;gap:.5rem;margin-bottom:.9rem;">
+                            <template x-for="s in sizes" :key="s.id">
+                                <button type="button" @click="sel.variantId = s.id; sel.unitPrice = s.price"
+                                        style="flex:1;padding:.6rem .5rem;border:2px solid rgba(0,0,0,.12);border-radius:.7rem;background:#fff;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .15s;"
+                                        :style="sel.variantId === s.id ? { borderColor:'#C8102E', background:'#fff5f5', color:'#C8102E' } : {}">
+                                    <span x-text="s.name"></span> · £<span x-text="s.price.toFixed(2)"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
                     <div style="display:flex;align-items:center;justify-content:space-between;">
                         <div>
                             <div class="dish-price-tag">
-                                @price($product->price)
+                                £<span x-text="sel.unitPrice.toFixed(2)"></span>
                                 @if($product->compare_at_price && $product->compare_at_price > $product->price)
                                     <span class="dish-old-price">@price($product->compare_at_price)</span>
                                     <span class="dish-discount-badge">{{ round((1 - $product->price / $product->compare_at_price) * 100) }}% OFF</span>
@@ -489,12 +509,12 @@
 
                     {{-- Add to Basket --}}
                     @if($product->stock_quantity > 0)
-                    <button @click="$store.toppingsModal.open({{ $product->id }}, qty)"
+                    <button @click="$store.toppingsModal.open({{ $product->id }}, qty, sel.variantId)"
                             class="btn-add">
                         <svg style="width:18px;height:18px;flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                         </svg>
-                        <span>Add to Basket — £<span x-text="({{ (float) $product->price }} * qty).toFixed(2)"></span></span>
+                        <span>Add to Basket — £<span x-text="(sel.unitPrice * qty).toFixed(2)"></span></span>
                     </button>
                     @else
                     <div style="padding:.75rem;background:#fef2f2;border-radius:99px;text-align:center;font-size:.88rem;font-weight:600;color:#C8102E;">
@@ -737,7 +757,7 @@
              :class="show ? 'visible' : ''">
             <div class="mbb-info">
                 <div class="mbb-name">{{ $product->name }}</div>
-                <div class="mbb-price">@price($product->price)</div>
+                <div class="mbb-price">£<span x-text="sel.unitPrice.toFixed(2)"></span></div>
             </div>
             <div class="mbb-qty">
                 <button type="button" class="mbb-qty-btn" @click="qty > 1 ? qty-- : null">-</button>
@@ -745,8 +765,8 @@
                 <button type="button" class="mbb-qty-btn" @click="qty < 20 ? qty++ : null">+</button>
             </div>
             <button class="mbb-add-btn"
-                    @click="$store.toppingsModal.open({{ $product->id }}, qty)">
-                <span x-text="'Add £' + ({{ (float) $product->price }} * qty).toFixed(2)"></span>
+                    @click="$store.toppingsModal.open({{ $product->id }}, qty, sel.variantId)">
+                <span x-text="'Add £' + (sel.unitPrice * qty).toFixed(2)"></span>
             </button>
         </div>
         @endif
