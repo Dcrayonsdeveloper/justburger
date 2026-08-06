@@ -136,8 +136,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Brands
             Route::resource('brands', App\Http\Controllers\Admin\BrandController::class);
 
-            // Toppings
-            Route::resource('toppings', App\Http\Controllers\Admin\ToppingController::class);
+            // Customize (toppings) — single-screen manager
+            Route::get('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'index'])->name('customize.index');
+            Route::post('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'store'])->name('customize.store');
+            Route::put('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'update'])->name('customize.update');
+            Route::delete('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'destroy'])->name('customize.destroy');
 
             // Attributes
             Route::resource('attributes', App\Http\Controllers\Admin\AttributeController::class);

@@ -16,6 +16,7 @@ class Topping extends Model
         'slug',
         'price',
         'group',
+        'is_preselected',
         'is_active',
         'position',
     ];
@@ -24,8 +25,18 @@ class Topping extends Model
     {
         return [
             'price' => 'decimal:2',
+            'is_preselected' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Pre-selected toppings are included with the product at no charge, so a
+     * price on one would never be collected. Keep the data honest.
+     */
+    public function isFree(): bool
+    {
+        return $this->is_preselected || (float) $this->price <= 0;
     }
 
     public function getSlugOptions(): SlugOptions
