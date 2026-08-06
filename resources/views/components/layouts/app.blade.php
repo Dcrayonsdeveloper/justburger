@@ -314,9 +314,6 @@
     <!-- Header -->
     @include('partials.header')
 
-    <!-- Mobile Search -->
-    @include('partials.mobile-search')
-
     <!-- Notify Stock Listener -->
     <div x-data @notify-stock.window="$store.toast.success('We\'ll notify you when this item is back in stock!')"></div>
 

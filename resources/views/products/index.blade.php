@@ -61,6 +61,10 @@
             box-shadow:0 0 0 3px rgba(200,16,46,.12);
         }
         .menu-search input::-webkit-search-cancel-button { cursor:pointer; }
+        /* Full width on mobile — this is the only search box on the site */
+        @media(max-width:1023px){
+            .menu-search { flex-basis:100%; max-width:none; }
+        }
 
         /* Category tabs */
         .cat-tabs {
@@ -295,7 +299,8 @@
     </x-slot>
 
     @php
-        $activeCat = request('category');
+        $activeCat  = request('category');
+        $searchTerm = trim((string) request('q'));
         $metaCat   = $activeCat ? ($categories->firstWhere('slug', $activeCat)?->name ?? null) : null;
         $freeThreshold = \App\Models\Setting::get('free_delivery_threshold', 20);
     @endphp
@@ -315,16 +320,28 @@
                         <h1 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(1.6rem,4vw,2.2rem);text-transform:uppercase;letter-spacing:.04em;color:#111111;line-height:1.1;">
                             {{ $metaCat ?? 'Our Full Menu' }}
                         </h1>
-                        <p style="font-size:.82rem;color:rgba(0,0,0,.42);margin-top:.15rem;">{{ $products->total() }} items</p>
+                        @if($searchTerm)
+                            <p style="font-size:.82rem;color:rgba(0,0,0,.42);margin-top:.15rem;">
+                                {{ $products->total() }} {{ Str::plural('result', $products->total()) }} for
+                                <span style="color:#111111;font-weight:600;">"{{ $searchTerm }}"</span>
+                                <a href="{{ route('products.index', request()->except(['q','page'])) }}"
+                                   style="color:#C8102E;font-weight:600;text-decoration:none;margin-left:.35rem;">Clear</a>
+                            </p>
+                        @else
+                            <p style="font-size:.82rem;color:rgba(0,0,0,.42);margin-top:.15rem;">{{ $products->total() }} items</p>
+                        @endif
                     </div>
-                    <form action="{{ route('search') }}" method="GET" class="menu-search">
+                    <form action="{{ route('products.index') }}" method="GET" class="menu-search" id="menu-search">
                         <svg class="menu-search-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        <input type="search" name="q" value="{{ request('q') }}"
+                        <input type="search" name="q" id="menu-search-input" value="{{ request('q') }}"
                                placeholder="Search the menu..."
                                autocomplete="off" enterkeyhint="search"
                                aria-label="Search the menu">
+                        @if(request()->filled('sort'))
+                            <input type="hidden" name="sort" value="{{ request('sort') }}">
+                        @endif
                     </form>
                 </div>
             </div>
@@ -350,6 +367,20 @@
                     active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
                 }
             });
+
+            // Arriving from the header / bottom-bar search icon (#menu-search):
+            // scroll the box into view and focus it.
+            (function () {
+                function focusSearch() {
+                    if (window.location.hash !== '#menu-search') return;
+                    var input = document.getElementById('menu-search-input');
+                    if (!input) return;
+                    input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    input.focus({ preventScroll: true });
+                }
+                document.addEventListener('DOMContentLoaded', focusSearch);
+                window.addEventListener('hashchange', focusSearch);
+            })();
         </script>
 
         {{-- ── Main layout ── --}}
@@ -363,7 +394,7 @@
                     <div style="display:flex;align-items:center;gap:.75rem;padding:.55rem 1.25rem;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:.75rem .75rem 0 0;border-bottom:none;">
                         <span style="font-size:.78rem;color:rgba(0,0,0,.38);margin-right:auto;">{{ $products->total() }} items</span>
                         @if(request()->hasAny(['category','min_price','max_price','rating','in_stock','on_sale']))
-                        <a href="{{ route('products.index', request()->only(['category','sort'])) }}"
+                        <a href="{{ route('products.index', request()->only(['category','sort','q'])) }}"
                            style="font-size:.75rem;color:#C8102E;font-weight:600;text-decoration:none;">Clear filters</a>
                         @endif
                         <div style="display:flex;align-items:center;gap:.4rem;">
@@ -476,7 +507,11 @@
                             </svg>
                         </div>
                         <h3 style="font-size:1rem;font-weight:700;color:#111111;margin-bottom:.3rem;">Nothing found</h3>
-                        <p style="font-size:.83rem;color:rgba(0,0,0,.38);margin-bottom:1rem;">Try a different category.</p>
+                        @if($searchTerm)
+                            <p style="font-size:.83rem;color:rgba(0,0,0,.38);margin-bottom:1rem;">No menu items match &ldquo;{{ $searchTerm }}&rdquo;. Try a shorter word.</p>
+                        @else
+                            <p style="font-size:.83rem;color:rgba(0,0,0,.38);margin-bottom:1rem;">Try a different category.</p>
+                        @endif
                         <a href="{{ route('products.index') }}" style="display:inline-flex;align-items:center;padding:.55rem 1.25rem;background:#C8102E;color:#fff;font-weight:700;font-size:.83rem;border-radius:99px;text-decoration:none;">
                             View All Items
                         </a>

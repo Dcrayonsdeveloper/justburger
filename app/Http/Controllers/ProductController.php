@@ -21,6 +21,23 @@ class ProductController extends Controller
             ->where('is_active', true)
             ->with(['category', 'brand', 'primaryImage']);
 
+        // Text search — handled here so searching stays on the menu instead of
+        // bouncing the visitor to a separate results page.
+        if ($request->filled('q')) {
+            $term = trim($request->get('q'));
+
+            if (config('scout.driver')) {
+                $query->whereIn('id', Product::search($term)->keys());
+            } else {
+                $query->where(function ($q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%")
+                      ->orWhere('short_description', 'like', "%{$term}%")
+                      ->orWhere('description', 'like', "%{$term}%")
+                      ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', "%{$term}%"));
+                });
+            }
+        }
+
         // Category filter
         if ($request->filled('category')) {
             $query->whereHas('category', function ($q) use ($request) {
