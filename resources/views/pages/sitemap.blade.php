@@ -43,7 +43,7 @@
                     </h2>
                     <ul class="space-y-1.5 text-sm">
                         @foreach($categories as $category)
-                            <li><a href="{{ route('categories.show', $category->slug) }}" class="text-[#007185] hover:text-[#C7511F] hover:underline">{{ $category->name }}</a></li>
+                            <li><a href="{{ route('products.index', ['category' => $category->slug]) }}" class="text-[#007185] hover:text-[#C7511F] hover:underline">{{ $category->name }}</a></li>
                         @endforeach
                     </ul>
                 </div>
