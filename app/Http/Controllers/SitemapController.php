@@ -146,7 +146,7 @@ class SitemapController extends Controller
                 ->get()
                 ->each(function ($category) use ($urls) {
                     $urls->push([
-                        'loc' => route('categories.show', $category->slug),
+                        'loc' => route('products.index', ['category' => $category->slug]),
                         'lastmod' => $category->updated_at->toW3cString(),
                         'changefreq' => 'weekly',
                         'priority' => '0.7',

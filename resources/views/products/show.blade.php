@@ -394,7 +394,7 @@
                 <a href="{{ route('products.index') }}">Menu</a>
                 @if($product->category)
                     <span class="dish-bc-sep">/</span>
-                    <a href="{{ route('categories.show', $product->category->slug) }}">{{ $product->category->name }}</a>
+                    <a href="{{ route('products.index', ['category' => $product->category->slug]) }}">{{ $product->category->name }}</a>
                 @endif
                 <span class="dish-bc-sep">/</span>
                 <span style="color:#111111;font-weight:600;">{{ $product->name }}</span>

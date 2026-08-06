@@ -76,14 +76,11 @@ Route::post('/products/{product}/ask-question', [App\Http\Controllers\ProductCon
     ->name('product.ask-question')
     ->middleware('throttle:5,60');
 
-// Categories — index redirects to menu, individual category pages still work
+// Categories — the dedicated category page was removed; all /categories & /category
+// URLs now 301-redirect to the Menu filtered by that category.
 Route::get('/categories', fn () => redirect()->route('products.index', [], 301))->name('categories.index');
-Route::get('/categories/{category:slug}', [App\Http\Controllers\CategoryController::class, 'show'])->name('categories.show')->middleware('cache.response:5');
-
-// Alias: /category/slug → 301 redirect to /categories/slug (avoid duplicate content)
-Route::get('/category/{slug}', function (string $slug) {
-    return redirect()->route('categories.show', $slug, 301);
-})->name('category.show');
+Route::get('/categories/{category:slug}', fn (\App\Models\Category $category) => redirect()->route('products.index', ['category' => $category->slug], 301))->name('categories.show');
+Route::get('/category/{slug}', fn (string $slug) => redirect()->route('products.index', ['category' => $slug], 301))->name('category.show');
 
 // Brands
 Route::prefix('brands')->name('brands.')->group(function () {
