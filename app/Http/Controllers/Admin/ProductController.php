@@ -135,6 +135,9 @@ class ProductController extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'customize_enabled' => 'boolean',
+            'toppings' => 'nullable|array',
+            'toppings.*' => 'integer|exists:toppings,id',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'main_image' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:2048',
@@ -147,6 +150,7 @@ class ProductController extends Controller
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['customize_enabled'] = $request->boolean('customize_enabled');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
         // "Compare at price / MRP" is optional; default it to the price (no discount) so the
@@ -162,7 +166,7 @@ class ProductController extends Controller
             ->toArray();
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
-        unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['large_price']);
+        unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['large_price'], $validated['toppings']);
 
         $product = Product::create($validated);
 
@@ -191,14 +195,7 @@ class ProductController extends Controller
             }
         }
 
-        // Sync toppings
-        if ($request->has('toppings')) {
-            $sync = [];
-            foreach ($request->input('toppings', []) as $toppingId) {
-                $sync[$toppingId] = ['is_default' => in_array($toppingId, $request->input('default_toppings', []))];
-            }
-            $product->toppings()->sync($sync);
-        }
+        $this->syncToppings($request, $product);
 
         // Create/refresh the Regular + Large size variants.
         $this->syncSizeVariants($product, $request->input('large_price'));
@@ -242,6 +239,9 @@ class ProductController extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'customize_enabled' => 'boolean',
+            'toppings' => 'nullable|array',
+            'toppings.*' => 'integer|exists:toppings,id',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'main_image' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:2048',
@@ -256,6 +256,7 @@ class ProductController extends Controller
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['customize_enabled'] = $request->boolean('customize_enabled');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
         // "Compare at price / MRP" is optional; default it to the price (no discount) so the
@@ -271,7 +272,7 @@ class ProductController extends Controller
             ->toArray();
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
-        unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['large_price']);
+        unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['large_price'], $validated['toppings']);
 
         $product->update($validated);
 
@@ -321,16 +322,7 @@ class ProductController extends Controller
             }
         }
 
-        // Sync toppings
-        if ($request->has('toppings')) {
-            $sync = [];
-            foreach ($request->input('toppings', []) as $toppingId) {
-                $sync[$toppingId] = ['is_default' => in_array($toppingId, $request->input('default_toppings', []))];
-            }
-            $product->toppings()->sync($sync);
-        } else {
-            $product->toppings()->detach();
-        }
+        $this->syncToppings($request, $product);
 
         // Create/refresh the Regular + Large size variants.
         $this->syncSizeVariants($product, $request->input('large_price'));
@@ -594,5 +586,42 @@ class ProductController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Write the product's customize selections.
+     *
+     * The Customize toggle is the master switch: turn it off and every topping
+     * link is dropped, so the storefront adds the item straight to the basket.
+     * The pivot's is_default mirrors the topping's own pre-select flag, which is
+     * what the storefront actually reads — kept in sync so the two never disagree.
+     */
+    private function syncToppings(Request $request, Product $product): void
+    {
+        if (! $request->boolean('customize_enabled')) {
+            $product->toppings()->detach();
+
+            return;
+        }
+
+        $ids = array_map('intval', $request->input('toppings', []));
+
+        if (empty($ids)) {
+            $product->toppings()->detach();
+
+            return;
+        }
+
+        $preselected = Topping::whereIn('id', $ids)
+            ->where('is_preselected', true)
+            ->pluck('id')
+            ->all();
+
+        $sync = [];
+        foreach ($ids as $id) {
+            $sync[$id] = ['is_default' => in_array($id, $preselected, true)];
+        }
+
+        $product->toppings()->sync($sync);
     }
 }
