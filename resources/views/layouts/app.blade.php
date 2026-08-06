@@ -94,8 +94,8 @@
     <!-- Header -->
     @include('partials.header')
 
-    <!-- Mobile Navigation -->
-    @include('partials.mobile-nav')
+    <!-- Mobile Search -->
+    @include('partials.mobile-search')
 
     <!-- Main Content -->
     <main id="main-content" class="min-h-screen">
