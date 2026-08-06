@@ -94,9 +94,6 @@
     <!-- Header -->
     @include('partials.header')
 
-    <!-- Mobile Search -->
-    @include('partials.mobile-search')
-
     <!-- Main Content -->
     <main id="main-content" class="min-h-screen">
         {{ $slot }}

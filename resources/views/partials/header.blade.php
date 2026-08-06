@@ -110,12 +110,12 @@
                     Menu
                 </a>
 
-                <!-- Mobile search button -->
-                <button @click="$dispatch('toggle-mobile-search')" class="lg:hidden p-1.5 text-white/80 hover:text-white" aria-label="Search products">
+                <!-- Mobile search — jumps to the search box on the menu -->
+                <a href="{{ route('products.index') }}#menu-search" class="lg:hidden p-1.5 text-white/80 hover:text-white" aria-label="Search the menu">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                </button>
+                </a>
             </div>
         </div>
     </div>

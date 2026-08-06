@@ -54,7 +54,7 @@ class AppServiceProvider extends ServiceProvider
             return "<?php echo currency_symbol(); ?>";
         });
 
-        View::composer(['partials.mobile-search', 'partials.header'], function ($view) {
+        View::composer('partials.header', function ($view) {
             $view->with('navCategories', Category::whereNull('parent_id')
                 ->where('is_active', true)
                 ->with(['children' => fn ($q) => $q->where('is_active', true)->orderBy('position')])

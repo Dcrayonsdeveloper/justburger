@@ -15,14 +15,14 @@
             <span class="text-xs font-medium">Menu</span>
         </a>
 
-        <button type="button" @click="$dispatch('toggle-mobile-search')"
-                class="flex flex-col items-center gap-1 px-3 py-2 {{ request()->routeIs('search') ? 'text-[#C8102E]' : 'text-white/60' }}"
-                aria-label="Search products">
+        <a href="{{ route('products.index') }}#menu-search"
+           class="flex flex-col items-center gap-1 px-3 py-2 {{ request()->filled('q') ? 'text-[#C8102E]' : 'text-white/60' }}"
+           aria-label="Search the menu">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <span class="text-xs font-medium">Search</span>
-        </button>
+        </a>
 
         <a href="{{ route('cart.index') }}" class="flex flex-col items-center gap-1 px-3 py-2 relative {{ request()->routeIs('cart*') || request()->routeIs('checkout*') ? 'text-[#C8102E]' : 'text-white/60' }}">
             <span class="relative">
