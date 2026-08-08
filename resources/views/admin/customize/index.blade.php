@@ -101,11 +101,15 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
-                            @if($topping->is_preselected)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">Pre-selected</span>
-                            @else
-                                <span class="text-neutral-300">&mdash;</span>
-                            @endif
+                            <form action="{{ route('admin.customize.toggle-preselected', $topping) }}" method="POST" class="inline-flex items-center gap-2">
+                                @csrf @method('PUT')
+                                <button type="submit" role="switch" aria-checked="{{ $topping->is_preselected ? 'true' : 'false' }}"
+                                        title="{{ $topping->is_preselected ? 'Stop pre-selecting this topping' : 'Pre-select this topping (its price becomes free)' }}"
+                                        style="position:relative;display:inline-block;width:2.5rem;height:1.35rem;border:none;border-radius:99px;cursor:pointer;transition:background .15s;background:{{ $topping->is_preselected ? '#C8102E' : '#d4d4d4' }};">
+                                    <span style="position:absolute;top:.15rem;left:.15rem;width:1.05rem;height:1.05rem;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s;{{ $topping->is_preselected ? 'transform:translateX(1.15rem);' : '' }}"></span>
+                                </button>
+                                <span class="text-xs font-medium {{ $topping->is_preselected ? 'text-primary-700' : 'text-neutral-400' }}">{{ $topping->is_preselected ? 'On' : 'Off' }}</span>
+                            </form>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <form action="{{ route('admin.customize.toggle-active', $topping) }}" method="POST" class="inline-flex items-center gap-2">
@@ -124,8 +128,6 @@
                                         @click="editing = {{ $topping->id }}; form = {{ Js::from([
                                             'name' => $topping->name,
                                             'price' => number_format((float) $topping->price, 2, '.', ''),
-                                            'is_preselected' => (bool) $topping->is_preselected,
-                                            'is_active' => (bool) $topping->is_active,
                                             'position' => (int) $topping->position,
                                         ]) }}"
                                         class="p-1.5 text-neutral-400 hover:text-primary-600 rounded transition-colors" title="Edit">
@@ -181,18 +183,6 @@
                                    class="w-28 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         </div>
 
-                        <div class="flex items-center gap-5 pt-1">
-                            <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer select-none">
-                                <input type="checkbox" name="is_preselected" value="1" x-model="form.is_preselected"
-                                       class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
-                                Pre-select
-                            </label>
-                            <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer select-none">
-                                <input type="checkbox" name="is_active" value="1" x-model="form.is_active"
-                                       class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
-                                Active
-                            </label>
-                        </div>
                     </div>
 
                     <div class="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-neutral-100">
