@@ -528,60 +528,27 @@
             </div>
 
             {{-- Customize (toppings) --}}
-            @php
-                $productToppingIds = $product->toppings->pluck('id')->toArray();
-                $customizeOn = (bool) old('customize_enabled', $product->customize_enabled);
-            @endphp
-            <div class="card overflow-hidden mt-5" x-data="{ on: {{ $customizeOn ? 'true' : 'false' }} }">
-                <div class="px-5 py-4 border-b border-neutral-100 flex items-start justify-between gap-4">
+            <div class="card overflow-hidden mt-5" x-data="{ on: {{ (bool) old('customize_enabled', $product->customize_enabled) ? 'true' : 'false' }} }">
+                <div class="px-5 py-4 flex items-start justify-between gap-4">
                     <div>
                         <h2 class="text-base font-semibold text-neutral-900">Customize</h2>
-                        <p class="text-xs text-neutral-500 mt-0.5">Off by default. Turn it on to let customers pick toppings for this item.</p>
+                        <p class="text-xs text-neutral-500 mt-0.5">
+                            Off by default. Turn it on and customers get the topping popup for this item, offering every topping on the
+                            <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Customize</a> page.
+                            Leave it off and no popup appears &mdash; the item goes straight to the basket.
+                        </p>
                     </div>
-                    <label class="inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
+                    <label class="relative inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
                         <input type="hidden" name="customize_enabled" value="0">
-                        <input type="checkbox" name="customize_enabled" value="1" x-model="on" class="sr-only peer">
-                        <span class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors" :class="on && '!bg-primary-600'">
-                            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="on && 'translate-x-5'"></span>
+                        <input type="checkbox" name="customize_enabled" value="1" x-model="on" class="sr-only">
+                        <span class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors" :class="{ '!bg-primary-600': on }">
+                            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="{ 'translate-x-5': on }"></span>
                         </span>
                         <span class="text-sm font-medium" :class="on ? 'text-primary-700' : 'text-neutral-500'" x-text="on ? 'Enabled' : 'Disabled'"></span>
                     </label>
                 </div>
-
-                <div x-show="on" x-cloak>
-                    @if(isset($toppings) && $toppings->count())
-                        <div class="px-5 py-4 space-y-2 max-h-72 overflow-y-auto">
-                            <p class="text-xs text-neutral-500 mb-2">Tick the toppings this item offers. Pre-selected ones arrive already ticked for the customer &mdash; set that on the <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Customize</a> page.</p>
-                            @foreach($toppings->groupBy('group') as $group => $groupToppings)
-                                <div class="mb-3">
-                                    <p class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">{{ ucfirst($group) }}</p>
-                                    @foreach($groupToppings as $topping)
-                                        <div class="flex items-center gap-3 py-1">
-                                            <label class="flex items-center gap-2 cursor-pointer flex-1">
-                                                <input type="checkbox" name="toppings[]" value="{{ $topping->id }}"
-                                                       {{ in_array($topping->id, old('toppings', $productToppingIds)) ? 'checked' : '' }}
-                                                       class="form-checkbox">
-                                                <span class="text-sm text-neutral-800">{{ $topping->name }}</span>
-                                                @if($topping->is_preselected)
-                                                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-700 font-medium">Pre-selected</span>
-                                                @elseif($topping->price > 0)
-                                                    <span class="text-xs text-neutral-400">(+&pound;{{ number_format($topping->price, 2) }})</span>
-                                                @else
-                                                    <span class="text-xs text-green-600">Free</span>
-                                                @endif
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="px-5 py-6 text-center text-sm text-neutral-500">
-                            No active toppings yet. <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Add some on the Customize page</a>.
-                        </div>
-                    @endif
-                </div>
             </div>
+
 
             {{-- Sticky Save Bar --}}
             <div class="sticky bottom-0 z-40 mt-5 -mx-6 px-6 py-3 bg-white border-t border-neutral-200 flex items-center justify-end gap-3" style="margin-left: -1.5rem; margin-right: -1.5rem; padding-left: 1.5rem; padding-right: 1.5rem;">

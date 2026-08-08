@@ -24,7 +24,7 @@ class CustomizeController extends Controller
 
     public function index(): View
     {
-        $toppings = Topping::withCount('products')
+        $toppings = Topping::query()
             ->orderBy('position')
             ->orderBy('name')
             ->get();
@@ -58,15 +58,12 @@ class CustomizeController extends Controller
     public function destroy(Topping $topping): RedirectResponse
     {
         $name = $topping->name;
-        $used = $topping->products()->count();
 
         $topping->delete();
 
         return redirect()
             ->route('admin.customize.index')
-            ->with('success', $used > 0
-                ? "Topping \"{$name}\" deleted and removed from {$used} product(s)."
-                : "Topping \"{$name}\" deleted.");
+            ->with('success', "Topping \"{$name}\" deleted.");
     }
 
     /**

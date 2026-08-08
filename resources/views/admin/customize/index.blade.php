@@ -4,7 +4,7 @@
     <x-slot name="header">
         <div>
             <h1 class="text-2xl font-bold text-neutral-900">Customize</h1>
-            <p class="text-sm text-neutral-600 mt-1">Toppings customers can add to a product. Turn customize on for a product under Menu &rarr; All Items to choose which of these it offers.</p>
+            <p class="text-sm text-neutral-600 mt-1">Toppings customers can add. Every topping here appears in the popup for any product with Customize turned on under Menu &rarr; All Items.</p>
         </div>
     </x-slot>
 
@@ -103,7 +103,6 @@
                     <th class="text-left px-4 py-3 font-semibold text-neutral-600">Group</th>
                     <th class="text-left px-4 py-3 font-semibold text-neutral-600">Price</th>
                     <th class="text-center px-4 py-3 font-semibold text-neutral-600">Pre-select</th>
-                    <th class="text-center px-4 py-3 font-semibold text-neutral-600">Products</th>
                     <th class="text-center px-4 py-3 font-semibold text-neutral-600">Status</th>
                     <th class="text-right px-4 py-3 font-semibold text-neutral-600">Actions</th>
                 </tr>
@@ -138,7 +137,6 @@
                                 <span class="text-neutral-300">&mdash;</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-center text-neutral-600">{{ $topping->products_count }}</td>
                         <td class="px-4 py-3 text-center">
                             @if($topping->is_active)
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">Active</span>
@@ -162,7 +160,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                                 <form action="{{ route('admin.customize.destroy', $topping) }}" method="POST"
-                                      onsubmit="return confirm('Delete &quot;{{ $topping->name }}&quot;? It will be removed from {{ $topping->products_count }} product(s). Set it Inactive instead if you only want to hide it.')">
+                                      onsubmit="return confirm('Delete &quot;{{ $topping->name }}&quot;? It will disappear from the customize popup everywhere. Set it Inactive instead if you only want to hide it.')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="p-1.5 text-neutral-400 hover:text-red-600 rounded transition-colors" title="Delete">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -173,7 +171,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-neutral-400">No toppings yet &mdash; add your first one above.</td>
+                        <td colspan="6" class="px-4 py-8 text-center text-neutral-400">No toppings yet &mdash; add your first one above.</td>
                     </tr>
                 @endforelse
             </tbody>
