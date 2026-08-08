@@ -47,7 +47,7 @@
 
                 <div class="md:col-span-5 flex flex-col gap-2 md:pt-7">
                     <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer select-none">
-                        <input type="checkbox" name="is_preselected" value="1" x-model="pre"
+                        <input type="checkbox" name="is_preselected" value="1"
                                class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
                         Pre-select
                     </label>
@@ -108,13 +108,14 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <form action="{{ route('admin.customize.toggle-active', $topping) }}" method="POST" class="inline">
+                            <form action="{{ route('admin.customize.toggle-active', $topping) }}" method="POST" class="inline-flex items-center gap-2">
                                 @csrf @method('PUT')
-                                <button type="submit"
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors {{ $topping->is_active ? 'bg-success-100 text-success-700 hover:bg-success-200' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200' }}"
-                                        title="Click to {{ $topping->is_active ? 'deactivate' : 'activate' }}">
-                                    {{ $topping->is_active ? 'Active' : 'Inactive' }}
+                                <button type="submit" role="switch" aria-checked="{{ $topping->is_active ? 'true' : 'false' }}"
+                                        title="{{ $topping->is_active ? 'Switch off' : 'Switch on' }}"
+                                        style="position:relative;display:inline-block;width:2.5rem;height:1.35rem;border:none;border-radius:99px;cursor:pointer;transition:background .15s;background:{{ $topping->is_active ? '#16a34a' : '#d4d4d4' }};">
+                                    <span style="position:absolute;top:.15rem;left:.15rem;width:1.05rem;height:1.05rem;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s;{{ $topping->is_active ? 'transform:translateX(1.15rem);' : '' }}"></span>
                                 </button>
+                                <span class="text-xs font-medium {{ $topping->is_active ? 'text-success-700' : 'text-neutral-400' }}">{{ $topping->is_active ? 'Active' : 'Inactive' }}</span>
                             </form>
                         </td>
                         <td class="px-4 py-3 text-right">
