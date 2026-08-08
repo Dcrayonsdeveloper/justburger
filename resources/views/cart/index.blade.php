@@ -350,7 +350,7 @@
 
                                             {{-- Subtotal when qty > 1 --}}
                                             <span x-show="item.quantity > 1"
-                                                  x-text="fp(item.price * item.quantity)"
+                                                  x-text="fp((item.line_price ?? item.price) * item.quantity)"
                                                   style="margin-left:auto;font-size:.88rem;font-weight:700;color:rgba(0,0,0,.45);"></span>
                                         </div>
                                     </div>
@@ -614,7 +614,7 @@
                     return this.currencyPosition === 'after' ? f + this.currencySymbol : this.currencySymbol + f;
                 },
                 get totalQty()    { return this.items.reduce((s,i) => s + i.quantity, 0); },
-                get subtotal()    { return this.items.reduce((s,i) => s + i.price * i.quantity, 0); },
+                get subtotal()    { return this.items.reduce((s,i) => s + (i.line_price ?? i.price) * i.quantity, 0); },
                 get totalAmount() { return Math.max(0, this.subtotal - this.discount); },
 
                 async updateQty(item, qty) {
