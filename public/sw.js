@@ -9,7 +9,7 @@
  *  - Offline fallback page for navigation requests
  */
 
-const CACHE_VERSION = 'justburgers-v1';
+const CACHE_VERSION = 'justburgers-v2';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
@@ -78,8 +78,11 @@ self.addEventListener('fetch', event => {
     }
 
     // API data routes → stale-while-revalidate
+    // API data routes → network-first. These back live admin-managed data
+    // (toppings, cart, stock), so a cached copy would show customers a menu
+    // that no longer exists. Cache is only a fallback for offline.
     if (url.pathname.startsWith('/api/')) {
-        event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE, DYNAMIC_CACHE_LIMIT));
+        event.respondWith(networkFirst(request, DYNAMIC_CACHE, DYNAMIC_CACHE_LIMIT));
         return;
     }
 
@@ -152,6 +155,21 @@ function networkFirstWithFallback(request) {
         .catch(() =>
             caches.match(request).then(cached => cached || caches.match('/offline'))
         );
+}
+
+function networkFirst(request, cacheName, limit) {
+    return fetch(request)
+        .then(response => {
+            if (response && response.ok) {
+                const copy = response.clone();
+                caches.open(cacheName).then(cache => {
+                    cache.put(request, copy);
+                    if (typeof trimCache === 'function') trimCache(cacheName, limit);
+                });
+            }
+            return response;
+        })
+        .catch(() => caches.match(request));
 }
 
 function staleWhileRevalidate(request, cacheName, limit) {
