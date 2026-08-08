@@ -1027,7 +1027,7 @@
                                                     <button type="button" class="ck-qty-btn" onclick="fetch('/cart/{{ $item->id }}',{method:'PUT',headers:{'Content-Type':'application/json','X-XSRF-TOKEN':decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]||''),'Accept':'application/json'},body:JSON.stringify({quantity:{{ $item->quantity+1 }}})}).then(()=>location.reload())">+</button>
                                                     <a href="#" class="ck-item-remove" onclick="event.preventDefault();if(confirm('Remove this item?'))fetch('/cart/{{ $item->id }}',{method:'DELETE',headers:{'X-XSRF-TOKEN':decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]||''),'Accept':'application/json'}}).then(()=>location.reload())">Remove</a>
                                                 </span>
-                                                <span class="ck-item-price">@price($item->price * $item->quantity)</span>
+                                                <span class="ck-item-price">@price(($item->price + $item->toppings_total) * $item->quantity)</span>
                                             </div>
                                         </div>
                                     </div>

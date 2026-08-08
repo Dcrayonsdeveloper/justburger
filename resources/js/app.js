@@ -122,7 +122,9 @@ Alpine.store('cart', {
     },
 
     get subtotal() {
-        return this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        // line_price already includes the item's toppings; falling back to the
+        // bare price would under-report every customised line.
+        return this.items.reduce((sum, item) => sum + ((item.line_price ?? item.price) * item.quantity), 0);
     },
 
     _updateCount() {
