@@ -14,14 +14,6 @@ use Illuminate\View\View;
  */
 class CustomizeController extends Controller
 {
-    /** Topping groups offered in the form. */
-    public const GROUPS = [
-        'veggies' => 'Veggies',
-        'cheese' => 'Cheese',
-        'sauce' => 'Sauce',
-        'extras' => 'Extras',
-    ];
-
     public function index(): View
     {
         $toppings = Topping::query()
@@ -29,10 +21,7 @@ class CustomizeController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.customize.index', [
-            'toppings' => $toppings,
-            'groups' => self::GROUPS,
-        ]);
+        return view('admin.customize.index', ['toppings' => $toppings]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -67,9 +56,22 @@ class CustomizeController extends Controller
     }
 
     /**
-     * Shared validation. "Free" and "Pre-select" both force the price to zero —
-     * a pre-selected topping is included with the product and never charged, so
-     * storing a price on one would be a number we never collect.
+     * Flip Active straight from the table, so it never depends on the edit
+     * dialog's checkbox state.
+     */
+    public function toggleActive(Topping $topping): RedirectResponse
+    {
+        $topping->update(['is_active' => ! $topping->is_active]);
+
+        return redirect()
+            ->route('admin.customize.index')
+            ->with('success', "Topping \"{$topping->name}\" is now " . ($topping->is_active ? 'active' : 'inactive') . '.');
+    }
+
+    /**
+     * Shared validation. A pre-selected topping arrives ticked in the popup and
+     * is included with the item, so its price is never collected — store 0 so
+     * the figure on screen matches what the customer is actually charged.
      */
     private function validated(Request $request, ?Topping $topping = null): array
     {
@@ -78,16 +80,18 @@ class CustomizeController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', $unique],
             'price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'group' => ['required', 'string', 'in:' . implode(',', array_keys(self::GROUPS))],
             'position' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['is_preselected'] = $request->boolean('is_preselected');
         $data['is_active'] = $request->boolean('is_active');
         $data['position'] = $data['position'] ?? 0;
+        $data['price'] = $data['is_preselected'] ? 0 : (float) ($data['price'] ?? 0);
 
-        $isFree = $request->boolean('is_free') || $data['is_preselected'];
-        $data['price'] = $isFree ? 0 : (float) ($data['price'] ?? 0);
+        // The group column is unused by the storefront but is non-nullable.
+        if (! $topping) {
+            $data['group'] = 'extras';
+        }
 
         return $data;
     }
