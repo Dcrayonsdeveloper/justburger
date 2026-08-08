@@ -104,7 +104,7 @@
                             <form action="{{ route('admin.customize.toggle-preselected', $topping) }}" method="POST" class="inline-flex items-center gap-2">
                                 @csrf @method('PUT')
                                 <button type="submit" role="switch" aria-checked="{{ $topping->is_preselected ? 'true' : 'false' }}"
-                                        title="{{ $topping->is_preselected ? 'Stop pre-selecting this topping' : 'Pre-select this topping (its price becomes free)' }}"
+                                        title="{{ $topping->is_preselected ? 'Stop this topping arriving ticked' : 'Make this topping arrive ticked in the popup' }}"
                                         style="position:relative;display:inline-block;width:2.5rem;height:1.35rem;border:none;border-radius:99px;cursor:pointer;transition:background .15s;background:{{ $topping->is_preselected ? '#C8102E' : '#d4d4d4' }};">
                                     <span style="position:absolute;top:.15rem;left:.15rem;width:1.05rem;height:1.05rem;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s;{{ $topping->is_preselected ? 'transform:translateX(1.15rem);' : '' }}"></span>
                                 </button>
