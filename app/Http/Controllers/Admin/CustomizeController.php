@@ -69,25 +69,19 @@ class CustomizeController extends Controller
     }
 
     /**
-     * Flip Pre-select straight from the table. A pre-selected topping arrives
-     * ticked in the customer's popup and is included with the item, so its
-     * price is never collected — zero it so the figure on screen matches what
-     * is actually charged.
+     * Flip Pre-select straight from the table. This only decides whether the
+     * topping starts ticked in the customer's popup — the price is separate and
+     * is left exactly as it is.
      */
     public function togglePreselected(Topping $topping): RedirectResponse
     {
-        $turningOn = ! $topping->is_preselected;
-
-        $topping->update([
-            'is_preselected' => $turningOn,
-            'price' => $turningOn ? 0 : $topping->price,
-        ]);
+        $topping->update(['is_preselected' => ! $topping->is_preselected]);
 
         return redirect()
             ->route('admin.customize.index')
-            ->with('success', $turningOn
-                ? "\"{$topping->name}\" is now pre-selected and free — customers get it ticked by default."
-                : "\"{$topping->name}\" is no longer pre-selected. Set its price if it should cost extra.");
+            ->with('success', $topping->is_preselected
+                ? "\"{$topping->name}\" now arrives ticked in the customer's popup."
+                : "\"{$topping->name}\" no longer arrives ticked.");
     }
 
     /**
@@ -95,7 +89,7 @@ class CustomizeController extends Controller
      *
      * Active and Pre-select are owned by the table switches, so the edit dialog
      * must never write them — otherwise saving a name or price would silently
-     * clear both.
+     * clear both. The price is stored exactly as typed; 0 renders as "Free".
      */
     private function validated(Request $request, ?Topping $topping = null): array
     {
@@ -108,21 +102,16 @@ class CustomizeController extends Controller
         ]);
 
         $data['position'] = $data['position'] ?? 0;
+        $data['price'] = (float) ($data['price'] ?? 0);
 
-        if ($topping) {
-            // Editing: leave the two flags alone, and keep a pre-selected
-            // topping free no matter what price was typed.
-            $preselected = (bool) $topping->is_preselected;
-        } else {
-            // Creating: the add form carries both checkboxes.
-            $preselected = $request->boolean('is_preselected');
-            $data['is_preselected'] = $preselected;
+        if (! $topping) {
+            // Creating: the add form carries both checkboxes. On edit they are
+            // owned by the table switches, so the dialog must not write them.
+            $data['is_preselected'] = $request->boolean('is_preselected');
             $data['is_active'] = $request->boolean('is_active');
             // The group column is unused by the storefront but is non-nullable.
             $data['group'] = 'extras';
         }
-
-        $data['price'] = $preselected ? 0 : (float) ($data['price'] ?? 0);
 
         return $data;
     }

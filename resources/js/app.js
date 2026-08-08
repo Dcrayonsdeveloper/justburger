@@ -353,22 +353,24 @@ Alpine.store('toppingsModal', {
     },
 
     get addedToppings() {
-        // Optional toppings that are checked
-        return this.optionals.filter(t => this.selected[t.id]);
+        // Everything ticked, pre-selected or not. Price and pre-select are
+        // independent: pre-select decides what starts ticked, the price decides
+        // what it costs, and the customer pays for whatever is ticked.
+        return this.allToppings.filter(t => this.selected[t.id]);
     },
 
     get keptDefaults() {
-        // Default toppings that remain checked
+        // Pre-selected toppings the customer left ticked
         return this.defaults.filter(t => this.selected[t.id]);
     },
 
     get removedToppings() {
-        // Default toppings that are unchecked
+        // Pre-selected toppings the customer unticked — not charged
         return this.defaults.filter(t => !this.selected[t.id]);
     },
 
     get toppingsExtra() {
-        return this.addedToppings.reduce((sum, t) => sum + t.price, 0);
+        return this.addedToppings.reduce((sum, t) => sum + Number(t.price || 0), 0);
     },
 
     async confirm() {

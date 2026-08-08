@@ -32,14 +32,14 @@ class ProductToppingController extends Controller
         $optionals = [];
 
         foreach ($toppings as $topping) {
-            // Pre-selected toppings are included with the product, so they are
-            // never charged — send 0 rather than a price we would not collect.
+            // Pre-select only decides what starts ticked; the price is charged
+            // for whatever the customer leaves ticked, pre-selected or not.
             $isPreselected = (bool) $topping->is_preselected;
 
             $item = [
                 'id' => $topping->id,
                 'name' => $topping->name,
-                'price' => $isPreselected ? 0.0 : (float) $topping->price,
+                'price' => (float) $topping->price,
                 'group' => $topping->group,
             ];
 
