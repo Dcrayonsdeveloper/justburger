@@ -9,7 +9,7 @@
  *  - Offline fallback page for navigation requests
  */
 
-const CACHE_VERSION = 'justburgers-v2';
+const CACHE_VERSION = 'justburgers-v3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
@@ -77,7 +77,6 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // API data routes → stale-while-revalidate
     // API data routes → network-first. These back live admin-managed data
     // (toppings, cart, stock), so a cached copy would show customers a menu
     // that no longer exists. Cache is only a fallback for offline.
@@ -96,7 +95,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(request)
             .then(response => {
-                if (response.ok) {
+                if (isCacheable(response)) {
                     const clone = response.clone();
                     caches.open(DYNAMIC_CACHE).then(c => c.put(request, clone));
                 }
@@ -108,11 +107,21 @@ self.addEventListener('fetch', event => {
 
 // ─── Strategies ─────────────────────────────────────────────────
 
+/**
+ * fetch() follows redirects, so a missing asset that redirects to the homepage
+ * comes back as a 200 HTML document and would sail past a plain response.ok
+ * check. Caching that under a .css or .js URL leaves the whole site unstyled
+ * until the cache is cleared, so redirected responses are never stored.
+ */
+function isCacheable(response) {
+    return !!response && response.ok && !response.redirected && response.type !== 'opaqueredirect';
+}
+
 function cacheFirst(request, cacheName) {
     return caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
-            if (response.ok) {
+            if (isCacheable(response)) {
                 const clone = response.clone();
                 caches.open(cacheName).then(c => c.put(request, clone));
             }
@@ -125,7 +134,7 @@ function cacheFirstWithLimit(request, cacheName, limit) {
     return caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
-            if (response.ok) {
+            if (isCacheable(response)) {
                 const clone = response.clone();
                 caches.open(cacheName).then(c => {
                     c.put(request, clone);
@@ -146,7 +155,7 @@ function cacheFirstWithLimit(request, cacheName, limit) {
 function networkFirstWithFallback(request) {
     return fetch(request)
         .then(response => {
-            if (response.ok) {
+            if (isCacheable(response)) {
                 const clone = response.clone();
                 caches.open(DYNAMIC_CACHE).then(c => c.put(request, clone));
             }
@@ -160,7 +169,7 @@ function networkFirstWithFallback(request) {
 function networkFirst(request, cacheName, limit) {
     return fetch(request)
         .then(response => {
-            if (response && response.ok) {
+            if (isCacheable(response)) {
                 const copy = response.clone();
                 caches.open(cacheName).then(cache => {
                     cache.put(request, copy);
@@ -176,7 +185,7 @@ function staleWhileRevalidate(request, cacheName, limit) {
     return caches.open(cacheName).then(cache =>
         cache.match(request).then(cached => {
             const fetchPromise = fetch(request).then(response => {
-                if (response.ok) {
+                if (isCacheable(response)) {
                     cache.put(request, response.clone());
                     trimCache(cacheName, limit);
                 }
