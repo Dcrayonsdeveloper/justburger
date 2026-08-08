@@ -347,6 +347,11 @@ Alpine.store('toppingsModal', {
         return !!this.selected[toppingId];
     },
 
+    get allToppings() {
+        // One flat list for the popup — pre-selected ones simply start ticked.
+        return [...this.defaults, ...this.optionals];
+    },
+
     get addedToppings() {
         // Optional toppings that are checked
         return this.optionals.filter(t => this.selected[t.id]);

@@ -48,35 +48,17 @@
             {{-- Toppings List --}}
             <div x-show="!$store.toppingsModal.isLoading" class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
-                {{-- Default Toppings --}}
-                <div x-show="$store.toppingsModal.defaults.length > 0">
-                    <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2.5">Included Toppings</h4>
+                {{-- One list — pre-selected toppings simply arrive ticked --}}
+                <div>
+                    <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2.5">Choose your toppings</h4>
                     <div class="space-y-1">
-                        <template x-for="topping in $store.toppingsModal.defaults" :key="topping.id">
-                            <label class="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer transition-colors"
-                                   :class="$store.toppingsModal.isSelected(topping.id) ? 'bg-green-50' : 'bg-neutral-50 opacity-60'"
-                                   @click="$store.toppingsModal.toggle(topping.id)">
-                                <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
-                                      :class="$store.toppingsModal.isSelected(topping.id) ? 'bg-green-500 border-green-500' : 'border-neutral-300 bg-white'">
-                                    <svg x-show="$store.toppingsModal.isSelected(topping.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                </span>
-                                <span class="flex-1 text-sm font-medium text-neutral-800" x-text="topping.name"></span>
-                                <span class="text-xs text-green-600 font-semibold">Free</span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
-
-                {{-- Optional Toppings --}}
-                <div x-show="$store.toppingsModal.optionals.length > 0">
-                    <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2.5">Add Extra Toppings</h4>
-                    <div class="space-y-1">
-                        <template x-for="topping in $store.toppingsModal.optionals" :key="topping.id">
+                        <template x-for="topping in $store.toppingsModal.allToppings" :key="topping.id">
                             <label class="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer transition-colors"
                                    :class="$store.toppingsModal.isSelected(topping.id) ? 'bg-amber-50' : 'bg-neutral-50 hover:bg-neutral-100'"
-                                   @click="$store.toppingsModal.toggle(topping.id)">
+                                   @click.prevent="$store.toppingsModal.toggle(topping.id)">
+                                <input type="checkbox" class="sr-only" :checked="$store.toppingsModal.isSelected(topping.id)">
                                 <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
-                                      :class="$store.toppingsModal.isSelected(topping.id) ? 'bg-[#D4A017] border-[#D4A017]' : 'border-neutral-300 bg-white'">
+                                      :class="$store.toppingsModal.isSelected(topping.id) ? 'bg-[#C8102E] border-[#C8102E]' : 'border-neutral-300 bg-white'">
                                     <svg x-show="$store.toppingsModal.isSelected(topping.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                 </span>
                                 <span class="flex-1 text-sm font-medium text-neutral-800" x-text="topping.name"></span>

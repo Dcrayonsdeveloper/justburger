@@ -4,7 +4,7 @@
     <x-slot name="header">
         <div>
             <h1 class="text-2xl font-bold text-neutral-900">Customize</h1>
-            <p class="text-sm text-neutral-600 mt-1">Toppings customers can add to a product. Turn customize on for a product under Menu &rarr; All Items to choose which of these it offers.</p>
+            <p class="text-sm text-neutral-600 mt-1">Toppings customers can add. Every topping here appears in the popup for any product with Customize turned on under Menu &rarr; All Items.</p>
         </div>
     </x-slot>
 
@@ -23,9 +23,9 @@
     @endif
 
     {{-- ── Add topping ── --}}
-    <div class="card p-5 mb-6" x-data="toppingForm({ price: '{{ old('price', '0.00') }}', free: {{ old('is_free') ? 'true' : 'false' }}, pre: {{ old('is_preselected') ? 'true' : 'false' }} })">
+    <div class="card p-5 mb-6">
         <h2 class="text-base font-semibold text-neutral-900 mb-1">Add Topping</h2>
-        <p class="text-xs text-neutral-500 mb-4">Tick <strong>Free</strong> for a no-charge topping. Tick <strong>Pre-select</strong> and it arrives already ticked on every product that offers it, shown to the customer as Free.</p>
+        <p class="text-xs text-neutral-500 mb-4">Leave the price at 0.00 for a free topping. Tick <strong>Pre-select</strong> and it arrives already ticked in the customer's popup.</p>
 
         <form action="{{ route('admin.customize.store') }}" method="POST">
             @csrf
@@ -40,29 +40,12 @@
 
                 <div class="md:col-span-3">
                     <label for="price" class="block text-sm font-medium text-neutral-700 mb-1">Price (&pound;)</label>
-                    <div class="flex items-center gap-3">
-                        <input type="number" name="price" id="price" step="0.01" min="0"
-                               x-model="price" :disabled="noCharge" :class="noCharge && 'bg-neutral-100 text-neutral-400'"
-                               class="w-28 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                        <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer select-none">
-                            <input type="checkbox" name="is_free" value="1" x-model="free"
-                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
-                            Free
-                        </label>
-                    </div>
-                    <p class="text-xs text-neutral-400 mt-1" x-show="noCharge" x-cloak>No charge &mdash; saved as &pound;0.00</p>
+                    <input type="number" name="price" id="price" step="0.01" min="0" value="{{ old('price', '0.00') }}"
+                           class="w-32 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <p class="text-xs text-neutral-400 mt-1">0.00 shows as &ldquo;Free&rdquo;</p>
                 </div>
 
-                <div class="md:col-span-2">
-                    <label for="group" class="block text-sm font-medium text-neutral-700 mb-1">Group <span class="text-red-500">*</span></label>
-                    <select name="group" id="group" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                        @foreach($groups as $value => $label)
-                            <option value="{{ $value }}" {{ old('group', 'extras') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="md:col-span-3 flex flex-col gap-2 md:pt-7">
+                <div class="md:col-span-5 flex flex-col gap-2 md:pt-7">
                     <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer select-none">
                         <input type="checkbox" name="is_preselected" value="1" x-model="pre"
                                class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
@@ -100,10 +83,8 @@
             <thead>
                 <tr class="bg-neutral-50 border-b border-neutral-200">
                     <th class="text-left px-4 py-3 font-semibold text-neutral-600">Name</th>
-                    <th class="text-left px-4 py-3 font-semibold text-neutral-600">Group</th>
                     <th class="text-left px-4 py-3 font-semibold text-neutral-600">Price</th>
                     <th class="text-center px-4 py-3 font-semibold text-neutral-600">Pre-select</th>
-                    <th class="text-center px-4 py-3 font-semibold text-neutral-600">Products</th>
                     <th class="text-center px-4 py-3 font-semibold text-neutral-600">Status</th>
                     <th class="text-right px-4 py-3 font-semibold text-neutral-600">Actions</th>
                 </tr>
@@ -112,18 +93,6 @@
                 @forelse($toppings as $topping)
                     <tr class="hover:bg-neutral-50 transition-colors">
                         <td class="px-4 py-3 font-medium text-neutral-900">{{ $topping->name }}</td>
-                        <td class="px-4 py-3">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                {{ match($topping->group) {
-                                    'veggies' => 'bg-green-100 text-green-700',
-                                    'cheese' => 'bg-yellow-100 text-yellow-700',
-                                    'sauce' => 'bg-orange-100 text-orange-700',
-                                    'extras' => 'bg-blue-100 text-blue-700',
-                                    default => 'bg-neutral-100 text-neutral-700',
-                                } }}">
-                                {{ $groups[$topping->group] ?? ucfirst($topping->group) }}
-                            </span>
-                        </td>
                         <td class="px-4 py-3">
                             @if($topping->price > 0)
                                 <span class="font-semibold">&pound;{{ number_format($topping->price, 2) }}</span>
@@ -138,13 +107,15 @@
                                 <span class="text-neutral-300">&mdash;</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-center text-neutral-600">{{ $topping->products_count }}</td>
                         <td class="px-4 py-3 text-center">
-                            @if($topping->is_active)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">Active</span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-500">Inactive</span>
-                            @endif
+                            <form action="{{ route('admin.customize.toggle-active', $topping) }}" method="POST" class="inline">
+                                @csrf @method('PUT')
+                                <button type="submit"
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors {{ $topping->is_active ? 'bg-success-100 text-success-700 hover:bg-success-200' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200' }}"
+                                        title="Click to {{ $topping->is_active ? 'deactivate' : 'activate' }}">
+                                    {{ $topping->is_active ? 'Active' : 'Inactive' }}
+                                </button>
+                            </form>
                         </td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
@@ -152,17 +123,15 @@
                                         @click="editing = {{ $topping->id }}; form = {{ Js::from([
                                             'name' => $topping->name,
                                             'price' => number_format((float) $topping->price, 2, '.', ''),
-                                            'group' => $topping->group,
                                             'is_preselected' => (bool) $topping->is_preselected,
                                             'is_active' => (bool) $topping->is_active,
                                             'position' => (int) $topping->position,
-                                            'is_free' => (float) $topping->price <= 0,
                                         ]) }}"
                                         class="p-1.5 text-neutral-400 hover:text-primary-600 rounded transition-colors" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                                 <form action="{{ route('admin.customize.destroy', $topping) }}" method="POST"
-                                      onsubmit="return confirm('Delete &quot;{{ $topping->name }}&quot;? It will be removed from {{ $topping->products_count }} product(s). Set it Inactive instead if you only want to hide it.')">
+                                      onsubmit="return confirm('Delete &quot;{{ $topping->name }}&quot;? It will disappear from the customize popup everywhere. Set it Inactive instead if you only want to hide it.')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="p-1.5 text-neutral-400 hover:text-red-600 rounded transition-colors" title="Delete">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -173,7 +142,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-neutral-400">No toppings yet &mdash; add your first one above.</td>
+                        <td colspan="5" class="px-4 py-8 text-center text-neutral-400">No toppings yet &mdash; add your first one above.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -186,8 +155,7 @@
              @keydown.escape.window="editing = null">
             <div class="absolute inset-0 bg-black/40" @click="editing = null"></div>
 
-            <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md p-5"
-                 x-data="{ get noCharge() { return form.is_free || form.is_preselected } }">
+            <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md p-5">
                 <h3 class="text-base font-semibold text-neutral-900 mb-4">Edit Topping</h3>
 
                 <form :action="'{{ url('admin/customize') }}/' + editing" method="POST">
@@ -202,25 +170,8 @@
 
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 mb-1">Price (&pound;)</label>
-                            <div class="flex items-center gap-3">
-                                <input type="number" name="price" step="0.01" min="0" x-model="form.price"
-                                       :disabled="noCharge" :class="noCharge && 'bg-neutral-100 text-neutral-400'"
-                                       class="w-28 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer select-none">
-                                    <input type="checkbox" name="is_free" value="1" x-model="form.is_free"
-                                           class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
-                                    Free
-                                </label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Group <span class="text-red-500">*</span></label>
-                            <select name="group" x-model="form.group" class="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                @foreach($groups as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
+                            <input type="number" name="price" step="0.01" min="0" x-model="form.price"
+                                   class="w-32 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         </div>
 
                         <div>
@@ -241,7 +192,6 @@
                                 Active
                             </label>
                         </div>
-                        <p class="text-xs text-neutral-400" x-show="noCharge" x-cloak>No charge &mdash; saved as &pound;0.00</p>
                     </div>
 
                     <div class="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-neutral-100">
@@ -253,14 +203,4 @@
         </div>
     </div>
 
-    <script>
-        function toppingForm(initial) {
-            return {
-                price: initial.price,
-                free: initial.free,
-                pre: initial.pre,
-                get noCharge() { return this.free || this.pre; },
-            };
-        }
-    </script>
 </x-layouts.admin>

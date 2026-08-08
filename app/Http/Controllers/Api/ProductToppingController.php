@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Topping;
 use Illuminate\Http\JsonResponse;
 
 class ProductToppingController extends Controller
@@ -23,12 +24,14 @@ class ProductToppingController extends Controller
             ]);
         }
 
-        $product->load(['toppings' => fn ($q) => $q->active()->ordered()]);
+        // Every active topping from the Customize page is offered — there is no
+        // per-product selection, the toggle above is the only switch.
+        $toppings = Topping::active()->ordered()->get();
 
         $defaults = [];
         $optionals = [];
 
-        foreach ($product->toppings as $topping) {
+        foreach ($toppings as $topping) {
             // Pre-selected toppings are included with the product, so they are
             // never charged — send 0 rather than a price we would not collect.
             $isPreselected = (bool) $topping->is_preselected;

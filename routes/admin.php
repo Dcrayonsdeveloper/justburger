@@ -141,6 +141,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'store'])->name('customize.store');
             Route::put('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'update'])->name('customize.update');
             Route::delete('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'destroy'])->name('customize.destroy');
+            Route::put('/customize/{topping}/toggle-active', [App\Http\Controllers\Admin\CustomizeController::class, 'toggleActive'])->name('customize.toggle-active');
 
             // Attributes
             Route::resource('attributes', App\Http\Controllers\Admin\AttributeController::class);
