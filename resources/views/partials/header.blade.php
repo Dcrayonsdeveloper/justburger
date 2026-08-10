@@ -14,7 +14,7 @@
         <div class="flex items-center h-16 lg:h-[72px]">
 
             <!-- Left: Logo -->
-            <a href="{{ url('/') }}" class="shrink-0 flex items-center px-5 lg:px-8" style="text-decoration:none;">
+            <a href="{{ url('/') }}" class="flex flex-1 items-center justify-center px-5 lg:flex-none lg:shrink-0 lg:justify-start lg:px-8" style="text-decoration:none;">
                 <span style="font-family:'Anton',Impact,'Arial Black',sans-serif;font-size:1.45rem;letter-spacing:2px;text-transform:uppercase;line-height:1;white-space:nowrap;"><span style="color:#C8102E;">JUST</span><span style="color:#fff;margin-left:2px;">BURGERS</span></span>
             </a>
 
@@ -110,12 +110,6 @@
                     Menu
                 </a>
 
-                <!-- Mobile search — jumps to the search box on the menu -->
-                <a href="{{ route('products.index') }}#menu-search" class="lg:hidden p-1.5 text-white/80 hover:text-white" aria-label="Search the menu">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </a>
             </div>
         </div>
     </div>
