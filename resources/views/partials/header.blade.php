@@ -94,6 +94,17 @@
                     </div>
                 @endguest
 
+                <!-- Wishlist icon (desktop) -->
+                <a href="{{ route('wishlist') }}" x-data class="hidden lg:flex items-center justify-center relative text-white hover:text-white/70 transition-colors" aria-label="Wishlist">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
+                    </svg>
+                    <span x-show="$store.wishlist.count > 0"
+                          x-text="$store.wishlist.count"
+                          x-cloak
+                          style="position:absolute;top:-8px;right:-10px;min-width:18px;height:18px;background:#C8102E;color:#fff;font-size:11px;font-weight:700;border-radius:100px;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;border:2px solid #111111;"></span>
+                </a>
+
                 <!-- Cart icon (desktop) -->
                 <a href="{{ route('cart.index') }}" x-data class="hidden lg:flex items-center justify-center relative text-white hover:text-white/70 transition-colors" aria-label="Basket">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">

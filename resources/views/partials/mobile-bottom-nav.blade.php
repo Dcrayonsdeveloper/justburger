@@ -15,6 +15,21 @@
             <span class="text-xs font-medium">Menu</span>
         </a>
 
+        <a href="{{ route('wishlist') }}"
+           class="flex-1 flex flex-col items-center justify-center gap-1 py-2 relative {{ request()->routeIs('wishlist*') ? 'text-[#C8102E]' : 'text-white/60' }}"
+           aria-label="Wishlist">
+            <span class="relative">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
+                </svg>
+                <span x-show="$store.wishlist.count > 0"
+                      x-text="$store.wishlist.count"
+                      x-cloak
+                      style="position:absolute;top:-5px;right:-7px;min-width:16px;height:16px;background:#C8102E;color:#fff;font-size:9px;font-weight:700;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;"></span>
+            </span>
+            <span class="text-xs font-medium">Wishlist</span>
+        </a>
+
         <a href="{{ route('cart.index') }}" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 relative {{ request()->routeIs('cart*') || request()->routeIs('checkout*') ? 'text-[#C8102E]' : 'text-white/60' }}">
             <span class="relative">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

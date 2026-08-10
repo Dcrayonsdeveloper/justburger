@@ -762,7 +762,7 @@
                                                     fetch('{{ route('account.addresses.store') }}', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                                                        body: JSON.stringify({ name, phone, address_line_1: line1, address_line_2: line2, city, state, postal_code: pincode })
+                                                        body: JSON.stringify({ name, phone, address_line1: line1, address_line2: line2, city, state, postal_code: pincode, country: 'GB' })
                                                     }).then(r => r.json().then(d => ({ok: r.ok, data: d}))).then(({ok, data}) => {
                                                         savingAddress = false;
                                                         if (ok) { location.reload(); }

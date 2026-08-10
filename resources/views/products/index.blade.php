@@ -119,6 +119,7 @@
 
         /* Product list item (Nando's style) */
         .menu-item-row {
+            position:relative;
             display:flex;
             align-items:center;
             gap:1rem;
@@ -184,6 +185,17 @@
             .menu-item-img { width:72px; height:72px; }
             .menu-item-row { padding:.8rem 1rem; }
         }
+        .menu-fav-btn {
+            position:absolute; top:.55rem; right:.6rem;
+            width:30px; height:30px; padding:0;
+            display:flex; align-items:center; justify-content:center;
+            background:#fff; border:1px solid rgba(0,0,0,.1); border-radius:50%;
+            color:rgba(0,0,0,.35); cursor:pointer;
+            transition:color .14s, border-color .14s, transform .14s;
+        }
+        .menu-fav-btn:hover { color:#C8102E; border-color:rgba(200,16,46,.35); transform:scale(1.06); }
+        .menu-fav-btn svg { width:16px; height:16px; }
+
         .menu-add-btn {
             width:86px;
             padding:.32rem .5rem;
@@ -432,6 +444,17 @@
                                     @endif
                                     <div class="menu-item-price">@price($product->price)</div>
                                 </a>
+<button type="button" class="menu-fav-btn"
+                                            @click.prevent="$store.wishlist.toggle({{ $product->id }})"
+                                            :aria-pressed="$store.wishlist.has({{ $product->id }})"
+                                            :title="$store.wishlist.has({{ $product->id }}) ? 'Remove from wishlist' : 'Save to wishlist'"
+                                            aria-label="Save to wishlist">
+                                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"
+                                             :fill="$store.wishlist.has({{ $product->id }}) ? '#C8102E' : 'none'"
+                                             :style="$store.wishlist.has({{ $product->id }}) ? 'color:#C8102E' : ''">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
+                                        </svg>
+                                    </button>
                                 <div class="menu-item-right">
                                     <img src="{{ $imgSrc }}"
                                          alt="{{ $product->name }}"

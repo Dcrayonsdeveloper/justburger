@@ -59,8 +59,8 @@
 
 @else
     {{-- Full menu card --}}
-    <div {{ $attributes->merge(['class' => 'group flex flex-col rounded-xl overflow-hidden']) }}
-       style="background:#fff; border:1px solid rgba(0,0,0,.08); transition:transform .3s cubic-bezier(.25,.1,.25,1), box-shadow .3s, border-color .3s;"
+    <div {{ $attributes->merge(['class' => 'group flex flex-col rounded-xl overflow-hidden']) }} x-data
+       style="position:relative;background:#fff; border:1px solid rgba(0,0,0,.08); transition:transform .3s cubic-bezier(.25,.1,.25,1), box-shadow .3s, border-color .3s;"
        onmouseenter="this.style.transform='translateY(-6px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.12)';this.style.borderColor='rgba(200,16,46,.25)';"
        onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='';">
 
@@ -72,6 +72,19 @@
                  loading="lazy"
                  onerror="this.onerror=null;this.src='{{ $catImg }}';"
                  style="transition:transform .5s cubic-bezier(.25,.1,.25,1);">
+
+            {{-- Wishlist --}}
+            <button type="button"
+                    @click.prevent.stop="$store.wishlist.toggle({{ $product->id }})"
+                    :title="$store.wishlist.has({{ $product->id }}) ? 'Remove from wishlist' : 'Save to wishlist'"
+                    aria-label="Save to wishlist"
+                    style="position:absolute;top:.6rem;right:.6rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);border:none;border-radius:50%;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15);color:rgba(0,0,0,.4);">
+                <svg style="width:17px;height:17px;" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"
+                     :fill="$store.wishlist.has({{ $product->id }}) ? '#C8102E' : 'none'"
+                     :style="$store.wishlist.has({{ $product->id }}) ? 'color:#C8102E' : ''">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
+                </svg>
+            </button>
 
             {{-- Category label --}}
             @if($product->category)
