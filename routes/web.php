@@ -217,8 +217,6 @@ Route::post('/otp/verify-reset', [App\Http\Controllers\Auth\OtpController::class
 Route::post('/otp/reset-password', [App\Http\Controllers\Auth\OtpController::class, 'resetPassword'])->middleware('throttle:10,5')->name('otp.reset-password');
 
 // Social Login (Google, Facebook)
-Route::get('/auth/{provider}/redirect', [App\Http\Controllers\SocialLoginController::class, 'redirect'])->name('social.redirect');
-Route::get('/auth/{provider}/callback', [App\Http\Controllers\SocialLoginController::class, 'callback'])->name('social.callback');
 
 // Push Notifications
 Route::post('/push/subscribe', [App\Http\Controllers\PushSubscriptionController::class, 'subscribe'])->middleware('throttle:10,1')->name('push.subscribe');

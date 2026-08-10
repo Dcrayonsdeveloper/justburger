@@ -78,10 +78,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(UserAddress::class)->where('is_default', true);
     }
 
-    public function socialAccounts(): HasMany
-    {
-        return $this->hasMany(UserSocialAccount::class);
-    }
 
     public function checkoutPreferences(): HasOne
     {
