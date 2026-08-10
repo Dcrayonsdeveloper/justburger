@@ -73,11 +73,8 @@ class Cart extends Model
             $this->coupon_id = null;
         }
 
-        $tax = $this->items->sum(function ($item) {
-            return $item->product->is_taxable
-                ? ($item->total * $item->product->tax_rate / 100)
-                : 0;
-        });
+        // No tax is charged to the customer; prices are the final price.
+        $tax = 0;
 
         $this->update([
             'coupon_id' => $this->coupon_id,

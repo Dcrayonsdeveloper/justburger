@@ -135,7 +135,7 @@ class CheckoutController extends Controller
             'same_billing_address' => ['nullable', 'boolean'],
             'payment_method' => ['required', 'string', 'in:cod,partial_pay'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'delivery_method' => ['required', 'string', 'in:delivery,collection'],
+            'delivery_method' => ['nullable', 'string', 'in:collection'],
         ];
 
         if ($isGuest) {
@@ -156,7 +156,9 @@ class CheckoutController extends Controller
         $validated = $request->validate($rules);
 
         // Delivery validation rules
-        $isDelivery = ($validated['delivery_method'] ?? 'collection') === 'delivery';
+        // Collection only — delivery was withdrawn, so there is never a fee,
+        // no minimum order and no delivery window to police.
+        $isDelivery = false;
         if ($isDelivery) {
             $ukNow = now('Europe/London');
             $dayOfWeek = (int) $ukNow->format('N'); // 1=Mon, 7=Sun
@@ -484,7 +486,7 @@ class CheckoutController extends Controller
             'same_billing_address' => ['nullable', 'boolean'],
             'payment_method' => ['required', 'string', 'in:stripe'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'delivery_method' => ['required', 'string', 'in:delivery,collection'],
+            'delivery_method' => ['nullable', 'string', 'in:collection'],
         ];
 
         if ($isGuest) {
@@ -505,7 +507,9 @@ class CheckoutController extends Controller
         $validated = $request->validate($rules);
 
         // Delivery window validation (mirrors process())
-        $isDelivery = ($validated['delivery_method'] ?? 'collection') === 'delivery';
+        // Collection only — delivery was withdrawn, so there is never a fee,
+        // no minimum order and no delivery window to police.
+        $isDelivery = false;
         if ($isDelivery) {
             $ukNow = now('Europe/London');
             if ((int) $ukNow->format('N') === 7) {

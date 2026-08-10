@@ -182,7 +182,6 @@
             font-size:.68rem; color:rgba(0,0,0,.35); font-weight:600;
         }
 
-        /* ─── Delivery nudge ─── */
         .nudge-bar {
             padding:.85rem 1.1rem;
             border-bottom:1px solid rgba(0,0,0,.07);
@@ -203,12 +202,6 @@
         @keyframes nudgeShimmer {
             from { transform:translateX(-100%); }
             to   { transform:translateX(100%); }
-        }
-
-        .free-delivery-banner {
-            padding:.7rem 1.1rem;
-            background:#f0fdf4;
-            border-bottom:1px solid rgba(22,163,74,.2);
         }
 
         /* ─── Empty state ─── */
@@ -371,28 +364,6 @@
                         <div class="lg:w-[330px] shrink-0">
                             <div class="order-summary lg:sticky lg:top-20">
 
-                                {{-- Free delivery nudge --}}
-                                @php $freeThreshold = (float) \App\Models\Setting::get('free_shipping_threshold', 20); @endphp
-                                <template x-if="subtotal < {{ $freeThreshold }}">
-                                    <div class="nudge-bar">
-                                        <p class="nudge-label">
-                                            Add <span x-text="fp({{ $freeThreshold }} - subtotal)"></span> more for FREE delivery
-                                        </p>
-                                        <div class="nudge-track">
-                                            <div class="nudge-fill"
-                                                 :style="'width:'+Math.min(100,(subtotal/{{ $freeThreshold }})*100)+'%'"></div>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="subtotal >= {{ $freeThreshold }}">
-                                    <div class="free-delivery-banner">
-                                        <p style="font-size:.82rem;color:#4ade80;font-weight:700;display:flex;align-items:center;gap:.4rem;">
-                                            <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                            You qualify for FREE delivery!
-                                        </p>
-                                    </div>
-                                </template>
-
                                 {{-- Summary header --}}
                                 <div class="summary-header">
                                     <svg style="width:15px;height:15px;color:rgba(0,0,0,.4);flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -445,16 +416,7 @@
                                                 <span style="font-weight:700;color:#4ade80;" x-text="'− ' + fp(discount)"></span>
                                             </div>
                                         </template>
-                                        <div class="summary-row">
-                                            <span class="summary-label">Delivery</span>
-                                            <template x-if="subtotal >= {{ $freeThreshold }}">
-                                                <span style="font-weight:700;color:#4ade80;font-size:.85rem;">FREE</span>
-                                            </template>
-                                            <template x-if="subtotal < {{ $freeThreshold }}">
-                                                <span class="summary-val" x-text="fp({{ (float) \App\Models\Setting::get('shipping_charge', 2.99) }})"></span>
-                                            </template>
-                                        </div>
-                                    </div>
+
 
                                     <div class="summary-divider"></div>
 
@@ -488,7 +450,7 @@
                                     <span style="color:rgba(0,0,0,.15);">·</span>
                                     <span class="trust-item">
                                         <svg style="width:11px;height:11px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        Fast delivery
+                                        Fresh &amp; fast
                                     </span>
                                     <span style="color:rgba(0,0,0,.15);">·</span>
                                     <span class="trust-item">
