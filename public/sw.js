@@ -9,7 +9,7 @@
  *  - Offline fallback page for navigation requests
  */
 
-const CACHE_VERSION = 'justburgers-v3';
+const CACHE_VERSION = 'justburgers-v4';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
@@ -62,6 +62,13 @@ self.addEventListener('fetch', event => {
         url.pathname.startsWith('/seller') ||
         url.pathname.startsWith('/pos') ||
         url.pathname.startsWith('/api/webhook')) {
+        return;
+    }
+
+    // Never cache pages that carry a CSRF token or per-user state. A cached
+    // copy hands the visitor a stale _token and the POST dies with 419
+    // "Page Expired", which is exactly what happened on sign-up.
+    if (/^\/(login|register|logout|password|checkout|cart|account|wishlist)(\/|$)/.test(url.pathname)) {
         return;
     }
 

@@ -468,55 +468,30 @@
               @submit.prevent="handleSubmit($event)">
             @csrf
 
-            <input type="hidden" name="delivery_method" :value="deliveryMethod">
+            <input type="hidden" name="delivery_method" value="collection">
 
             <div class="ck-grid">
                 {{-- ═══ LEFT COLUMN ═══ --}}
                 <div class="ck-left">
 
-                    {{-- ── Delivery / Collection Toggle ── --}}
+                    {{-- ── Collection only ── --}}
                     <div class="ck-card">
                         <div class="ck-card-head">
                             <div class="ck-step">
                                 <svg style="width:.7rem;height:.7rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>
                             </div>
-                            <span class="ck-card-label">How would you like your order?</span>
+                            <span class="ck-card-label">Collection</span>
                         </div>
                         <div class="ck-card-body">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
-                                <label style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;border-radius:.5rem;cursor:pointer;transition:all .15s;"
-                                       :style="deliveryMethod === 'collection' ? 'border:2px solid #C8102E;background:rgba(200,16,46,.04)' : 'border:2px solid rgba(0,0,0,.1);background:#fff'"
-                                       @click="deliveryMethod = 'collection'">
-                                    <div style="width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;"
-                                         :style="deliveryMethod === 'collection' ? 'background:rgba(200,16,46,.1);color:#C8102E' : 'background:rgba(0,0,0,.05);color:rgba(0,0,0,.35)'">
-                                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                    </div>
-                                    <div>
-                                        <span style="font-size:.82rem;font-weight:700;display:block;" :style="deliveryMethod === 'collection' ? 'color:#C8102E' : 'color:#111'">Collection</span>
-                                        <span style="font-size:.65rem;color:rgba(0,0,0,.4);line-height:1.3;">Pick up from store</span>
-                                    </div>
-                                </label>
-                                <label style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;border-radius:.5rem;cursor:pointer;transition:all .15s;"
-                                       :style="deliveryMethod === 'delivery' ? 'border:2px solid #C8102E;background:rgba(200,16,46,.04)' : 'border:2px solid rgba(0,0,0,.1);background:#fff'"
-                                       @click="deliveryMethod = 'delivery'">
-                                    <div style="width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;"
-                                         :style="deliveryMethod === 'delivery' ? 'background:rgba(200,16,46,.1);color:#C8102E' : 'background:rgba(0,0,0,.05);color:rgba(0,0,0,.35)'">
-                                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                                    </div>
-                                    <div>
-                                        <span style="font-size:.82rem;font-weight:700;display:block;" :style="deliveryMethod === 'delivery' ? 'color:#C8102E' : 'color:#111'">Delivery</span>
-                                        <span style="font-size:.65rem;color:rgba(0,0,0,.4);line-height:1.3;">Within 3 miles &middot; £5.00</span>
-                                    </div>
-                                </label>
+                            <div style="padding:.75rem .9rem;background:rgba(46,125,50,.06);border:1px solid rgba(46,125,50,.15);border-radius:.4rem;">
+                                <p style="font-size:.8rem;font-weight:700;color:#2E7D32;margin:0 0 .2rem;">
+                                    <svg style="width:.8rem;height:.8rem;display:inline;vertical-align:-1px;margin-right:.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    Collect your order from the restaurant
+                                </p>
+                                <p style="font-size:.78rem;color:rgba(0,0,0,.6);margin:0;">
+                                    {{ \App\Models\Setting::get('site_address', '525 Staines Road, Bedfont, Middx. TW14 8BP') }}
+                                </p>
                             </div>
-                            <template x-if="deliveryMethod === 'collection'">
-                                <div style="margin-top:.75rem;padding:.6rem .75rem;background:rgba(46,125,50,.06);border:1px solid rgba(46,125,50,.15);border-radius:.4rem;">
-                                    <p style="font-size:.75rem;font-weight:600;color:#2E7D32;margin:0;">
-                                        <svg style="width:.75rem;height:.75rem;display:inline;vertical-align:-1px;margin-right:.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                        Collect from: {{ \App\Models\Setting::get('site_address', '525 Staines Road, Bedfont, Middx. TW14 8BP') }}
-                                    </p>
-                                </div>
-                            </template>
                         </div>
                     </div>
 
@@ -525,7 +500,7 @@
                         <div class="ck-card-head">
                             <div class="ck-step">1</div>
                             <span class="ck-card-label">
-                                @if($isGuest) Contact & Delivery @else Delivery Address @endif
+                                @if($isGuest) Contact Details @else Contact Details @endif
                             </span>
                         </div>
                         <div class="ck-card-body">
@@ -803,7 +778,7 @@
                             <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
                                 <input type="checkbox" name="same_billing_address" value="1" x-model="sameBilling"
                                        style="accent-color:#C8102E;width:.9rem;height:.9rem;">
-                                <span style="font-size:.82rem;font-weight:600;color:#111111;">Billing same as delivery</span>
+                                <span style="font-size:.82rem;font-weight:600;color:#111111;">Billing same as contact details</span>
                             </label>
 
                             <div x-show="!sameBilling" x-collapse style="margin-top:.65rem;padding-top:.65rem;border-top:1px solid rgba(0,0,0,.08);">
@@ -866,14 +841,14 @@
                                     </div>
                                     <div>
                                         <p class="ck-pay-name">Partial Pay</p>
-                                        <p class="ck-pay-desc">Pay {{ currency_symbol() }}{{ \App\Models\Setting::get('cod_advance_amount', 100) }} now, rest on delivery</p>
+                                        <p class="ck-pay-desc">Pay {{ currency_symbol() }}{{ \App\Models\Setting::get('cod_advance_amount', 100) }} now, rest on collection</p>
                                     </div>
                                 </div>
                                 <div x-show="paymentMethod === 'cod'" x-collapse>
                                     <div style="padding:0 .75rem .65rem;">
                                         <div style="display:flex;align-items:center;gap:.4rem;padding:.5rem .65rem;background:rgba(200,16,46,.04);border:1px solid rgba(200,16,46,.12);border-radius:.4rem;font-size:.72rem;color:#111111;">
                                             <svg style="width:.85rem;height:.85rem;color:#C8102E;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                            <span>Pay <strong style="color:#C8102E;">@price(\App\Models\Setting::get('cod_advance_amount', 100))</strong> advance to confirm. <strong>@price($cart->total - \App\Models\Setting::get('cod_advance_amount', 100) > 0 ? $cart->total - \App\Models\Setting::get('cod_advance_amount', 100) : 0)</strong> on delivery.</span>
+                                            <span>Pay <strong style="color:#C8102E;">@price(\App\Models\Setting::get('cod_advance_amount', 100))</strong> advance to confirm. <strong>@price($cart->total - \App\Models\Setting::get('cod_advance_amount', 100) > 0 ? $cart->total - \App\Models\Setting::get('cod_advance_amount', 100) : 0)</strong> on collection.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -892,45 +867,14 @@
                         <div class="ck-card-body">
                             <label class="ck-label">Order Notes (optional)</label>
                             <textarea name="notes" rows="2" class="ck-input" style="resize:none;"
-                                      placeholder="Special delivery instructions...">{{ old('notes') }}</textarea>
+                                      placeholder="Any notes for your order...">{{ old('notes') }}</textarea>
                         </div>
                     </div>
                 </div>
 
                 {{-- ═══ RIGHT COLUMN — Order Summary ═══ --}}
                 <div class="ck-right">
-                    {{-- Delivery info nudge --}}
-                    @php
-                        $deliveryMinOrder = (float) \App\Models\Setting::get('delivery_min_order', 25);
-                        $deliveryFee = (float) \App\Models\Setting::get('delivery_fee', 5);
-                        $cartSubtotal = (float) $cart->subtotal;
-                    @endphp
-                    <div x-show="deliveryMethod === 'delivery'" x-cloak>
-                        @if($cartSubtotal < $deliveryMinOrder)
-                            <div class="ck-ship-nudge" style="background:rgba(200,16,46,.06);border:1px solid rgba(200,16,46,.15);">
-                                <p style="font-size:.78rem;color:#C8102E;font-weight:700;margin:0;">Add @price($deliveryMinOrder - $cartSubtotal) more for delivery (min £{{ number_format($deliveryMinOrder, 2) }})</p>
-                                <div class="ck-ship-bar" style="background:rgba(200,16,46,.12);">
-                                    <div style="background:#C8102E;height:100%;width:{{ min(100, ($cartSubtotal / $deliveryMinOrder) * 100) }}%;border-radius:99px;"></div>
-                                </div>
-                            </div>
-                        @else
-                            <div class="ck-ship-nudge" style="background:rgba(46,125,50,.08);border:1px solid rgba(46,125,50,.15);">
-                                <p style="font-size:.78rem;color:#2E7D32;font-weight:700;margin:0;">&#10003; Delivery available &middot; £{{ number_format($deliveryFee, 2) }} fee</p>
-                            </div>
-                        @endif
-                    </div>
-                    <div x-show="deliveryMethod === 'collection'">
-                        <div class="ck-ship-nudge" style="background:rgba(46,125,50,.08);border:1px solid rgba(46,125,50,.15);">
-                            <p style="font-size:.78rem;color:#2E7D32;font-weight:700;margin:0;">&#10003; Collection — no delivery fee</p>
-                        </div>
-                    </div>
-
-                    <div class="ck-summary">
-                        <div class="ck-summary-head">
-                            Your Order
-                        </div>
-
-                        {{-- Coupons --}}
+{{-- Coupons --}}
                         @if($availableCoupons->count())
                         <div style="padding:.75rem 1rem;border-bottom:1px solid rgba(0,0,0,.06);" x-data="{ applying: false }">
                             <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.5rem;">
@@ -1050,17 +994,7 @@
                             @endif
 
 
-                            @php $shipFee = $deliveryFee; @endphp
-                            <div class="ck-price-row">
-                                <span class="ck-price-label">Delivery</span>
-                                <template x-if="deliveryMethod === 'delivery'">
-                                    <span class="ck-price-val">@price($deliveryFee)</span>
-                                </template>
-                                <template x-if="deliveryMethod === 'collection'">
-                                    <span class="ck-price-green">FREE (Collection)</span>
-                                </template>
-                            </div>
-                            <p x-show="deliveryMethod === 'delivery'" x-cloak style="font-size:.65rem;color:rgba(0,0,0,.35);">Within 3 miles &middot; Mon–Sat 10am–4pm</p>
+                            @php $shipFee = 0; @endphp
 
                             {{-- Loyalty Points --}}
                             @if(!empty($loyaltyPoints) && $loyaltyPoints > 0)
@@ -1079,36 +1013,28 @@
                                 </div>
                             @endif
 
-                            @if($cart->tax > 0)
-                                <div class="ck-price-row">
-                                    <span class="ck-price-label">Tax (incl.)</span>
-                                    <span style="font-size:.7rem;color:#2E7D32;font-weight:500;">incl. @price($cart->tax)</span>
-                                </div>
-                            @endif
+
 
                             <hr class="ck-price-divider">
 
                             @php
-                                $displayTotalDelivery = $cart->total + $deliveryFee;
+                                // Collection only — no delivery fee to add.
                                 $displayTotalCollection = $cart->total;
                                 $totalSavings = $cart->discount;
                                 if (isset($navratriActive) && $navratriActive) {
                                     $navSave = round(($cart->subtotal - $cart->discount) * 0.05, 2);
-                                    $displayTotalDelivery = max(0, $displayTotalDelivery - $navSave);
                                     $displayTotalCollection = max(0, $displayTotalCollection - $navSave);
                                     $totalSavings += $navSave;
                                 }
-                                $displayTotal = $displayTotalDelivery;
+                                $displayTotal = $displayTotalCollection;
                                 $codMinOrder = 10;
                                 $showCod = $displayTotal >= $codMinOrder;
                             @endphp
 
                             <div class="ck-total-row">
                                 <span class="ck-total-label">Total</span>
-                                <span class="ck-total-val" x-show="deliveryMethod === 'delivery'">@price($displayTotalDelivery)</span>
-                                <span class="ck-total-val" x-show="deliveryMethod === 'collection'">@price($displayTotalCollection)</span>
+                                                                <span class="ck-total-val">@price($displayTotalCollection)</span>
                             </div>
-                            <p style="font-size:.62rem;color:rgba(0,0,0,.35);text-align:center;margin-top:.15rem;">Inclusive of all taxes</p>
 
                             @if($totalSavings > 0)
                                 <div class="ck-saved-banner" style="margin-top:.65rem;">
@@ -1123,8 +1049,7 @@
                                 <span x-show="!processing">
                                     <template x-if="paymentMethod === 'stripe'">
                                         <span>Pay Now &middot;
-                                            <span x-show="deliveryMethod === 'delivery'">@price($displayTotalDelivery)</span>
-                                            <span x-show="deliveryMethod === 'collection'">@price($displayTotalCollection)</span>
+                                                                                        <span>@price($displayTotalCollection)</span>
                                         </span>
                                     </template>
                                     <template x-if="paymentMethod === 'cod'">

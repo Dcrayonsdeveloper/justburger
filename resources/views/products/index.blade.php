@@ -187,14 +187,15 @@
         }
         .menu-fav-btn {
             position:absolute; top:.55rem; right:.6rem;
-            width:30px; height:30px; padding:0;
+            width:34px; height:34px; padding:0;
             display:flex; align-items:center; justify-content:center;
-            background:#fff; border:1px solid rgba(0,0,0,.1); border-radius:50%;
-            color:rgba(0,0,0,.35); cursor:pointer;
-            transition:color .14s, border-color .14s, transform .14s;
+            background:#fff; border:1.5px solid rgba(200,16,46,.25); border-radius:50%;
+            color:#C8102E; cursor:pointer;
+            box-shadow:0 1px 4px rgba(0,0,0,.10);
+            transition:background .14s, border-color .14s, transform .14s;
         }
-        .menu-fav-btn:hover { color:#C8102E; border-color:rgba(200,16,46,.35); transform:scale(1.06); }
-        .menu-fav-btn svg { width:16px; height:16px; }
+        .menu-fav-btn:hover { background:#fdecef; border-color:#C8102E; transform:scale(1.08); }
+        .menu-fav-btn svg { width:19px; height:19px; display:block; }
 
         .menu-add-btn {
             width:86px;
@@ -314,7 +315,6 @@
         $activeCat  = request('category');
         $searchTerm = trim((string) request('q'));
         $metaCat   = $activeCat ? ($categories->firstWhere('slug', $activeCat)?->name ?? null) : null;
-        $freeThreshold = \App\Models\Setting::get('free_delivery_threshold', 20);
     @endphp
 
     <div class="menu-page">
@@ -449,7 +449,7 @@
                                             :aria-pressed="$store.wishlist.has({{ $product->id }})"
                                             :title="$store.wishlist.has({{ $product->id }}) ? 'Remove from wishlist' : 'Save to wishlist'"
                                             aria-label="Save to wishlist">
-                                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"
+                                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
                                              :fill="$store.wishlist.has({{ $product->id }}) ? '#C8102E' : 'none'"
                                              :style="$store.wishlist.has({{ $product->id }}) ? 'color:#C8102E' : ''">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
@@ -638,11 +638,6 @@
                            onmouseover="this.style.background='#a50e26'" onmouseout="this.style.background='#C8102E'">
                             View Basket &amp; Checkout
                         </a>
-                        @if($freeThreshold)
-                        <p style="font-size:.7rem;color:rgba(0,0,0,.32);text-align:center;margin-top:.5rem;">
-                            Free delivery on orders over @price($freeThreshold)
-                        </p>
-                        @endif
                     </div>
                 </div>
 
