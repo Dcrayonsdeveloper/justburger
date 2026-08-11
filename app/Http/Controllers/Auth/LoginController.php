@@ -53,7 +53,10 @@ class LoginController extends Controller
                 return response()->json(['success' => true]);
             }
 
-            return redirect()->intended(route('account.dashboard'));
+            // Land on the storefront, not the account area — people sign in to
+            // order. intended() still wins, so anyone bounced here from checkout
+            // is returned there instead.
+            return redirect()->intended(route('home'));
         }
 
         if ($request->wantsJson()) {
