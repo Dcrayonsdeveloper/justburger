@@ -89,7 +89,7 @@ class OtpController extends Controller
 
         return response()->json([
             'success' => true,
-            'redirect' => session()->pull('url.intended', route('account.dashboard')),
+            'redirect' => session()->pull('url.intended', route('home')),
         ]);
     }
 
@@ -177,10 +177,10 @@ class OtpController extends Controller
         Auth::login($user);
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'redirect' => route('account.dashboard')]);
+            return response()->json(['success' => true, 'redirect' => route('home')]);
         }
 
-        return redirect()->route('account.dashboard')->with('success', 'Password reset successfully!');
+        return redirect()->route('home')->with('success', 'Password reset successfully!');
     }
 
     private function findUser(string $identifier): ?User
