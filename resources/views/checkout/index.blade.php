@@ -542,22 +542,6 @@
                             <div style="display:flex;flex-direction:column;gap:.65rem;" x-data="addressGPS()">
 
                                 {{-- GPS Location Button --}}
-                                <button type="button" class="ck-gps-btn" @click="detectLocation()" :disabled="gpsLoading">
-                                    <div class="ck-gps-icon" :class="gpsLoading ? 'locating' : ''">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!gpsLoading">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        </svg>
-                                        <svg x-show="gpsLoading" x-cloak class="animate-spin" style="width:1rem;height:1rem;" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="ck-gps-text" x-text="gpsLoading ? 'Detecting your location...' : 'Use My Current Location'"></p>
-                                        <p class="ck-gps-sub" x-text="gpsLoading ? 'This may take a few seconds' : 'Auto-fill address using GPS'"></p>
-                                    </div>
-                                </button>
 
                                 {{-- GPS Status Message --}}
                                 <div x-show="gpsStatus" x-cloak class="ck-gps-status" :class="gpsSuccess ? 'success' : 'error'">
@@ -663,26 +647,6 @@
                                 <h3 class="ck-new-addr-title">New Address</h3>
                                 <div style="display:flex;flex-direction:column;gap:.55rem;">
 
-                                    {{-- GPS Button for new address --}}
-                                    <button type="button" class="ck-gps-btn" style="margin-bottom:.25rem;" @click="detectLocation()" :disabled="gpsLoading">
-                                        <div class="ck-gps-icon" :class="gpsLoading ? 'locating' : ''">
-                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!gpsLoading">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            </svg>
-                                            <svg x-show="gpsLoading" x-cloak class="animate-spin" style="width:1rem;height:1rem;" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="ck-gps-text" x-text="gpsLoading ? 'Detecting...' : 'Use My Location'"></p>
-                                            <p class="ck-gps-sub">Auto-fill address using GPS</p>
-                                        </div>
-                                    </button>
-                                    <div x-show="gpsStatus" x-cloak class="ck-gps-status" :class="gpsSuccess ? 'success' : 'error'" style="margin-bottom:.25rem;">
-                                        <span x-text="gpsStatus"></span>
-                                    </div>
 
                                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;">
                                         <div>
@@ -874,7 +838,42 @@
 
                 {{-- ═══ RIGHT COLUMN — Order Summary ═══ --}}
                 <div class="ck-right">
-{{-- Coupons --}}
+{{-- Promo code --}}
+                        <div style="padding:.75rem 1rem;border-bottom:1px solid rgba(0,0,0,.06);"
+                             x-data="{ code: '', applying: false, error: '' }">
+                            <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.5rem;">
+                                <svg style="width:.85rem;height:.85rem;color:#D4A017;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                <span style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#111111;">Have a code?</span>
+                            </div>
+                            @if($cart->coupon_id)
+                                <p style="font-size:.75rem;color:#2E7D32;font-weight:600;margin:0;">
+                                    &#10003; {{ $cart->coupon->code ?? 'Coupon' }} applied
+                                </p>
+                            @else
+                            <form @submit.prevent="
+                                    if (!code.trim()) return;
+                                    applying = true; error = '';
+                                    fetch('{{ route('cart.apply-coupon') }}', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                        body: JSON.stringify({ code: code })
+                                    }).then(r => r.ok ? location.reload() : r.json().then(d => { error = d.error || 'Invalid code'; applying = false; }))
+                                      .catch(() => { error = 'Something went wrong.'; applying = false; })
+                                  " style="display:flex;gap:.4rem;">
+                                <input type="text" x-model="code" placeholder="Promo / discount code"
+                                       autocomplete="off" spellcheck="false"
+                                       style="flex:1;min-width:0;padding:.5rem .65rem;font-size:.8rem;border:1px solid rgba(0,0,0,.15);border-radius:.35rem;outline:none;text-transform:uppercase;">
+                                <button type="submit" :disabled="applying"
+                                        style="padding:.5rem .9rem;font-size:.78rem;font-weight:700;color:#fff;background:#C8102E;border:0;border-radius:.35rem;cursor:pointer;white-space:nowrap;">
+                                    <span x-show="!applying">Apply</span>
+                                    <span x-show="applying" x-cloak>...</span>
+                                </button>
+                            </form>
+                            <p x-show="error" x-cloak x-text="error" style="font-size:.72rem;color:#C8102E;margin:.35rem 0 0;"></p>
+                            @endif
+                        </div>
+
+                        {{-- Coupons --}}
                         @if($availableCoupons->count())
                         <div style="padding:.75rem 1rem;border-bottom:1px solid rgba(0,0,0,.06);" x-data="{ applying: false }">
                             <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.5rem;">

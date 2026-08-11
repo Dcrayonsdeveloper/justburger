@@ -3,10 +3,18 @@
     $whatsappMessage = \App\Models\Setting::get('whatsapp_message', 'Hi! I\'d like to place an order please.');
 @endphp
 
-<div x-data="{ open: false, pulse: true }"
+<style>
+    /* Sit clear of the mobile bottom nav (64px + safe area); drop to the
+       normal corner offset once that nav is gone at sm and up. */
+    #whatsapp-float { bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)); transition: bottom .3s ease; }
+    @media (min-width: 640px) { #whatsapp-float { bottom: 1.5rem; } }
+</style>
+
+<div x-data="{ open: false, pulse: true, scrolled: false }"
      x-init="setTimeout(() => pulse = false, 5000)"
+     @scroll.window="scrolled = window.scrollY > 400"
      id="whatsapp-float"
-     class="fixed bottom-20 right-6 sm:bottom-6 z-10000 flex flex-col items-end gap-3" style="transition:bottom .3s ease;">
+     class="fixed right-4 sm:right-6 z-10000 flex flex-col items-end gap-3">
 
     {{-- Tooltip --}}
     <div x-show="open" x-cloak
@@ -34,6 +42,16 @@
             Start Chat
         </a>
     </div>
+
+    {{-- Back to top --}}
+    <button x-show="scrolled" x-cloak x-transition
+            @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Back to top"
+            class="w-11 h-11 bg-[#C8102E] hover:bg-[#A00D24] rounded-full shadow-lg flex items-center justify-center transition-colors">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+        </svg>
+    </button>
 
     {{-- WhatsApp Button --}}
     <button @click="open = !open"
