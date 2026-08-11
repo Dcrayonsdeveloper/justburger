@@ -331,7 +331,9 @@ class CartController extends Controller
             return back()->with('error', $message);
         }
 
-        $coupon = Coupon::where('code', strtoupper($validated['code']))
+        // Match case-insensitively: codes are entered by hand at checkout and
+        // saved verbatim in admin, so "test" must find a coupon stored as "TEST".
+        $coupon = Coupon::whereRaw('UPPER(code) = ?', [strtoupper(trim($validated['code']))])
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());

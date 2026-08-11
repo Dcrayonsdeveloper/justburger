@@ -178,7 +178,7 @@
                                         <label for="country" class="block text-[16px] font-medium text-neutral-600 mb-1.5">Country <span class="text-error-500">*</span></label>
                                         <select name="country" id="country" required
                                                 class="w-full rounded-lg border border-neutral-200 px-3.5 py-2.5 text-sm text-neutral-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors @error('country') border-error-300 ring-1 ring-error-300 @enderror">
-                                            <option value="IN" {{ old('country', 'IN') === 'IN' ? 'selected' : '' }}>India</option>
+                                            <option value="GB" selected>United Kingdom</option>
                                         </select>
                                         @error('country')
                                             <p class="mt-1 text-[12px] text-error-600">{{ $message }}</p>
