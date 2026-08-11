@@ -119,7 +119,6 @@
 
         /* Product list item (Nando's style) */
         .menu-item-row {
-            position:relative;
             display:flex;
             align-items:center;
             gap:1rem;
@@ -186,16 +185,16 @@
             .menu-item-row { padding:.8rem 1rem; }
         }
         .menu-fav-btn {
-            position:absolute; top:.55rem; right:.6rem;
-            width:34px; height:34px; padding:0;
+            align-self:flex-end;
+            width:32px; height:32px; padding:0;
             display:flex; align-items:center; justify-content:center;
-            background:#fff; border:1.5px solid rgba(200,16,46,.25); border-radius:50%;
-            color:#C8102E; cursor:pointer;
-            box-shadow:0 1px 4px rgba(0,0,0,.10);
-            transition:background .14s, border-color .14s, transform .14s;
+            background:#fff; border:1.5px solid rgba(0,0,0,.12); border-radius:50%;
+            color:rgba(0,0,0,.35); cursor:pointer;
+            transition:color .14s, border-color .14s, background .14s;
         }
-        .menu-fav-btn:hover { background:#fdecef; border-color:#C8102E; transform:scale(1.08); }
-        .menu-fav-btn svg { width:19px; height:19px; display:block; }
+        .menu-fav-btn:hover { color:#C8102E; border-color:#C8102E; background:#fdecef; }
+        .menu-fav-btn[aria-pressed="true"] { color:#C8102E; border-color:#C8102E; }
+        .menu-fav-btn svg { width:18px; height:18px; display:block; }
 
         .menu-add-btn {
             width:86px;
@@ -444,6 +443,7 @@
                                     @endif
                                     <div class="menu-item-price">@price($product->price)</div>
                                 </a>
+                                <div class="menu-item-right">
 <button type="button" class="menu-fav-btn"
                                             @click.prevent="$store.wishlist.toggle({{ $product->id }})"
                                             :aria-pressed="$store.wishlist.has({{ $product->id }})"
@@ -455,7 +455,6 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
                                         </svg>
                                     </button>
-                                <div class="menu-item-right">
                                     <img src="{{ $imgSrc }}"
                                          alt="{{ $product->name }}"
                                          class="menu-item-img"
