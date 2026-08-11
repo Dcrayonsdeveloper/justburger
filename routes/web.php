@@ -118,8 +118,8 @@ Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'
 
 // Wishlist actions (require auth)
 Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function () {
-    Route::post('/{product}', [App\Http\Controllers\WishlistController::class, 'store'])->name('store');
-    Route::delete('/{product}', [App\Http\Controllers\WishlistController::class, 'destroy'])->name('destroy');
+    Route::post('/{product:id}', [App\Http\Controllers\WishlistController::class, 'store'])->name('store');
+    Route::delete('/{product:id}', [App\Http\Controllers\WishlistController::class, 'destroy'])->name('destroy');
 });
 
 // Guest Authentication Routes
