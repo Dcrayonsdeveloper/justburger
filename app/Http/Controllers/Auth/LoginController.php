@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Models\Cart;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -19,10 +20,30 @@ class LoginController extends Controller
 
     public function login(Request $request): RedirectResponse|JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
+        // The sign-in form asks for "email or phone number" in one box, so the
+        // identifier arrives here as `email` whichever it is. Decide which
+        // column to authenticate against rather than assuming an address.
+        $validated = $request->validate([
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
+
+        $identifier = trim($validated['email']);
+        $field = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+        if ($field === 'phone') {
+            // Match however the number was stored: with or without spaces,
+            // dashes or a leading +.
+            $digits = preg_replace('/\D/', '', $identifier);
+            $user = User::whereRaw(
+                "REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?",
+                ['%' . $digits]
+            )->first();
+
+            $identifier = $user?->email ?? $identifier;
+        }
+
+        $credentials = ['email' => $identifier, 'password' => $validated['password']];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $this->mergeGuestCart($request);

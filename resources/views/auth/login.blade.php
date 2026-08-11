@@ -189,11 +189,6 @@
         .auth-step-id { font-size: .9rem; color: rgba(255,255,255,.5); }
         .auth-step-id strong { color: #fff; }
 
-        .auth-otp-input {
-            text-align: center; letter-spacing: 8px;
-            font-weight: 700; font-size: 1.2rem;
-        }
-
         .auth-back-link {
             display: inline-flex; align-items: center; gap: .35rem;
             font-size: .85rem; color: rgba(255,255,255,.3);
@@ -264,33 +259,6 @@
                     </div>
                     <button type="submit" class="auth-btn-primary">Sign In</button>
                 </form>
-                <div style="text-align:center;">
-                    <button @click="sendOtpForIdentifier()" type="button" class="auth-text-btn">Sign in with OTP instead</button>
-                </div>
-            </div>
-
-            {{-- Step 2b: OTP sent --}}
-            <div x-show="step === 'otp_sent'" x-cloak style="display:flex;flex-direction:column;gap:1rem;">
-                <div class="auth-step-header">
-                    <p class="auth-step-id">OTP sent to <strong x-text="identifier"></strong></p>
-                    <button @click="step='identifier';error=''" type="button" class="auth-link">Change</button>
-                </div>
-                <div>
-                    <label class="auth-label">Enter OTP</label>
-                    <input type="text" x-model="otp" maxlength="6" inputmode="numeric" @keyup.enter="verifyOtp()"
-                           class="auth-input auth-otp-input" placeholder="- - - - - -">
-                </div>
-                <button @click="verifyOtp()" :disabled="verifying" type="button" class="auth-btn-primary">
-                    <span x-show="!verifying">Verify & Sign In</span>
-                    <span x-show="verifying">Verifying...</span>
-                </button>
-                <p x-show="error" x-text="error" class="auth-error" x-cloak></p>
-                <p class="auth-hint">OTP sent via WhatsApp + Email. Valid 10 min.</p>
-            </div>
-
-            {{-- Sending OTP --}}
-            <div x-show="step === 'sending_otp'" x-cloak style="padding:1.25rem 0;text-align:center;">
-                <p style="font-size:.95rem;color:rgba(255,255,255,.5);">Sending OTP to <strong style="color:#fff;" x-text="identifier"></strong>...</p>
             </div>
 
             <div class="auth-check-row">
@@ -405,51 +373,15 @@
 <script>
 function unifiedLogin() {
     return {
-        identifier: '', otp: '', step: 'identifier',
-        sending: false, verifying: false, error: '',
+        identifier: '', step: 'identifier',
+        error: '',
 
         continueLogin() {
             if (!this.identifier.trim()) { this.error = 'Enter email or phone number'; return; }
             this.error = '';
-            const isPhone = /^\+?\d[\d\s-]{8,}$/.test(this.identifier.replace(/\s/g, ''));
-            if (isPhone) {
-                this.sendOtpForIdentifier();
-            } else {
-                this.step = 'password';
-            }
+            // Email or phone — the next step is always the password.
+            this.step = 'password';
         },
-
-        async sendOtpForIdentifier() {
-            this.step = 'sending_otp'; this.error = '';
-            try {
-                const r = await fetch('{{ route("otp.send-login") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
-                    body: JSON.stringify({ identifier: this.identifier })
-                });
-                if (r.status === 429) { this.error = 'Too many attempts. Please wait a few minutes.'; this.step = 'identifier'; return; }
-                const d = await r.json();
-                if (d.success) { this.step = 'otp_sent'; }
-                else { this.error = d.message || 'Failed to send OTP'; this.step = 'identifier'; }
-            } catch(e) { this.error = 'Something went wrong. Please try again.'; this.step = 'identifier'; }
-        },
-
-        async verifyOtp() {
-            if (!this.otp || this.otp.length !== 6) { this.error = 'Enter 6-digit OTP'; return; }
-            this.verifying = true; this.error = '';
-            try {
-                const r = await fetch('{{ route("otp.verify-login") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
-                    body: JSON.stringify({ identifier: this.identifier, otp: this.otp })
-                });
-                if (r.status === 429) { this.error = 'Too many attempts. Please wait a few minutes.'; this.verifying = false; return; }
-                const d = await r.json();
-                if (d.success) { window.location.href = d.redirect; }
-                else { this.error = d.message || 'Invalid OTP'; }
-            } catch(e) { this.error = 'Something went wrong. Please try again.'; }
-            this.verifying = false;
-        }
     };
 }
 function otpReset() {
