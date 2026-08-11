@@ -83,10 +83,14 @@ class Coupon extends Model
             return false;
         }
 
-        // Check usage per user limit
-        $userUsageCount = $this->usages()->where('user_id', $user->id)->count();
-        if ($userUsageCount >= $this->usage_per_user) {
-            return false;
+        // Check usage per user limit. A null/0 limit means unlimited — without
+        // this guard, "count >= null" is always true and the coupon would be
+        // refused for everyone.
+        if ($this->usage_per_user) {
+            $userUsageCount = $this->usages()->where('user_id', $user->id)->count();
+            if ($userUsageCount >= $this->usage_per_user) {
+                return false;
+            }
         }
 
         return true;
