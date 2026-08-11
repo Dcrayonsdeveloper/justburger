@@ -184,17 +184,19 @@
             .menu-item-img { width:72px; height:72px; }
             .menu-item-row { padding:.8rem 1rem; }
         }
+        .menu-item-imgwrap { position:relative; display:block; line-height:0; }
         .menu-fav-btn {
-            align-self:flex-end;
-            width:32px; height:32px; padding:0;
+            position:absolute; top:.25rem; right:.25rem; z-index:2;
+            width:26px; height:26px; padding:0;
             display:flex; align-items:center; justify-content:center;
-            background:#fff; border:1.5px solid rgba(0,0,0,.12); border-radius:50%;
-            color:rgba(0,0,0,.35); cursor:pointer;
-            transition:color .14s, border-color .14s, background .14s;
+            background:rgba(255,255,255,.94); border:none; border-radius:50%;
+            color:rgba(0,0,0,.45); cursor:pointer;
+            box-shadow:0 1px 4px rgba(0,0,0,.22);
+            transition:color .14s, background .14s, transform .14s;
         }
-        .menu-fav-btn:hover { color:#C8102E; border-color:#C8102E; background:#fdecef; }
-        .menu-fav-btn[aria-pressed="true"] { color:#C8102E; border-color:#C8102E; }
-        .menu-fav-btn svg { width:18px; height:18px; display:block; }
+        .menu-fav-btn:hover { color:#C8102E; background:#fff; transform:scale(1.1); }
+        .menu-fav-btn[aria-pressed="true"] { color:#C8102E; }
+        .menu-fav-btn svg { width:15px; height:15px; display:block; }
 
         .menu-add-btn {
             width:86px;
@@ -444,6 +446,12 @@
                                     <div class="menu-item-price">@price($product->price)</div>
                                 </a>
                                 <div class="menu-item-right">
+                                    <span class="menu-item-imgwrap">
+<img src="{{ $imgSrc }}"
+                                         alt="{{ $product->name }}"
+                                         class="menu-item-img"
+                                         loading="lazy"
+                                         onerror="this.onerror=null;this.src='{{ $fallback }}';">
 <button type="button" class="menu-fav-btn"
                                             @click.prevent="$store.wishlist.toggle({{ $product->id }})"
                                             :aria-pressed="$store.wishlist.has({{ $product->id }})"
@@ -455,11 +463,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 12.998 12 21.75l-9.752-8.752a5.25 5.25 0 1 1 7.424-7.424L12 6.9l2.328-2.326a5.25 5.25 0 1 1 7.424 7.424Z"/>
                                         </svg>
                                     </button>
-                                    <img src="{{ $imgSrc }}"
-                                         alt="{{ $product->name }}"
-                                         class="menu-item-img"
-                                         loading="lazy"
-                                         onerror="this.onerror=null;this.src='{{ $fallback }}';">
+                                    </span>
                                     <button class="menu-add-btn"
                                             @click.prevent="$store.toppingsModal.open({{ $product->id }}, 1)"
                                             style="background:#C8102E;color:#fff;">
