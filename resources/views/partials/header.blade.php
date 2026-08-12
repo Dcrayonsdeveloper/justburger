@@ -102,7 +102,7 @@
                     <span x-show="$store.wishlist.count > 0"
                           x-text="$store.wishlist.count"
                           x-cloak
-                          style="position:absolute;top:-8px;right:-10px;min-width:18px;height:18px;background:#C8102E;color:#fff;font-size:11px;font-weight:700;border-radius:100px;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;border:2px solid #111111;"></span>
+                          class="count-badge count-badge--ring"></span>
                 </a>
 
                 <!-- Cart icon (desktop) -->
@@ -113,7 +113,7 @@
                     <span x-show="$store.cart.itemCount > 0"
                           x-text="$store.cart.itemCount"
                           x-cloak
-                          style="position:absolute;top:-8px;right:-10px;min-width:18px;height:18px;background:#C8102E;color:#fff;font-size:11px;font-weight:700;border-radius:100px;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;border:2px solid #111111;"></span>
+                          class="count-badge count-badge--ring"></span>
                 </a>
 
                 <!-- Menu CTA (desktop only) -->

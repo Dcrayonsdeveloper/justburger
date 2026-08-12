@@ -1496,3 +1496,31 @@ img:not([src]), img[src=""] {
 @font-face {
     font-display: swap;
 }
+
+/* ── Count badges on the header and bottom-nav icons ──────────────
+   One definition so the cart and wishlist counts stay identical.
+   box-shadow rather than border, so the ring around the badge does
+   not change its box size and push the digit off-centre. */
+.count-badge {
+    position: absolute;
+    top: -6px;
+    right: -7px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #C8102E;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    border-radius: 999px;
+    pointer-events: none;
+}
+/* Sits on the dark header bar — ring it so it reads as separate from the icon. */
+.count-badge--ring { box-shadow: 0 0 0 2px #111111; }
+/* Bottom nav icons are larger, so the badge tucks in closer. */
+.count-badge--nav { top: -4px; right: -6px; min-width: 15px; height: 15px; font-size: 9.5px; }
