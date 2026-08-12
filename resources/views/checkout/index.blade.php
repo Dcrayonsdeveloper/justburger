@@ -704,7 +704,7 @@
                                                         body: JSON.stringify({ name, phone, address_line1: line1, address_line2: line2, city, state, postal_code: pincode, country: 'GB' })
                                                     }).then(r => r.json().then(d => ({ok: r.ok, data: d}))).then(({ok, data}) => {
                                                         savingAddress = false;
-                                                        if (ok) { location.reload(); }
+                                                        if (ok) { location.href = '{{ route('checkout.index') }}?address=' + (data.address ? data.address.id : ''); }
                                                         else {
                                                             let msg = data.message || Object.values(data.errors || {}).flat().join(', ') || 'Failed to save address';
                                                             errEl.textContent = msg;

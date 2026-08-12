@@ -56,7 +56,11 @@ class CheckoutController extends Controller
 
         $isGuest = !auth()->check();
         $addresses = $isGuest ? collect() : UserAddress::where('user_id', auth()->id())->get();
-        $defaultAddress = $addresses->where('is_default', true)->first() ?? $addresses->first();
+        // ?address=<id> lets the page come back with the address the customer
+        // just saved already selected, rather than falling back to the default.
+        $defaultAddress = $addresses->firstWhere('id', (int) request('address'))
+            ?? $addresses->where('is_default', true)->first()
+            ?? $addresses->first();
 
         $paymentSettings = Setting::where('group', 'payment')->pluck('value', 'key');
 
