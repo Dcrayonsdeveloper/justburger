@@ -684,34 +684,7 @@
                                     <div id="new_addr_error" class="ck-error" style="display:none;"></div>
                                     <div style="display:flex;gap:.5rem;padding-top:.35rem;">
                                         <button type="button" :disabled="savingAddress"
-                                                @click="
-                                                    let name = document.getElementById('new_addr_name').value.trim();
-                                                    let phone = document.getElementById('new_addr_phone').value.trim();
-                                                    let line1 = document.getElementById('new_addr_line1').value.trim();
-                                                    let line2 = document.getElementById('new_addr_line2').value.trim();
-                                                    let pincode = pin;
-                                                    let errEl = document.getElementById('new_addr_error');
-                                                    if (!name || !phone || !line1 || !city || !state || !pincode) {
-                                                        errEl.textContent = 'Please fill all required fields.';
-                                                        errEl.style.display = 'block';
-                                                        return;
-                                                    }
-                                                    errEl.style.display = 'none';
-                                                    savingAddress = true;
-                                                    fetch('{{ route('account.addresses.store') }}', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                                                        body: JSON.stringify({ name, phone, address_line1: line1, address_line2: line2, city, state, postal_code: pincode, country: 'GB' })
-                                                    }).then(r => r.json().then(d => ({ok: r.ok, data: d}))).then(({ok, data}) => {
-                                                        savingAddress = false;
-                                                        if (ok) { location.href = '{{ route('checkout.index') }}?address=' + (data.address ? data.address.id : ''); }
-                                                        else {
-                                                            let msg = data.message || Object.values(data.errors || {}).flat().join(', ') || 'Failed to save address';
-                                                            errEl.textContent = msg;
-                                                            errEl.style.display = 'block';
-                                                        }
-                                                    }).catch(() => { savingAddress = false; errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block'; });
-                                                "
+                                                @click="saveAddress()"
                                                 style="padding:.45rem 1rem;font-size:.78rem;font-weight:700;color:#fff;background:#C8102E;border:0;border-radius:.4rem;cursor:pointer;transition:background .15s;"
                                                 onmouseover="this.style.background='#a00d24'" onmouseout="this.style.background='#C8102E'">
                                             <span x-show="!savingAddress">Save Address</span>
@@ -1138,6 +1111,19 @@
             }
 
             // ─── Guest checkout: GPS + address fields ───
+            // Field labels and input ids shared by the address forms, so a failed
+            // save can name the field instead of saying "Something went wrong".
+            const ADDR_LABELS = {
+                name: 'Full name', phone: 'Phone', address_line1: 'Address',
+                address_line2: 'Area / Landmark', postal_code: 'Postcode',
+                city: 'City', state: 'County', country: 'Country',
+            };
+            const ADDR_INPUTS = {
+                name: 'new_addr_name', phone: 'new_addr_phone', address_line1: 'new_addr_line1',
+                address_line2: 'new_addr_line2', postal_code: 'new_addr_pincode',
+                city: 'new_addr_city', state: 'new_addr_state',
+            };
+
             function addressGPS() {
                 return {
                     // GPS state
@@ -1248,6 +1234,79 @@
                     line1: '',
                     line2: '',
                     pinTimeout: null,
+                    savingAddress: false,
+
+                    resetFieldErrors() {
+                        Object.values(ADDR_INPUTS).forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.style.borderColor = '';
+                        });
+                    },
+
+                    showFieldErrors(messages, fields) {
+                        const errEl = document.getElementById('new_addr_error');
+                        errEl.innerHTML = messages.map(m => '<div>' + m + '</div>').join('');
+                        errEl.style.display = 'block';
+                        (fields || []).forEach(k => {
+                            const el = document.getElementById(ADDR_INPUTS[k]);
+                            if (el) el.style.borderColor = '#C8102E';
+                        });
+                        const first = (fields || []).map(k => document.getElementById(ADDR_INPUTS[k])).find(Boolean);
+                        if (first) first.focus();
+                    },
+
+                    saveAddress() {
+                        if (this.savingAddress) return;
+                        this.resetFieldErrors();
+
+                        const val = id => (document.getElementById(id)?.value || '').trim();
+                        const values = {
+                            name: val('new_addr_name'),
+                            phone: val('new_addr_phone'),
+                            address_line1: (this.line1 || '').trim(),
+                            address_line2: (this.line2 || '').trim(),
+                            postal_code: (this.pin || '').trim(),
+                            city: (this.city || '').trim(),
+                            state: (this.state || '').trim(),
+                            country: 'GB',
+                        };
+
+                        const required = ['name', 'phone', 'address_line1', 'postal_code', 'city'];
+                        const missing = required.filter(k => !values[k]);
+                        if (missing.length) {
+                            this.showFieldErrors(missing.map(k => ADDR_LABELS[k] + ' is required.'), missing);
+                            return;
+                        }
+
+                        this.savingAddress = true;
+                        fetch('{{ route('account.addresses.store') }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            body: JSON.stringify(values),
+                        })
+                        .then(r => r.json().then(d => ({ status: r.status, ok: r.ok, data: d })).catch(() => ({ status: r.status, ok: r.ok, data: null })))
+                        .then(({ status, ok, data }) => {
+                            this.savingAddress = false;
+                            if (ok) {
+                                location.href = '{{ route('checkout.index') }}?address=' + ((data && data.address) ? data.address.id : '');
+                                return;
+                            }
+                            if (status === 422 && data && data.errors) {
+                                const keys = Object.keys(data.errors);
+                                this.showFieldErrors(keys.map(k => (data.errors[k][0] || (ADDR_LABELS[k] + ' is invalid.'))
+                                    .replace(/address line1/i, 'Address')
+                                    .replace(/postal code/i, 'Postcode')
+                                    .replace(/\bstate\b/i, 'County')), keys);
+                                return;
+                            }
+                            this.showFieldErrors([(data && data.message) || 'Could not save the address. Please try again.'], []);
+                        })
+                        .catch(() => {
+                            this.savingAddress = false;
+                            this.showFieldErrors(['Could not reach the server. Check your connection and try again.'], []);
+                        });
+                    },
+
 
                     detectLocation() {
                         if (!navigator.geolocation) {
