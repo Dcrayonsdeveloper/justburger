@@ -840,7 +840,20 @@
                 <div class="ck-right">
 {{-- Promo code --}}
                         <div style="padding:.75rem 1rem;border-bottom:1px solid rgba(0,0,0,.06);"
-                             x-data="{ code: '', applying: false, error: '' }">
+                             x-data="{
+                                 code: '', applying: false, error: '',
+                                 apply() {
+                                     if (!this.code.trim() || this.applying) return;
+                                     this.applying = true; this.error = '';
+                                     fetch('{{ route('cart.apply-coupon') }}', {
+                                         method: 'POST',
+                                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                         body: JSON.stringify({ code: this.code })
+                                     })
+                                     .then(r => r.ok ? location.reload() : r.json().then(d => { this.error = d.error || 'Invalid code'; this.applying = false; }))
+                                     .catch(() => { this.error = 'Something went wrong.'; this.applying = false; });
+                                 }
+                             }">
                             <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.5rem;">
                                 <svg style="width:.85rem;height:.85rem;color:#D4A017;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                                 <span style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#111111;">Have a code?</span>
@@ -862,25 +875,20 @@
                                     </button>
                                 </div>
                             @else
-                            <form @submit.prevent="
-                                    if (!code.trim()) return;
-                                    applying = true; error = '';
-                                    fetch('{{ route('cart.apply-coupon') }}', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                                        body: JSON.stringify({ code: code })
-                                    }).then(r => r.ok ? location.reload() : r.json().then(d => { error = d.error || 'Invalid code'; applying = false; }))
-                                      .catch(() => { error = 'Something went wrong.'; applying = false; })
-                                  " style="display:flex;gap:.4rem;">
+                            {{-- Not a <form>: this sits inside the main checkout form, and a
+                                 nested form is invalid HTML — the browser drops it, so @submit
+                                 never fires and the button submits the order instead. --}}
+                            <div style="display:flex;gap:.4rem;">
                                 <input type="text" x-model="code" placeholder="Promo / discount code"
                                        autocomplete="off" spellcheck="false"
+                                       @keydown.enter.prevent="apply()"
                                        style="flex:1;min-width:0;padding:.5rem .65rem;font-size:.8rem;border:1px solid rgba(0,0,0,.15);border-radius:.35rem;outline:none;text-transform:uppercase;">
-                                <button type="submit" :disabled="applying"
+                                <button type="button" @click="apply()" :disabled="applying"
                                         style="padding:.5rem .9rem;font-size:.78rem;font-weight:700;color:#fff;background:#C8102E;border:0;border-radius:.35rem;cursor:pointer;white-space:nowrap;">
                                     <span x-show="!applying">Apply</span>
                                     <span x-show="applying" x-cloak>...</span>
                                 </button>
-                            </form>
+                            </div>
                             <p x-show="error" x-cloak x-text="error" style="font-size:.72rem;color:#C8102E;margin:.35rem 0 0;"></p>
                             @endif
                         </div>
