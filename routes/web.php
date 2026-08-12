@@ -106,11 +106,15 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/data', [App\Http\Controllers\CartController::class, 'data'])->name('data');
     Route::get('/', [App\Http\Controllers\CartController::class, 'index'])->name('index');
     Route::post('/add', [App\Http\Controllers\CartController::class, 'add'])->name('add');
+
+    // Literal segments must be declared before /{cartItem}, or the wildcard
+    // swallows them and tries to resolve "remove-coupon" as a cart item id.
+    Route::post('/apply-coupon', [App\Http\Controllers\CartController::class, 'applyCoupon'])->name('apply-coupon');
+    Route::delete('/remove-coupon', [App\Http\Controllers\CartController::class, 'removeCoupon'])->name('remove-coupon');
+
     Route::put('/{cartItem}', [App\Http\Controllers\CartController::class, 'update'])->name('update');
     Route::delete('/{cartItem}', [App\Http\Controllers\CartController::class, 'destroy'])->name('destroy');
     Route::delete('/', [App\Http\Controllers\CartController::class, 'clear'])->name('clear');
-    Route::post('/apply-coupon', [App\Http\Controllers\CartController::class, 'applyCoupon'])->name('apply-coupon');
-    Route::delete('/remove-coupon', [App\Http\Controllers\CartController::class, 'removeCoupon'])->name('remove-coupon');
 });
 
 // Wishlist page (handles auth check in controller)

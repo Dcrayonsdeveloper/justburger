@@ -623,11 +623,13 @@
                 },
 
                 async removeCoupon() {
+                    // Surface failures — an empty catch here hid a 404 for ages.
                     try {
-                        const r = await fetch('/cart/remove-coupon', { method:'DELETE', headers:{'X-CSRF-TOKEN':this.csrfToken,'Accept':'application/json'} });
-                        const d = await r.json();
-                        if (r.ok) this.syncCoupon(d);
-                    } catch {}
+                        const r = await fetch('{{ route('cart.remove-coupon') }}', { method:'DELETE', headers:{'X-CSRF-TOKEN':this.csrfToken,'Accept':'application/json'} });
+                        const d = await r.json().catch(() => ({}));
+                        if (r.ok) { this.syncCoupon(d); this.couponError = ''; }
+                        else { this.couponError = d.error || d.message || 'Could not remove the coupon'; }
+                    } catch { this.couponError = 'Something went wrong'; }
                 },
 
                 syncCoupon(d) {
