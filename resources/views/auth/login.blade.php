@@ -71,6 +71,10 @@
             color: rgba(255,255,255,.7);
             margin-bottom: .35rem;
         }
+        /* x-show clears the element's inline `display`, which would wipe an inline
+           display:flex and leave gap doing nothing. Keep it in a class. */
+        .auth-stack { display:flex; flex-direction:column; gap:1rem; }
+
         .auth-input {
             width: 100%;
             padding: .7rem 1rem;
@@ -231,7 +235,7 @@
             @endif
 
             {{-- Step 1: Enter email or phone --}}
-            <div x-show="step === 'identifier'" style="display:flex;flex-direction:column;gap:1rem;">
+            <div x-show="step === 'identifier'" class="auth-stack">
                 <div>
                     <label class="auth-label">Email or Phone Number</label>
                     <input type="text" x-model="identifier" @keyup.enter="continueLogin()" autofocus
@@ -242,7 +246,7 @@
             </div>
 
             {{-- Step 2a: Password login --}}
-            <div x-show="step === 'password'" x-cloak style="display:flex;flex-direction:column;gap:1rem;">
+            <div x-show="step === 'password'" x-cloak class="auth-stack">
                 <div class="auth-step-header">
                     <p class="auth-step-id"><span x-text="identifier"></span></p>
                     <button @click="step='identifier';error=''" type="button" class="auth-link">Change</button>

@@ -326,19 +326,6 @@
     <div x-data="{ show: false }"
          x-init="window.addEventListener('scroll', () => { show = window.scrollY > 400 })"
          x-cloak>
-        <button x-show="show"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 translate-y-4"
-                x-transition:enter-end="opacity-100 translate-y-0"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 translate-y-0"
-                x-transition:leave-end="opacity-0 translate-y-4"
-                @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
-                class="fixed z-40 w-10 h-10 bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
-                style="bottom:100px;right:34px;"
-                aria-label="Back to top">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-        </button>
     </div>
 
     <!-- Footer -->
