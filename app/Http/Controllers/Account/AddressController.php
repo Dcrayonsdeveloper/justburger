@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
 use App\Models\UserAddress;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,7 +23,7 @@ class AddressController extends Controller
         return view('account.addresses.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -63,7 +64,18 @@ class AddressController extends Controller
             $data['is_default'] = true;
         }
 
-        $request->user()->addresses()->create($data);
+        $address = $request->user()->addresses()->create($data);
+
+        // The checkout page saves addresses over fetch(). Without this it got a
+        // 302 to an HTML page, r.json() threw, and the UI reported
+        // "Something went wrong" on an address that had in fact been saved.
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address added successfully.',
+                'address' => ['id' => $address->id],
+            ]);
+        }
 
         return redirect()->route('account.addresses.index')
             ->with('success', 'Address added successfully.');
