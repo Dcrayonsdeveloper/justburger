@@ -846,9 +846,21 @@
                                 <span style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#111111;">Have a code?</span>
                             </div>
                             @if($cart->coupon_id)
-                                <p style="font-size:.75rem;color:#2E7D32;font-weight:600;margin:0;">
-                                    &#10003; {{ $cart->coupon->code ?? 'Coupon' }} applied
-                                </p>
+                                <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+                                    <p style="font-size:.75rem;color:#2E7D32;font-weight:600;margin:0;">
+                                        &#10003; {{ $cart->coupon->code ?? 'Coupon' }} applied
+                                    </p>
+                                    <button type="button"
+                                            @click="
+                                                fetch('{{ route('cart.remove-coupon') }}', {
+                                                    method: 'DELETE',
+                                                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                                                }).then(r => r.ok ? location.reload() : null)
+                                              "
+                                            style="font-size:.72rem;font-weight:700;color:#C8102E;background:none;border:0;cursor:pointer;padding:.2rem .3rem;">
+                                        Remove
+                                    </button>
+                                </div>
                             @else
                             <form @submit.prevent="
                                     if (!code.trim()) return;
