@@ -25,7 +25,7 @@
                 <span x-show="$store.wishlist.count > 0"
                       x-text="$store.wishlist.count"
                       x-cloak
-                      style="position:absolute;top:-5px;right:-7px;min-width:16px;height:16px;background:#C8102E;color:#fff;font-size:9px;font-weight:700;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;"></span>
+                      class="count-badge count-badge--nav"></span>
             </span>
             <span class="text-xs font-medium">Wishlist</span>
         </a>
@@ -38,7 +38,7 @@
                 <span x-show="$store.cart.itemCount > 0"
                       x-text="$store.cart.itemCount"
                       x-cloak
-                      style="position:absolute;top:-5px;right:-7px;min-width:16px;height:16px;background:#C8102E;color:#fff;font-size:9px;font-weight:700;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;"></span>
+                      class="count-badge count-badge--nav"></span>
             </span>
             <span class="text-xs font-medium">Order</span>
         </a>
