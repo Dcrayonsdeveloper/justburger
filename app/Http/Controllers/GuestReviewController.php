@@ -43,7 +43,7 @@ class GuestReviewController extends Controller
             'guest_name' => $validated['guest_name'],
             'guest_email' => $validated['guest_email'],
             'rating' => $validated['rating'],
-            'title' => $validated['title'],
+            'title' => $validated['title'] ?? null,
             'content' => $validated['content'],
             'is_verified_purchase' => false,
             'is_approved' => false,
