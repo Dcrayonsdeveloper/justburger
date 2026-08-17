@@ -926,22 +926,6 @@
 
                             @php $shipFee = 0; @endphp
 
-                            {{-- Loyalty Points --}}
-                            @if(!empty($loyaltyPoints) && $loyaltyPoints > 0)
-                                <div class="ck-price-row" style="padding-top:.35rem;border-top:1px dashed rgba(0,0,0,.08);"
-                                     x-data="{ usePoints: false, pointsToUse: {{ min($loyaltyPoints, (int) ceil(($cart->subtotal - $cart->discount) / 0.25)) }} }">
-                                    <div style="display:flex;align-items:center;gap:.4rem;">
-                                        <input type="checkbox" name="use_loyalty_points" value="1" x-model="usePoints"
-                                               style="accent-color:#D4A017;width:.75rem;height:.75rem;">
-                                        <span style="font-size:.75rem;font-weight:600;color:#B8860B;">Use {{ number_format($loyaltyPoints) }} points</span>
-                                        <span style="font-size:.62rem;color:rgba(0,0,0,.35);">(worth @price($loyaltyValue))</span>
-                                    </div>
-                                    <template x-if="usePoints">
-                                        <span style="font-size:.78rem;font-weight:600;color:#B8860B;">-@price($loyaltyValue)</span>
-                                    </template>
-                                    <input type="hidden" name="loyalty_points_used" :value="usePoints ? {{ $loyaltyPoints }} : 0">
-                                </div>
-                            @endif
 
 
 
