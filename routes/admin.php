@@ -100,6 +100,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::post('/{order}/ship', [App\Http\Controllers\Admin\OrderController::class, 'ship'])->name('ship');
                 Route::get('/{order}/invoice', [App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('invoice');
                 Route::get('/{order}/packing-slip', [App\Http\Controllers\Admin\OrderController::class, 'packingSlip'])->name('packing-slip');
+                Route::get('/{order}/receipt', [App\Http\Controllers\Admin\OrderController::class, 'receipt'])->name('receipt');
             });
 
             // Returns

@@ -175,4 +175,11 @@ class OrderController extends Controller
 
         return view('admin.orders.packing-slip', compact('order'));
     }
+
+    public function receipt(Order $order): View
+    {
+        $order->load(['items.product', 'payments']);
+
+        return view('admin.orders.receipt', compact('order'));
+    }
 }
