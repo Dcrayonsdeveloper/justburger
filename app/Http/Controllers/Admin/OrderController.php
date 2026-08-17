@@ -82,29 +82,16 @@ class OrderController extends Controller
         $validated = $request->validate([
             'status' => ['required', 'in:confirmed,processing,packed,shipped,out_for_delivery,delivered,cancelled,returned'],
             'comment' => ['nullable', 'string', 'max:500'],
-            'carrier' => ['nullable', 'required_if:status,shipped', 'string', 'max:100'],
-            'tracking_number' => ['nullable', 'required_if:status,shipped', 'string', 'max:100'],
+            'carrier' => ['nullable', 'string', 'max:100'],
+            'tracking_number' => ['nullable', 'string', 'max:100'],
         ]);
 
         $oldStatus = $order->status;
 
-        // Validate state transitions
-        $allowedTransitions = [
-            'pending' => ['confirmed', 'cancelled'],
-            'confirmed' => ['processing', 'cancelled'],
-            'processing' => ['packed', 'cancelled'],
-            'packed' => ['shipped', 'cancelled'],
-            'shipped' => ['out_for_delivery', 'returned'],
-            'out_for_delivery' => ['delivered', 'returned'],
-            'delivered' => ['returned'],
-            'cancelled' => [],
-            'returned' => [],
-        ];
-
-        $allowed = $allowedTransitions[$oldStatus] ?? [];
-        if (!in_array($validated['status'], $allowed)) {
-            return back()->with('error', "Cannot change status from \"{$oldStatus}\" to \"{$validated['status']}\".");
-        }
+        // Any valid status can be set directly. The strict step-by-step fulfilment
+        // workflow (confirmed -> processing -> ... -> delivered) doesn't fit a
+        // collection-based burger shop, so there's no transition gate — the admin
+        // picks a status and it's applied.
 
         // If shipping, create shipment record
         if ($validated['status'] === 'shipped' && !empty($validated['tracking_number'])) {
