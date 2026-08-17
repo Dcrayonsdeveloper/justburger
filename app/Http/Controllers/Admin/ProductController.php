@@ -370,6 +370,61 @@ class ProductController extends Controller
         return back()->with('success', "Product {$status}.");
     }
 
+    /**
+     * Clone a product into a new, inactive draft (images + variants + attribute
+     * values + toppings copied) and open the copy for editing. The copy stays off
+     * the storefront (is_active = false) until the admin activates it.
+     */
+    public function duplicate(Product $product): RedirectResponse
+    {
+        $product->load(['images', 'variants', 'attributeValues', 'toppings']);
+
+        $copy = $product->replicate();
+        $copy->name = $product->name . ' (Copy)';
+        $copy->slug = null;   // Spatie regenerates a unique slug from the new name
+        $copy->uuid = null;   // regenerated on create
+        $copy->sku = $product->sku ? $product->sku . '-COPY-' . strtoupper(Str::random(4)) : null;
+        $copy->barcode = null;
+        $copy->is_active = false;
+        $copy->is_featured = false;
+        $copy->rating = 0;
+        $copy->review_count = 0;
+        $copy->view_count = 0;
+        $copy->sales_count = 0;
+        $copy->wishlist_count = 0;
+        $copy->published_at = null;
+        $copy->save();
+
+        foreach ($product->images as $image) {
+            $newImage = $image->replicate();
+            $newImage->product_id = $copy->id;
+            $newImage->variant_id = null;
+            $newImage->save();
+        }
+
+        foreach ($product->variants as $variant) {
+            $newVariant = $variant->replicate();
+            $newVariant->product_id = $copy->id;
+            $newVariant->sku = $variant->sku ? $variant->sku . '-COPY-' . strtoupper(Str::random(4)) : null;
+            $newVariant->barcode = null;
+            $newVariant->save();
+        }
+
+        foreach ($product->attributeValues as $attributeValue) {
+            $newValue = $attributeValue->replicate();
+            $newValue->product_id = $copy->id;
+            $newValue->save();
+        }
+
+        if ($product->toppings->isNotEmpty()) {
+            $copy->toppings()->sync($product->toppings->pluck('id')->all());
+        }
+
+        return redirect()
+            ->route('admin.products.edit', $copy)
+            ->with('success', 'Product duplicated. You are now editing the copy — review it and set it Active when ready.');
+    }
+
     public function export(Request $request): StreamedResponse
     {
         $query = Product::with(['category', 'seller', 'images']);
