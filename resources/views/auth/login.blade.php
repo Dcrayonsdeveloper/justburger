@@ -259,8 +259,10 @@
                             <label class="auth-label" style="margin:0;">Password</label>
                             <a href="{{ route('password.request') }}" class="auth-link">Forgot?</a>
                         </div>
-                        <input type="password" name="password" required autocomplete="current-password" class="auth-input">
+                        <input type="password" name="password" required autocomplete="current-password"
+                               class="auth-input" :class="{ 'auth-input-error': error }">
                     </div>
+                    <p x-show="error" x-text="error" class="auth-error" x-cloak></p>
                     <button type="submit" class="auth-btn-primary">Sign In</button>
                 </form>
             </div>
@@ -377,8 +379,9 @@
 <script>
 function unifiedLogin() {
     return {
-        identifier: '', step: 'identifier',
-        error: '',
+        identifier: @js(old('email', '')),
+        step: @js($errors->has('email') ? 'password' : 'identifier'),
+        error: @js($errors->first('email')),
 
         continueLogin() {
             if (!this.identifier.trim()) { this.error = 'Enter email or phone number'; return; }
