@@ -9,7 +9,8 @@
         $businessHours = \App\Models\Setting::get('business_hours', 'Mon–Tue 12:00–10:00 PM, Wed–Thu 12:00–10:30 PM, Fri–Sat 11:45 AM–11:00 PM, Sun 4:00–10:00 PM');
         $openHours = \App\Models\Setting::get('opening_hours', '');
         $openHoursArr = is_array($openHours) ? $openHours : [];
-        $mapEmbed = \App\Models\Setting::get('google_map_embed', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2486.5!2d-0.4517!3d51.4538!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s525+Staines+Road%2C+Bedfont%2C+TW14+8BP!5e0!3m2!1sen!2suk!4v1700000000000');
+        $mapEmbed = \App\Models\Setting::get('google_map_embed', 'https://maps.google.com/maps?q=51.4529232,-0.4307548&z=16&hl=en&output=embed');
+        $mapLink = \App\Models\Setting::get('google_maps_link', 'https://maps.app.goo.gl/D1nM6QygrSvWprM36');
     @endphp
 
     <x-slot name="title">Contact Us — {{ $siteName }}</x-slot>
@@ -211,6 +212,7 @@
 
         /* Map */
         .ct-map {
+            position:relative;
             border-radius:.85rem;
             overflow:hidden;
             border:1px solid rgba(0,0,0,.08);
@@ -218,6 +220,8 @@
         .ct-map iframe {
             width:100%; height:240px; display:block; border:0;
         }
+        /* Transparent overlay so a click anywhere on the map opens the restaurant in Google Maps */
+        .ct-map-link { position:absolute; inset:0; z-index:2; cursor:pointer; }
 
         /* ─── Success toast ─── */
         .ct-success {
@@ -449,6 +453,8 @@
                             loading="lazy"
                             referrerpolicy="no-referrer-when-downgrade">
                     </iframe>
+                    <a href="{{ $mapLink }}" target="_blank" rel="noopener"
+                       class="ct-map-link" aria-label="Open Just Burgers Plus in Google Maps"></a>
                 </div>
                 @endif
 
