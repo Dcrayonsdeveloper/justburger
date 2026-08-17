@@ -90,6 +90,7 @@ class OrderController extends Controller
 
         // Validate state transitions
         $allowedTransitions = [
+            'pending' => ['confirmed', 'cancelled'],
             'confirmed' => ['processing', 'cancelled'],
             'processing' => ['packed', 'cancelled'],
             'packed' => ['shipped', 'cancelled'],
