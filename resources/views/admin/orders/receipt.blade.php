@@ -6,53 +6,60 @@
     <title>Receipt - {{ $order->order_number }}</title>
     <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg?v=3">
     <link rel="shortcut icon" href="/images/icons/favicon.svg?v=3">
+    {{-- Page size is written here at runtime so the roll feeds exactly the receipt's length, then cuts. --}}
+    <style id="page-size">@page { size: 80mm 297mm; margin: 0; }</style>
     <style>
+        /*
+         | Sized for an 80mm thermal roll (Epson TM-T20II and compatibles):
+         | 80mm paper, 72mm printable area, 4mm non-printable edge each side.
+         | Screen and print use identical metrics, so the preview is true size
+         | and the printed height can be measured from the on-screen layout.
+         */
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:#e9eaed; font-family:'Segoe UI', system-ui, sans-serif; color:#111; padding:24px 12px; }
 
-        /* Toolbar (screen only) */
-        .toolbar { max-width:320px; margin:0 auto 14px; display:flex; gap:8px; justify-content:center; }
+        /* Toolbar + hint (screen only) */
+        .toolbar { width:80mm; margin:0 auto 10px; display:flex; gap:8px; justify-content:center; }
         .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border:none; border-radius:8px;
                font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; }
         .btn-primary { background:#111; color:#fff; }
         .btn-light { background:#fff; color:#111; border:1px solid #d0d0d0; }
+        .print-hint { width:80mm; margin:0 auto 14px; font-size:10.5px; line-height:1.6; color:#555; text-align:center; }
 
-        /* Receipt paper */
+        /* Receipt paper — 80mm wide, 4mm gutters, 72mm of printable content */
         .receipt {
-            max-width:320px; margin:0 auto; background:#fff; padding:22px 20px;
-            font-family:'Courier New', ui-monospace, monospace; font-size:12.5px; line-height:1.55; color:#1a1a1a;
+            width:80mm; margin:0 auto; background:#fff; padding:3mm 4mm;
+            font-family:'Courier New', ui-monospace, monospace; font-size:9pt; line-height:1.45; color:#000;
             box-shadow:0 2px 14px rgba(0,0,0,.12);
         }
         .center { text-align:center; }
-        .rc-name { font-size:16px; font-weight:800; letter-spacing:.5px; }
-        .rc-sub { font-size:11px; color:#333; }
-        .rc-type { font-weight:800; font-size:13px; letter-spacing:2px; margin:8px 0 2px; }
-        .rc-note { font-size:11px; color:#333; }
-        .hr { border:0; border-top:1px dashed #999; margin:10px 0; }
+        .rc-name { font-size:13pt; font-weight:700; letter-spacing:.3mm; }
+        .rc-sub { font-size:8pt; }
+        .rc-type { font-weight:700; font-size:11pt; letter-spacing:.6mm; margin:2mm 0 1mm; }
+        .rc-note { font-size:8pt; }
+        .hr { border:0; border-top:1px dashed #000; margin:2mm 0; }
 
-        .rc-meta { font-size:11.5px; }
+        .rc-meta { font-size:8.5pt; }
         .rc-meta strong { font-weight:700; }
 
-        .rc-item { display:flex; justify-content:space-between; gap:10px; margin:5px 0; }
+        .rc-item { display:flex; justify-content:space-between; gap:2mm; margin:1mm 0; page-break-inside:avoid; }
         .rc-item .qty { white-space:nowrap; }
-        .rc-item .nm { flex:1; }
+        .rc-item .nm { flex:1; overflow-wrap:anywhere; }
         .rc-item .amt { white-space:nowrap; text-align:right; }
-        .rc-item-variant { font-size:11px; color:#555; padding-left:26px; }
+        .rc-item-variant { font-size:8pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
 
-        .rc-row { display:flex; justify-content:space-between; gap:10px; margin:3px 0; font-size:12px; }
-        .rc-row.total { font-weight:800; font-size:14px; }
-        .rc-row .neg { }
+        .rc-row { display:flex; justify-content:space-between; gap:2mm; margin:.8mm 0; font-size:9pt; page-break-inside:avoid; }
+        .rc-row.total { font-weight:700; font-size:11pt; }
 
-        .rc-paid { font-weight:800; text-align:center; letter-spacing:1px; padding:8px 0; }
-        .rc-paid.ok { color:#0a7c2f; }
-        .rc-paid.due { color:#b3261e; }
+        /* Monochrome print head — no colour, no grey. Everything stays solid black. */
+        .rc-paid { font-weight:700; text-align:center; letter-spacing:.3mm; padding:2mm 0; font-size:9.5pt; }
 
-        .rc-foot { font-size:10.5px; color:#444; text-align:center; }
+        .rc-foot { font-size:7.5pt; text-align:center; }
 
         @media print {
-            body { background:#fff; padding:0; }
-            .toolbar { display:none !important; }
-            .receipt { box-shadow:none; max-width:100%; padding:0; }
+            html, body { width:80mm; background:#fff; padding:0; margin:0; }
+            .toolbar, .print-hint { display:none !important; }
+            .receipt { box-shadow:none; margin:0; }
         }
     </style>
 </head>
@@ -100,6 +107,11 @@
             Print
         </button>
         <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-light">Back</a>
+    </div>
+
+    <div class="print-hint">
+        Shown at true size for an 80mm roll.<br>
+        Printer setup: paper <strong>Roll Paper 80 x 297mm</strong>, margins <strong>None</strong>, scale <strong>100%</strong>.
     </div>
 
     <div class="receipt">
@@ -163,9 +175,9 @@
         </div>
 
         @if($isPaid)
-            <div class="rc-paid ok">** ORDER HAS BEEN PAID **</div>
+            <div class="rc-paid">** ORDER HAS BEEN PAID **</div>
         @else
-            <div class="rc-paid due">** AWAITING PAYMENT **</div>
+            <div class="rc-paid">** AWAITING PAYMENT **</div>
         @endif
 
         <hr class="hr">
@@ -175,5 +187,30 @@
             Thank you for your order!
         </div>
     </div>
+
+    <script>
+        /*
+         | Thermal rolls have no fixed page length. Measure the rendered receipt and
+         | set @page to exactly that height (+ a 6mm gap so the cutter clears the last
+         | line), otherwise the printer feeds a full 297mm page for every receipt.
+         | CSS px are fixed at 96dpi, so px -> mm is a constant.
+         */
+        (function () {
+            var PX_TO_MM = 25.4 / 96;
+            var CUT_FEED_MM = 6;
+
+            function setPageHeight() {
+                var receipt = document.querySelector('.receipt');
+                if (!receipt) return;
+                var mm = receipt.getBoundingClientRect().height * PX_TO_MM + CUT_FEED_MM;
+                document.getElementById('page-size').textContent =
+                    '@page { size: 80mm ' + mm.toFixed(1) + 'mm; margin: 0; }';
+            }
+
+            setPageHeight();
+            window.addEventListener('load', setPageHeight);
+            window.addEventListener('beforeprint', setPageHeight);
+        })();
+    </script>
 </body>
 </html>
