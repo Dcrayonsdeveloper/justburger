@@ -423,28 +423,6 @@
             </div>
         </div>
 
-        {{-- ─── Express Checkout ─── --}}
-        @if(!empty($oneClickReady) && $defaultAddress)
-        <div style="max-width:1100px;margin:0 auto;padding:1rem 1rem 0;" x-data="{ expressLoading: false }">
-            <div class="ck-express">
-                <div style="min-width:0;">
-                    <p class="ck-express-label">Express Checkout</p>
-                    <p class="ck-express-detail">Deliver to {{ $defaultAddress->name }} — {{ $defaultAddress->city }}, {{ $defaultAddress->postal_code }}</p>
-                </div>
-                <form action="{{ route('checkout.process') }}" method="POST" @submit="expressLoading = true">
-                    @csrf
-                    <input type="hidden" name="shipping_address_id" value="{{ $defaultAddress->id }}">
-                    <input type="hidden" name="same_billing_address" value="1">
-                    <input type="hidden" name="payment_method" value="{{ $checkoutPreference->default_payment_method ?? 'cod' }}">
-                    <input type="hidden" name="express_checkout" value="1">
-                    <button type="submit" :disabled="expressLoading" class="ck-express-btn">
-                        <span x-show="!expressLoading">Place Order</span>
-                        <span x-show="expressLoading">Processing...</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-        @endif
 
         @php
             $methodOrder = ['stripe' => 'stripe_enabled', 'cod' => 'cod_enabled'];
