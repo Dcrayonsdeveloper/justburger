@@ -81,6 +81,7 @@
                         <th class="px-4 py-3">Usage</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Expires</th>
+                        <th class="px-4 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -127,10 +128,22 @@
                                     --
                                 @endif
                             </td>
+                            <td class="px-4 py-3 text-right" onclick="event.stopPropagation()">
+                                <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST"
+                                      onsubmit="return confirm('Delete coupon {{ $coupon->code }}? This cannot be undone.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors" title="Delete coupon">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-12 text-center">
+                            <td colspan="8" class="px-4 py-12 text-center">
                                 <p class="text-gray-500 text-sm">No discounts found</p>
                                 <a href="{{ route('admin.coupons.create') }}"
                                    class="inline-flex items-center mt-3 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
