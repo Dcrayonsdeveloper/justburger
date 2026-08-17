@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt - {{ $order->order_number }}</title>
+    <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg?v=3">
+    <link rel="shortcut icon" href="/images/icons/favicon.svg?v=3">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:#e9eaed; font-family:'Segoe UI', system-ui, sans-serif; color:#111; padding:24px 12px; }
