@@ -61,13 +61,13 @@ class LoginController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'The provided credentials do not match our records.',
-                'errors' => ['email' => ['The provided credentials do not match our records.']],
+                'message' => 'Incorrect email or password. Please try again.',
+                'errors' => ['email' => ['Incorrect email or password. Please try again.']],
             ], 422);
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'email' => 'Incorrect email or password. Please try again.',
         ])->onlyInput('email');
     }
 
