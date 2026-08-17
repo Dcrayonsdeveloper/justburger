@@ -68,9 +68,15 @@ class Review extends Model
         static::created(function ($review) {
             $review->product->updateRating();
 
-            // Send coupon reward for non-generated reviews
+            // Send coupon reward for non-generated reviews. Never let a coupon or
+            // email failure (e.g. SMTP unavailable) break the review submission —
+            // the review is already saved; the reward is best-effort.
             if (!$review->is_generated) {
-                app(\App\Listeners\SendCouponAfterReview::class)->handle($review);
+                try {
+                    app(\App\Listeners\SendCouponAfterReview::class)->handle($review);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Review coupon reward failed: ' . $e->getMessage(), ['review_id' => $review->id]);
+                }
             }
         });
 
