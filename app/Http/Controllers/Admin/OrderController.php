@@ -16,7 +16,12 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Order::with(['user', 'items']);
+        // A Stripe checkout creates the order as status='pending' BEFORE the customer
+        // pays, and it stays 'pending' if they abandon the payment. Those are not real
+        // orders, so keep them out of the admin list. StripeOrderService::confirm()
+        // flips a genuinely paid order to status='confirmed'; COD orders are created
+        // 'confirmed' from the start — so both still appear.
+        $query = Order::with(['user', 'items'])->where('status', '!=', 'pending');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -45,7 +50,7 @@ class OrderController extends Controller
         $orders = $query->latest()->paginate($perPage)->withQueryString();
 
         $stats = [
-            'total' => Order::count(),
+            'total' => Order::where('status', '!=', 'pending')->count(),
             'confirmed' => Order::where('status', 'confirmed')->count(),
             'processing' => Order::whereIn('status', ['processing', 'packed'])->count(),
             'shipped' => Order::whereIn('status', ['shipped', 'out_for_delivery'])->count(),
