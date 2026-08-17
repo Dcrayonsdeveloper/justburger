@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - {{ $order->order_number }}</title>
+    <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg?v=3">
+    <link rel="shortcut icon" href="/images/icons/favicon.svg?v=3">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 14px; color: #1a1a1a; line-height: 1.6; background: #f3f4f6; }
