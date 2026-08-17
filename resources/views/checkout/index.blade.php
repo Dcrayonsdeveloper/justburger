@@ -420,15 +420,6 @@
                     </a>
                     Checkout
                 </h1>
-                @auth
-                <div style="display:flex;align-items:center;gap:.5rem;">
-                    <span class="ck-user">{{ auth()->user()->name }}</span>
-                    <form method="POST" action="{{ route('logout') }}" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="ck-link" style="font-size:.72rem;background:none;border:0;cursor:pointer;">Logout</button>
-                    </form>
-                </div>
-                @endauth
             </div>
         </div>
 
