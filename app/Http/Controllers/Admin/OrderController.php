@@ -16,12 +16,11 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
-        // A Stripe checkout creates the order as status='pending' BEFORE the customer
-        // pays, and it stays 'pending' if they abandon the payment. Those are not real
-        // orders, so keep them out of the admin list. StripeOrderService::confirm()
-        // flips a genuinely paid order to status='confirmed'; COD orders are created
-        // 'confirmed' from the start — so both still appear.
-        $query = Order::with(['user', 'items'])->where('status', '!=', 'pending');
+        // Show all orders including unpaid 'pending' ones. Payment state is surfaced by
+        // the "Payment status" column, and the Stripe webhook (StripeOrderService::confirm)
+        // flips an order to paid/confirmed once payment actually completes — so nothing is
+        // hidden and the real status is always visible.
+        $query = Order::with(['user', 'items']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -50,7 +49,7 @@ class OrderController extends Controller
         $orders = $query->latest()->paginate($perPage)->withQueryString();
 
         $stats = [
-            'total' => Order::where('status', '!=', 'pending')->count(),
+            'total' => Order::count(),
             'confirmed' => Order::where('status', 'confirmed')->count(),
             'processing' => Order::whereIn('status', ['processing', 'packed'])->count(),
             'shipped' => Order::whereIn('status', ['shipped', 'out_for_delivery'])->count(),
