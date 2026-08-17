@@ -277,16 +277,9 @@ class CheckoutController extends Controller
 
         $finalTotal = max(0, $cart->subtotal - $totalDiscount + $shippingFee);
 
-        // Cash payment: only available for orders above £10
+        // Cash on collection: no advance and no minimum — the customer pays in full
+        // when they collect the order, so placing the order is all that's needed.
         $codAdvance = 0;
-        $codAvailable = $finalTotal >= 10;
-        if ($paymentMethod === 'cod') {
-            if (!$codAvailable) {
-                return redirect()->route('checkout.index')
-                    ->with('error', 'Cash payment is not available for orders below £10. Please choose online payment.');
-            }
-            $codAdvance = 0;
-        }
 
         // Resolve affiliate from cookie/session
         $affiliateId = null;
