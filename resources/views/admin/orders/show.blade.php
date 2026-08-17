@@ -26,6 +26,12 @@
                     </svg>
                     Packing Slip
                 </a>
+                <a href="{{ route('admin.orders.receipt', $order) }}" class="btn btn-secondary" target="_blank">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6m-6-4h6m-6-4h6M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16l-3-2-2 2-2-2-2 2-2-2-3 2z"/>
+                    </svg>
+                    Receipt
+                </a>
             </div>
         </div>
     </x-slot>
