@@ -72,6 +72,15 @@ class SendOrderNotification
                 . "Manage: " . url("/admin/orders/{$order->id}")
             );
         }
+
+        // In-app bell notification for admin/staff users
+        $this->notifyAdmins(
+            'admin_new_order',
+            "New order #{$order->order_number}",
+            $customerName . ' placed an order · £' . number_format($order->total, 2)
+                . ' · ' . ($order->payment_status === 'paid' ? 'Paid online' : 'Pay on collection'),
+            ['order_id' => $order->id, 'url' => "/admin/orders/{$order->id}"]
+        );
     }
 
     public function handleOrderShipped(OrderShipped $event): void
@@ -181,6 +190,27 @@ class SendOrderNotification
             'return_id' => $return->id,
             'amount' => $event->amount,
         ], new RefundProcessedMail($return, $event->amount));
+    }
+
+    /**
+     * Create an in-app bell notification for every admin/staff user.
+     * Best-effort — a failure here must never break order processing.
+     */
+    private function notifyAdmins(string $type, string $title, string $content, array $data = []): void
+    {
+        try {
+            $admins = \App\Models\User::where('role', 'admin')
+                ->orWhere('role', 'staff')
+                ->orWhereHas('admin')
+                ->orWhereHas('staff')
+                ->get();
+
+            foreach ($admins as $admin) {
+                $this->notificationService->notifyInApp($admin, $type, $title, $content, $data);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Admin in-app notification failed: ' . $e->getMessage(), ['type' => $type]);
+        }
     }
 
     /**
