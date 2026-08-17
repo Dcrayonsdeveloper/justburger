@@ -15,7 +15,7 @@ class ReviewController extends Controller
         $query = Review::with(['product:id,name,slug', 'user:id,first_name,last_name']);
 
         if ($request->filled('status')) {
-            $query->where('is_approved', $request->status === 'approved');
+            $query->where('status', $request->status);
         }
 
         $perPage = $request->input('per_page', 10);
@@ -27,7 +27,7 @@ class ReviewController extends Controller
     public function pending(): View
     {
         $perPage = request()->input('per_page', 10);
-        $reviews = Review::where('is_approved', false)
+        $reviews = Review::where('status', 'pending')
             ->with(['product:id,name,slug', 'user:id,first_name,last_name'])
             ->latest()
             ->paginate($perPage)->withQueryString();
@@ -44,14 +44,14 @@ class ReviewController extends Controller
 
     public function approve(Review $review): RedirectResponse
     {
-        $review->update(['is_approved' => true]);
+        $review->update(['is_approved' => true, 'status' => 'approved']);
 
         return back()->with('success', 'Review approved');
     }
 
     public function reject(Review $review): RedirectResponse
     {
-        $review->update(['is_approved' => false]);
+        $review->update(['is_approved' => false, 'status' => 'rejected']);
 
         return back()->with('success', 'Review rejected');
     }
