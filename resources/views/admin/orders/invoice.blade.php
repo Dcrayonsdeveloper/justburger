@@ -223,7 +223,7 @@
                 @php $totalTax = 0; $vatRate = (float) \App\Models\Setting::get('default_vat_rate', 20); @endphp
                 @foreach($order->items as $item)
                     @php
-                        $taxableAmount = round($item->total / (1 + $gstRate / 100), 2);
+                        $taxableAmount = round($item->total / (1 + $vatRate / 100), 2);
                         $gstAmount = round($item->total - $taxableAmount, 2);
                         $totalTax += $gstAmount;
                         $hsn = $item->product?->hsn_code ?? '';
@@ -240,7 +240,7 @@
                         <td class="text-right">{{ format_price($item->price) }}</td>
                         <td class="text-center">{{ $item->quantity }}</td>
                         <td class="text-right">{{ format_price($taxableAmount) }}</td>
-                        <td class="text-right" style="font-size:12px;color:#6b7280;">{{ format_price($gstAmount) }}<br><span style="font-size:10px;">{{ $gstRate }}%</span></td>
+                        <td class="text-right" style="font-size:12px;color:#6b7280;">{{ format_price($gstAmount) }}<br><span style="font-size:10px;">{{ $vatRate }}%</span></td>
                         <td class="text-right" style="font-weight: 600;">{{ format_price($item->total) }}</td>
                     </tr>
                 @endforeach
