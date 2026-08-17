@@ -699,33 +699,9 @@
                         </div>
                     </div>
 
-                    {{-- ── Section 2: Billing (auth only) ── --}}
+                    {{-- Billing always matches the contact/collection details --}}
                     @if(!$isGuest)
-                    <div class="ck-card">
-                        <div class="ck-card-body" style="padding:.75rem 1rem;">
-                            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
-                                <input type="checkbox" name="same_billing_address" value="1" x-model="sameBilling"
-                                       style="accent-color:#C8102E;width:.9rem;height:.9rem;">
-                                <span style="font-size:.82rem;font-weight:600;color:#111111;">Billing same as contact details</span>
-                            </label>
-
-                            <div x-show="!sameBilling" x-collapse style="margin-top:.65rem;padding-top:.65rem;border-top:1px solid rgba(0,0,0,.08);">
-                                @if($addresses->count())
-                                    <div style="display:flex;flex-direction:column;gap:.4rem;">
-                                        @foreach($addresses as $address)
-                                            <label class="ck-addr">
-                                                <input type="radio" name="billing_address_id" value="{{ $address->id }}">
-                                                <div style="flex:1;min-width:0;">
-                                                    <span class="ck-addr-name">{{ $address->name }}</span>
-                                                    <p class="ck-addr-detail">{{ $address->address_line_1 }}, {{ $address->city }}, {{ $address->state }}</p>
-                                                </div>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                    <input type="hidden" name="same_billing_address" value="1">
                     @endif
 
                     {{-- ── Section 3: Payment ── --}}
@@ -1029,7 +1005,7 @@
                                         </span>
                                     </template>
                                     <template x-if="paymentMethod === 'cod'">
-                                        <span>Pay {{ currency_symbol() }}{{ \App\Models\Setting::get('cod_advance_amount', 100) }} & Place Order</span>
+                                        <span>Place Order</span>
                                     </template>
                                 </span>
                                 <span x-show="processing" x-cloak style="display:flex;align-items:center;justify-content:center;gap:.4rem;">
