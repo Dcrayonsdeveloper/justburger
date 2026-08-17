@@ -321,8 +321,8 @@
                 </div>
 
                 <div>
-                    <label for="phone" class="auth-label">Mobile number <span style="font-weight:400;color:rgba(255,255,255,.3);">(optional)</span></label>
-                    <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" autocomplete="tel"
+                    <label for="phone" class="auth-label">Mobile number</label>
+                    <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" required autocomplete="tel"
                            class="auth-input @error('phone') auth-input-error @enderror" placeholder="07123 456789">
                     @error('phone')
                         <p class="auth-error">{{ $message }}</p>
