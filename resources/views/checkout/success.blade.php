@@ -7,39 +7,27 @@
         <meta property="og:type" content="website">
         <meta name="twitter:card" content="summary">
 
-        {{-- JSON-LD Order --}}
-        <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "Order",
-            "orderNumber": "{{ $order->order_number }}",
-            "orderDate": "{{ $order->created_at->toIso8601String() }}",
-            "orderStatus": "https://schema.org/OrderProcessing",
-            "priceCurrency": "GBP",
-            "price": "{{ number_format($order->total, 2, '.', '') }}",
-            "acceptedOffer": [
-                @foreach($order->items as $item)
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Product",
-                        "name": "{{ e($item->product_name) }}"
-                    },
-                    "price": "{{ number_format($item->price, 2, '.', '') }}",
-                    "priceCurrency": "GBP",
-                    "eligibleQuantity": {
-                        "@type": "QuantitativeValue",
-                        "value": {{ $item->quantity }}
-                    }
-                }{{ !$loop->last ? ',' : '' }}
-                @endforeach
-            ],
-            "seller": {
-                "@type": "Organization",
-                "name": "{{ \App\Models\Setting::get('site_name', config('app.name')) }}"
-            }
-        }
-        </script>
+        {{-- JSON-LD Order (built in PHP; inline @directives + @type tokens in a script break Blade/Livewire) --}}
+        @php
+            $orderJsonLd = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Order',
+                'orderNumber' => $order->order_number,
+                'orderDate' => $order->created_at->toIso8601String(),
+                'orderStatus' => 'https://schema.org/OrderProcessing',
+                'priceCurrency' => 'GBP',
+                'price' => number_format($order->total, 2, '.', ''),
+                'acceptedOffer' => $order->items->map(fn ($item) => [
+                    '@type' => 'Offer',
+                    'itemOffered' => ['@type' => 'Product', 'name' => $item->product_name],
+                    'price' => number_format($item->price, 2, '.', ''),
+                    'priceCurrency' => 'GBP',
+                    'eligibleQuantity' => ['@type' => 'QuantitativeValue', 'value' => (int) $item->quantity],
+                ])->values()->all(),
+                'seller' => ['@type' => 'Organization', 'name' => \App\Models\Setting::get('site_name', config('app.name'))],
+            ];
+        @endphp
+        <script type="application/ld+json">{!! json_encode($orderJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     @endpush
 
     <div class="bg-white text-[#222222]">
@@ -186,24 +174,16 @@
                         </div>
                         <div class="text-[16px] text-neutral-600">
                             @php $paymentMethod = $order->metadata['payment_method'] ?? 'cod'; @endphp
-                            <p class="font-medium text-neutral-800">
-                                @switch($paymentMethod)
-                                    @case('cod')
-                                        Cash on Delivery
-                                        @break
-                                    @case('card')
-                                        Credit/Debit Card
-                                        @break
-                                    @case('upi')
-                                        UPI
-                                        @break
-                                    @case('paypal')
-                                        PayPal
-                                        @break
-                                    @default
-                                        {{ ucfirst($paymentMethod) }}
-                                @endswitch
-                            </p>
+                            @php
+                                $paymentLabel = match($paymentMethod) {
+                                    'cod' => 'Cash on Delivery',
+                                    'card' => 'Credit/Debit Card',
+                                    'upi' => 'UPI',
+                                    'paypal' => 'PayPal',
+                                    default => ucfirst($paymentMethod),
+                                };
+                            @endphp
+                            <p class="font-medium text-neutral-800">{{ $paymentLabel }}</p>
                             <p class="text-[12px] mt-1">
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
                                     {{ $order->payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700' }}">
@@ -264,23 +244,21 @@
 
     {{-- GA4 Purchase + FB Purchase tracking --}}
     @if(config('services.ga4.measurement_id') || config('services.facebook.pixel_id'))
+    @php
+        $orderItemsArr = $order->items->map(fn ($item) => [
+            'item_id' => $item->sku ?? (string) $item->product_id,
+            'item_name' => $item->product_name,
+            'price' => (float) $item->price,
+            'quantity' => (int) $item->quantity,
+        ])->values()->all();
+        $fbContentIds = $order->items->pluck('product_id')->map('strval')->values()->all();
+    @endphp
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            <?php
-            $orderItemsArr = $order->items->map(function($item) {
-                return [
-                    'item_id' => $item->sku ?? (string) $item->product_id,
-                    'item_name' => $item->product_name,
-                    'price' => (float) $item->price,
-                    'quantity' => $item->quantity,
-                ];
-            })->values()->toArray();
-            ?>
             var orderItems = {!! json_encode($orderItemsArr) !!};
-
             @if(config('services.ga4.measurement_id'))
             gtag('event', 'purchase', {
-                transaction_id: '{{ $order->order_number }}',
+                transaction_id: @json($order->order_number),
                 value: {{ (float) $order->total }},
                 tax: {{ (float) $order->tax }},
                 shipping: {{ (float) $order->shipping_cost }},
@@ -288,16 +266,15 @@
                 items: orderItems
             });
             @endif
-
             @if(config('services.facebook.pixel_id'))
             fbq('track', 'Purchase', {
-                content_ids: {!! json_encode($order->items->pluck('product_id')->map('strval')->values()->toArray()) !!},
+                content_ids: {!! json_encode($fbContentIds) !!},
                 content_type: 'product',
                 value: {{ (float) $order->total }},
                 currency: 'GBP',
                 num_items: {{ $order->items->sum('quantity') }},
-                order_id: '{{ $order->order_number }}'
-            }@if(!empty($fbPurchaseEventId)), {eventID: '{{ $fbPurchaseEventId }}'}@endif);
+                order_id: @json($order->order_number)
+            }{!! !empty($fbPurchaseEventId) ? ', {eventID: ' . json_encode($fbPurchaseEventId) . '}' : '' !!});
             @endif
         });
     </script>
