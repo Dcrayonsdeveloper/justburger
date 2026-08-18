@@ -43,7 +43,22 @@
                         </svg>
                     </div>
                     <h1 class="text-2xl font-bold text-neutral-900 mb-1">Order Confirmed!</h1>
-                    <p class="text-[14px] text-neutral-600">Thank you for your order. We'll begin processing it shortly.</p>
+                    <p class="text-[14px] text-neutral-600">Thank you for your order. We'll begin preparing it shortly.</p>
+                </div>
+
+                <!-- Collection ready time -->
+                @php
+                    $prepMinutes = (int) \App\Models\Setting::get('collection_prep_minutes', 15);
+                    $readyBy = $order->created_at->copy()->addMinutes($prepMinutes)->timezone('Europe/London');
+                @endphp
+                <div class="bg-primary-600 rounded-xl p-4 mb-4 flex items-start gap-3 text-white">
+                    <svg class="w-6 h-6 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <p class="text-[15px] font-semibold">Please collect your order in about {{ $prepMinutes }} minutes</p>
+                        <p class="text-[13px] mt-0.5">Ready by <span class="font-semibold">{{ $readyBy->format('h:i A') }}</span> &middot; UK time</p>
+                    </div>
                 </div>
 
                 <!-- Order Number Banner -->
@@ -147,21 +162,20 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
-                            <h3 class="text-[16px] font-semibold text-neutral-900">Delivery Address</h3>
+                            <h3 class="text-[16px] font-semibold text-neutral-900">Collection</h3>
                         </div>
-                        @php $shipping = $order->shipping_address_snapshot; @endphp
-                        @if($shipping)
-                            <div class="text-[16px] text-neutral-600 leading-relaxed">
-                                <p class="font-medium text-neutral-800">{{ $shipping['name'] ?? '' }}</p>
-                                @if(!empty($shipping['phone']))
-                                    <p class="text-neutral-600 text-[12px]">{{ $shipping['phone'] }}</p>
-                                @endif
-                                <p class="mt-1">
-                                    {{ $shipping['address_line_1'] ?? '' }}@if(!empty($shipping['address_line_2'])), {{ $shipping['address_line_2'] }}@endif<br>
-                                    {{ $shipping['city'] ?? '' }}, {{ $shipping['state'] ?? '' }} {{ $shipping['postal_code'] ?? '' }}
-                                </p>
-                            </div>
-                        @endif
+                        @php
+                            $shipping = $order->shipping_address_snapshot;
+                            $collectName = $shipping['name'] ?? $order->guest_name ?? ($order->user->full_name ?? 'Customer');
+                            $pickupAddress = \App\Models\Setting::get('site_address', '525 Staines Road, Bedfont, Middx. TW14 8BP');
+                        @endphp
+                        <div class="text-[16px] text-neutral-600 leading-relaxed">
+                            <p class="font-medium text-neutral-800">{{ $collectName }}</p>
+                            <p class="mt-1 text-[13px]">
+                                <span class="text-neutral-600">Collect from:</span><br>
+                                {{ $pickupAddress }}
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Payment Method -->
@@ -176,7 +190,7 @@
                             @php $paymentMethod = $order->metadata['payment_method'] ?? 'cod'; @endphp
                             @php
                                 $paymentLabel = match($paymentMethod) {
-                                    'cod' => 'Cash on Delivery',
+                                    'cod' => 'Cash on Collection',
                                     'card' => 'Credit/Debit Card',
                                     'upi' => 'UPI',
                                     'paypal' => 'PayPal',
