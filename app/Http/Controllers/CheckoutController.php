@@ -140,22 +140,9 @@ class CheckoutController extends Controller
             'payment_method' => ['required', 'string', 'in:cod,partial_pay'],
             'notes' => ['nullable', 'string', 'max:500'],
             'delivery_method' => ['nullable', 'string', 'in:collection'],
+            // Collection only — we just capture the customer's name.
+            'guest_name' => ['required', 'string', 'max:255'],
         ];
-
-        if ($isGuest) {
-            $rules['guest_email'] = ['required', 'email', 'max:255'];
-            $rules['guest_name'] = ['required', 'string', 'max:255'];
-            $rules['guest_phone'] = ['required', 'string', 'max:20'];
-            $rules['shipping_name'] = ['required', 'string', 'max:255'];
-            $rules['shipping_address_line_1'] = ['required', 'string', 'max:255'];
-            $rules['shipping_address_line_2'] = ['nullable', 'string', 'max:255'];
-            $rules['shipping_city'] = ['required', 'string', 'max:100'];
-            $rules['shipping_state'] = ['required', 'string', 'max:100'];
-            $rules['shipping_postal_code'] = ['required', 'string', 'max:10'];
-        } else {
-            $rules['shipping_address_id'] = ['required', 'exists:user_addresses,id'];
-            $rules['billing_address_id'] = ['nullable', 'exists:user_addresses,id'];
-        }
 
         $validated = $request->validate($rules);
 
@@ -196,49 +183,22 @@ class CheckoutController extends Controller
             }
         }
 
-        // Build address snapshots
-        if ($isGuest) {
-            $shippingSnapshot = [
-                'name' => $validated['shipping_name'],
-                'phone' => $validated['guest_phone'] ?? '',
-                'address_line_1' => $validated['shipping_address_line_1'],
-                'address_line_2' => $validated['shipping_address_line_2'] ?? '',
-                'city' => $validated['shipping_city'],
-                'state' => $validated['shipping_state'],
-                'postal_code' => $validated['shipping_postal_code'],
-                'country' => 'India',
-            ];
-            $billingSnapshot = $shippingSnapshot;
-            $shippingAddressId = null;
-            $billingAddressId = null;
-        } else {
-            $shippingAddress = UserAddress::where('user_id', auth()->id())->findOrFail($validated['shipping_address_id']);
-            $billingAddressId = $validated['same_billing_address']
-                ? $shippingAddress->id
-                : ($validated['billing_address_id'] ?? $shippingAddress->id);
-            $billingAddress = UserAddress::where('user_id', auth()->id())->findOrFail($billingAddressId);
-
-            $shippingSnapshot = [
-                'name' => $shippingAddress->full_name,
-                'phone' => $shippingAddress->phone,
-                'address_line_1' => $shippingAddress->address_line_1,
-                'address_line_2' => $shippingAddress->address_line_2,
-                'city' => $shippingAddress->city,
-                'state' => $shippingAddress->state,
-                'postal_code' => $shippingAddress->postal_code,
-                'country' => $shippingAddress->country,
-            ];
-            $billingSnapshot = [
-                'name' => $billingAddress->full_name,
-                'address_line_1' => $billingAddress->address_line_1,
-                'city' => $billingAddress->city,
-                'state' => $billingAddress->state,
-                'postal_code' => $billingAddress->postal_code,
-                'country' => $billingAddress->country,
-            ];
-            $shippingAddressId = $shippingAddress->id;
-            $billingAddressId = $billingAddress->id;
-        }
+        // Collection only — no delivery address is taken, so we snapshot just the
+        // customer's name and keep the rest of the shape empty for downstream views.
+        $customerName = $validated['guest_name'];
+        $shippingSnapshot = [
+            'name' => $customerName,
+            'phone' => '',
+            'address_line_1' => '',
+            'address_line_2' => '',
+            'city' => '',
+            'state' => '',
+            'postal_code' => '',
+            'country' => '',
+        ];
+        $billingSnapshot = $shippingSnapshot;
+        $shippingAddressId = null;
+        $billingAddressId = null;
 
         // Navratri offer: 5% extra off on all orders (after coupon discounts)
         $paymentMethod = $validated['payment_method'];
@@ -484,22 +444,9 @@ class CheckoutController extends Controller
             'payment_method' => ['required', 'string', 'in:stripe'],
             'notes' => ['nullable', 'string', 'max:500'],
             'delivery_method' => ['nullable', 'string', 'in:collection'],
+            // Collection only — we just capture the customer's name.
+            'guest_name' => ['required', 'string', 'max:255'],
         ];
-
-        if ($isGuest) {
-            $rules['guest_email'] = ['required', 'email', 'max:255'];
-            $rules['guest_name'] = ['required', 'string', 'max:255'];
-            $rules['guest_phone'] = ['required', 'string', 'max:20'];
-            $rules['shipping_name'] = ['required', 'string', 'max:255'];
-            $rules['shipping_address_line_1'] = ['required', 'string', 'max:255'];
-            $rules['shipping_address_line_2'] = ['nullable', 'string', 'max:255'];
-            $rules['shipping_city'] = ['required', 'string', 'max:100'];
-            $rules['shipping_state'] = ['required', 'string', 'max:100'];
-            $rules['shipping_postal_code'] = ['required', 'string', 'max:10'];
-        } else {
-            $rules['shipping_address_id'] = ['required', 'exists:user_addresses,id'];
-            $rules['billing_address_id'] = ['nullable', 'exists:user_addresses,id'];
-        }
 
         $validated = $request->validate($rules);
 
@@ -565,49 +512,21 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Order total is too low for online payment. Please choose another method.'], 422);
         }
 
-        // ── Address snapshots ──
-        if ($isGuest) {
-            $shippingSnapshot = [
-                'name' => $validated['shipping_name'],
-                'phone' => $validated['guest_phone'] ?? '',
-                'address_line_1' => $validated['shipping_address_line_1'],
-                'address_line_2' => $validated['shipping_address_line_2'] ?? '',
-                'city' => $validated['shipping_city'],
-                'state' => $validated['shipping_state'],
-                'postal_code' => $validated['shipping_postal_code'],
-                'country' => 'United Kingdom',
-            ];
-            $billingSnapshot = $shippingSnapshot;
-            $shippingAddressId = null;
-            $billingAddressId = null;
-        } else {
-            $shippingAddress = UserAddress::where('user_id', auth()->id())->findOrFail($validated['shipping_address_id']);
-            $billingAddressId = ($validated['same_billing_address'] ?? true)
-                ? $shippingAddress->id
-                : ($validated['billing_address_id'] ?? $shippingAddress->id);
-            $billingAddress = UserAddress::where('user_id', auth()->id())->findOrFail($billingAddressId);
-
-            $shippingSnapshot = [
-                'name' => $shippingAddress->full_name,
-                'phone' => $shippingAddress->phone,
-                'address_line_1' => $shippingAddress->address_line_1,
-                'address_line_2' => $shippingAddress->address_line_2,
-                'city' => $shippingAddress->city,
-                'state' => $shippingAddress->state,
-                'postal_code' => $shippingAddress->postal_code,
-                'country' => $shippingAddress->country,
-            ];
-            $billingSnapshot = [
-                'name' => $billingAddress->full_name,
-                'address_line_1' => $billingAddress->address_line_1,
-                'city' => $billingAddress->city,
-                'state' => $billingAddress->state,
-                'postal_code' => $billingAddress->postal_code,
-                'country' => $billingAddress->country,
-            ];
-            $shippingAddressId = $shippingAddress->id;
-            $billingAddressId = $billingAddress->id;
-        }
+        // ── Address snapshot — collection only, so we keep just the name ──
+        $customerName = $validated['guest_name'];
+        $shippingSnapshot = [
+            'name' => $customerName,
+            'phone' => '',
+            'address_line_1' => '',
+            'address_line_2' => '',
+            'city' => '',
+            'state' => '',
+            'postal_code' => '',
+            'country' => '',
+        ];
+        $billingSnapshot = $shippingSnapshot;
+        $shippingAddressId = null;
+        $billingAddressId = null;
 
         // ── Affiliate resolution ──
         $affiliateId = null;
