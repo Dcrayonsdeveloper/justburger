@@ -83,9 +83,6 @@ class CheckoutController extends Controller
             ->orderByDesc('value')
             ->get();
 
-        // Navratri offer active check
-        $navratriActive = Setting::get('navratri_offer_active', '1') === '1';
-
         // Shipping fee calculation for display
         $freeShipThreshold = (float) Setting::get('free_shipping_threshold', 499);
         $shippingFee = ($cart->subtotal - $cart->discount) >= $freeShipThreshold ? 0 : 50;
@@ -126,7 +123,7 @@ class CheckoutController extends Controller
 
         return view('checkout.index', compact(
             'cart', 'addresses', 'defaultAddress', 'paymentSettings',
-            'isGuest', 'availableCoupons', 'navratriActive', 'fbEventId',
+            'isGuest', 'availableCoupons', 'fbEventId',
             'oneClickReady', 'checkoutPreference', 'loyaltyPoints', 'loyaltyValue'
         ));
     }
@@ -200,15 +197,10 @@ class CheckoutController extends Controller
         $shippingAddressId = null;
         $billingAddressId = null;
 
-        // Navratri offer: 5% extra off on all orders (after coupon discounts)
         $paymentMethod = $validated['payment_method'];
-        $navratriDiscount = 0;
-        $navratriActive = Setting::get('navratri_offer_active', '1') === '1';
-        if ($navratriActive) {
-            $navratriDiscount = round(($cart->subtotal - $cart->discount) * 0.05, 2);
-        }
 
-        $totalDiscount = $cart->discount + $navratriDiscount;
+        // The only discount is whatever coupon the customer actually applied.
+        $totalDiscount = $cart->discount;
 
         // Loyalty points redemption
         $loyaltyPointsUsed = 0;
@@ -253,11 +245,8 @@ class CheckoutController extends Controller
             }
         }
 
-        $order = DB::transaction(function () use ($cart, $shippingSnapshot, $billingSnapshot, $shippingAddressId, $billingAddressId, $validated, $isGuest, $finalTotal, $totalDiscount, $paymentMethod, $navratriDiscount, $codAdvance, $affiliateId, $affiliateRefCode, $shippingFee, $loyaltyPointsUsed, $loyaltyDiscount, $isDelivery) {
+        $order = DB::transaction(function () use ($cart, $shippingSnapshot, $billingSnapshot, $shippingAddressId, $billingAddressId, $validated, $isGuest, $finalTotal, $totalDiscount, $paymentMethod, $codAdvance, $affiliateId, $affiliateRefCode, $shippingFee, $loyaltyPointsUsed, $loyaltyDiscount, $isDelivery) {
             $metadata = ['payment_method' => $paymentMethod, 'delivery_method' => $isDelivery ? 'delivery' : 'collection'];
-            if ($navratriDiscount > 0) {
-                $metadata['navratri_discount'] = $navratriDiscount;
-            }
             if ($codAdvance > 0) {
                 $metadata['cod_advance'] = $codAdvance;
                 $metadata['cod_balance'] = $finalTotal - $codAdvance;
@@ -483,11 +472,7 @@ class CheckoutController extends Controller
         }
 
         // ── Pricing (must mirror process()) ──
-        $navratriDiscount = 0;
-        if (Setting::get('navratri_offer_active', '1') === '1') {
-            $navratriDiscount = round(($cart->subtotal - $cart->discount) * 0.05, 2);
-        }
-        $totalDiscount = $cart->discount + $navratriDiscount;
+        $totalDiscount = $cart->discount;
 
         $loyaltyPointsUsed = 0;
         $loyaltyDiscount = 0;
@@ -552,9 +537,6 @@ class CheckoutController extends Controller
             'payment_method' => 'stripe',
             'cart_id' => $cart->id,
         ];
-        if ($navratriDiscount > 0) {
-            $metadata['navratri_discount'] = $navratriDiscount;
-        }
         if ($loyaltyPointsUsed > 0) {
             $metadata['loyalty_points_used'] = $loyaltyPointsUsed;
             $metadata['loyalty_discount'] = $loyaltyDiscount;

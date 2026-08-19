@@ -739,22 +739,17 @@
                             <hr class="ck-price-divider">
 
                             @php
-                                // Collection only — no delivery fee to add.
-                                $displayTotalCollection = $cart->total;
+                                // Collection only — no delivery fee to add. The only
+                                // saving is a coupon the customer applied themselves.
+                                $displayTotal = $cart->total;
                                 $totalSavings = $cart->discount;
-                                if (isset($navratriActive) && $navratriActive) {
-                                    $navSave = round(($cart->subtotal - $cart->discount) * 0.05, 2);
-                                    $displayTotalCollection = max(0, $displayTotalCollection - $navSave);
-                                    $totalSavings += $navSave;
-                                }
-                                $displayTotal = $displayTotalCollection;
                                 $codMinOrder = 10;
                                 $showCod = $displayTotal >= $codMinOrder;
                             @endphp
 
                             <div class="ck-total-row">
                                 <span class="ck-total-label">Total</span>
-                                                                <span class="ck-total-val">@price($displayTotalCollection)</span>
+                                                                <span class="ck-total-val">@price($displayTotal)</span>
                             </div>
 
                             @if($totalSavings > 0)
@@ -770,7 +765,7 @@
                                 <span x-show="!processing">
                                     <template x-if="paymentMethod === 'stripe'">
                                         <span>Pay Now &middot;
-                                                                                        <span>@price($displayTotalCollection)</span>
+                                                                                        <span>@price($displayTotal)</span>
                                         </span>
                                     </template>
                                     <template x-if="paymentMethod === 'cod'">
