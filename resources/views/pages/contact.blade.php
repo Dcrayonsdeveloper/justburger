@@ -135,6 +135,10 @@
             letter-spacing:.04em; text-transform:uppercase;
         }
         .ct-label .req { color:#C8102E; }
+        .ct-label .opt {
+            color:rgba(0,0,0,.35); font-weight:500;
+            text-transform:none; letter-spacing:0;
+        }
         .ct-input {
             width:100%; background:#fafaf8;
             border:1.5px solid rgba(0,0,0,.1);
@@ -330,7 +334,7 @@
                             @error('name')<p class="ct-error">{{ $message }}</p>@enderror
                         </div>
                         <div class="ct-field">
-                            <label class="ct-label">Email</label>
+                            <label class="ct-label">Email <span class="opt">(optional)</span></label>
                             <input type="email" name="email" value="{{ old('email') }}"
                                    class="ct-input @error('email') error @enderror"
                                    placeholder="you@example.com">
@@ -340,7 +344,7 @@
 
                     <div class="ct-row">
                         <div class="ct-field">
-                            <label class="ct-label">Phone</label>
+                            <label class="ct-label">Phone <span class="opt">(optional)</span></label>
                             <input type="tel" name="phone" value="{{ old('phone') }}"
                                    class="ct-input @error('phone') error @enderror"
                                    placeholder="+44 7700 900 000">
