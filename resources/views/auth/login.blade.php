@@ -93,6 +93,16 @@
             box-shadow: 0 0 0 3px rgba(200,16,46,.15);
         }
         .auth-input-error { border-color: #ef4444; }
+        .auth-input-ok { border-color: #34d399; }
+
+        /* Live username feedback, sat directly under the field */
+        .auth-hint {
+            display: flex; align-items: center; gap: .35rem;
+            font-size: .78rem; color: rgba(255,255,255,.45);
+            margin-top: .3rem;
+        }
+        .auth-hint-ok { color: #34d399; }
+        .auth-hint-bad { color: #f87171; }
 
         /* Buttons */
         .auth-btn-primary {
@@ -212,7 +222,7 @@
 
 <div class="auth-wrapper"
      x-data="{
-        mode: '{{ $errors->has('full_name') || $errors->has('phone') || $errors->has('terms') || old('_register') || request()->get('mode') === 'register' ? 'register' : 'login' }}'
+        mode: '{{ $errors->has('username') || $errors->has('terms') || old('_register') || request()->get('mode') === 'register' ? 'register' : 'login' }}'
      }">
 
     <!-- Logo -->
@@ -237,9 +247,10 @@
             {{-- Step 1: Enter email or phone --}}
             <div x-show="step === 'identifier'" class="auth-stack">
                 <div>
-                    <label class="auth-label">Email or Phone Number</label>
+                    <label class="auth-label">Username</label>
                     <input type="text" x-model="identifier" @keyup.enter="continueLogin()" autofocus
-                           class="auth-input" placeholder="Enter your email or mobile">
+                           autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"
+                           class="auth-input" placeholder="Enter your username">
                 </div>
                 <button @click="continueLogin()" type="button" class="auth-btn-primary">Continue</button>
                 <p x-show="error" x-text="error" class="auth-error" x-cloak></p>
@@ -300,32 +311,26 @@
                 @csrf
                 <input type="hidden" name="_register" value="1">
 
-                <div>
-                    <label for="full_name" class="auth-label">Your name</label>
-                    <input type="text" name="full_name" id="full_name" value="{{ old('full_name') }}" required autocomplete="name"
-                           class="auth-input @error('full_name') auth-input-error @enderror" placeholder="First and last name">
-                    @error('full_name')
-                        <p class="auth-error">{{ $message }}</p>
-                    @enderror
-                </div>
+                <div x-data="usernameField()" x-init="value && check()">
+                    <label for="username" class="auth-label">Username</label>
+                    <input type="text" name="username" id="username" x-model="value" required
+                           autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"
+                           maxlength="30" @input.debounce.350ms="check()"
+                           class="auth-input @error('username') auth-input-error @enderror"
+                           :class="{ 'auth-input-error': state === 'bad', 'auth-input-ok': state === 'ok' }"
+                           placeholder="e.g. hungry_james">
 
-                <div>
-                    <label for="reg_email" class="auth-label">Email</label>
-                    <input type="email" name="email" id="reg_email" value="{{ old('_register') ? old('email') : '' }}" required autocomplete="email" placeholder="you@example.com"
-                           class="auth-input @if(old('_register')) @error('email') auth-input-error @enderror @endif">
-                    @if(old('_register'))
-                        @error('email')
-                            <p class="auth-error">{{ $message }}</p>
-                        @enderror
-                    @endif
-                </div>
+                    {{-- Live availability: replaces the server-side error once typing starts --}}
+                    <p x-show="state" x-cloak class="auth-hint"
+                       :class="{ 'auth-hint-ok': state === 'ok', 'auth-hint-bad': state === 'bad' }">
+                        <span x-show="state === 'ok'">&check;</span><span x-show="state === 'bad'">&times;</span>
+                        <span x-text="message"></span>
+                    </p>
 
-                <div>
-                    <label for="phone" class="auth-label">Mobile number</label>
-                    <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" required autocomplete="tel"
-                           class="auth-input @error('phone') auth-input-error @enderror" placeholder="07123 456789">
-                    @error('phone')
-                        <p class="auth-error">{{ $message }}</p>
+                    <p x-show="!state" x-cloak class="auth-hint">Lowercase letters, numbers and underscores.</p>
+
+                    @error('username')
+                        <p class="auth-error" x-show="!state" x-cloak>{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -384,10 +389,63 @@ function unifiedLogin() {
         error: @js($errors->first('email')),
 
         continueLogin() {
-            if (!this.identifier.trim()) { this.error = 'Enter email or phone number'; return; }
+            if (!this.identifier.trim()) { this.error = 'Enter your username'; return; }
             this.error = '';
-            // Email or phone — the next step is always the password.
+            // Whatever the identifier is, the next step is always the password.
             this.step = 'password';
+        },
+    };
+}
+
+/**
+ * Tells the visitor whether a username is free while they type it.
+ *
+ * Two things stop it misleading anyone: the input is debounced so a partial
+ * name is not judged, and each request aborts the previous one so a slow reply
+ * for an earlier value cannot land after a newer answer.
+ */
+function usernameField() {
+    return {
+        value: @js(strtolower((string) old('username', ''))),
+        state: '',        // '' | 'checking' | 'ok' | 'bad'
+        message: '',
+        inflight: null,
+
+        async check() {
+            this.value = this.value.trim().toLowerCase();
+            const wanted = this.value;
+
+            if (!wanted) { this.state = ''; this.message = ''; return; }
+
+            this.state = 'checking';
+            this.message = 'Checking…';
+
+            if (this.inflight) this.inflight.abort();
+            this.inflight = new AbortController();
+
+            try {
+                const url = '{{ route('username.check') }}?username=' + encodeURIComponent(wanted);
+                const r = await fetch(url, {
+                    signal: this.inflight.signal,
+                    headers: { 'Accept': 'application/json' },
+                });
+
+                if (r.status === 429) {
+                    this.state = ''; this.message = '';
+                    return;
+                }
+
+                const d = await r.json();
+
+                // Ignore anything that arrives for a value we have moved on from.
+                if (wanted !== this.value) return;
+
+                this.state = d.available ? 'ok' : 'bad';
+                this.message = d.message || '';
+            } catch (e) {
+                if (e.name === 'AbortError') return;
+                this.state = ''; this.message = '';
+            }
         },
     };
 }

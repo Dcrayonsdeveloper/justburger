@@ -138,6 +138,13 @@ Route::middleware(['guest', 'throttle:10,1'])->group(function () {
     Route::post('/password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
+// Live username availability for the sign-up form. Kept out of the guest group
+// above because a debounced field fires far more often than a login attempt —
+// but still bounded, since this endpoint confirms whether a username exists.
+Route::get('/auth/username-available', [App\Http\Controllers\Auth\UsernameController::class, 'check'])
+    ->middleware('throttle:60,1')
+    ->name('username.check');
+
 // Abandoned Checkout Capture (AJAX - captures email/phone before form submit)
 Route::post('/api/abandoned-capture', [App\Http\Controllers\CheckoutController::class, 'captureAbandoned'])
     ->middleware('throttle:20,1')

@@ -5,16 +5,15 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AnalyticsService;
+use App\Support\Username;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
-
 
 class RegisterController extends Controller
 {
@@ -23,40 +22,48 @@ class RegisterController extends Controller
         return redirect()->route('login', ['mode' => 'register']);
     }
 
+    /**
+     * Sign-up asks for a username and a password and nothing else — no email,
+     * no phone. Nothing here can identify a person, which is the point.
+     *
+     * The trade-off is that a forgotten password cannot be reset: there is no
+     * channel to reach the account holder. That is a deliberate choice.
+     */
     public function register(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'full_name' => ['required', 'string', 'max:101'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['required', 'string', 'max:20', 'unique:users'],
+            'username' => Username::rules(),
             'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
+        ], Username::messages());
 
-        $nameParts = explode(' ', trim($validated['full_name']), 2);
-        $firstName = $nameParts[0];
-        $lastName = $nameParts[1] ?? '';
+        $username = strtolower($validated['username']);
 
         $user = User::create([
             'uuid' => Str::uuid(),
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
+            'username' => $username,
+            // first_name is NOT NULL and shown around the account area. With no
+            // real name collected, the username stands in for it; checkout asks
+            // separately for the name to put on the order.
+            'first_name' => $username,
+            'last_name' => '',
+            'email' => null,
+            'phone' => null,
             'password' => Hash::make($validated['password']),
             'role' => 'customer',
             'is_active' => true,
         ]);
 
-        // Post-registration side effects (verification email, analytics) must never
-        // break sign-up if they fail — e.g. the mail server rejecting the message.
-        try {
-            event(new Registered($user));
-        } catch (\Throwable $e) {
-            Log::warning('Registration verification email/event failed: ' . $e->getMessage());
+        // Registered() fans out to the email-verification listener, which has
+        // nothing to send to. Skip it rather than rely on the catch below.
+        if ($user->email) {
+            try {
+                event(new Registered($user));
+            } catch (\Throwable $e) {
+                Log::warning('Registration verification email/event failed: ' . $e->getMessage());
+            }
         }
 
         try {
-            // Facebook CAPI: CompleteRegistration
             app(AnalyticsService::class)->trackCompleteRegistration($user, $request);
         } catch (\Throwable $e) {
             Log::warning('trackCompleteRegistration failed: ' . $e->getMessage());
@@ -66,6 +73,6 @@ class RegisterController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('login')->with('success', 'Account created successfully! Please login to continue.');
+        return redirect()->route('login')->with('success', 'Account created. Please sign in to continue.');
     }
 }
