@@ -127,15 +127,23 @@ Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function
 });
 
 // Guest Authentication Routes
-Route::middleware(['guest', 'throttle:10,1'])->group(function () {
+//
+// Reading a page is not an attempt at anything. Throttling the GETs meant ten
+// views of the sign-in page in a minute — trivially reached when a failed
+// submission re-renders the form — locked the visitor out with a 429 and no way
+// back in. The limit belongs on the submissions, which is what brute force uses.
+Route::middleware('guest')->group(function () {
     Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
     Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
     Route::get('/password/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('/password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
     Route::get('/password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
+
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+        Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
+        Route::post('/password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+        Route::post('/password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
+    });
 });
 
 // Live username availability for the sign-up form. Kept out of the guest group
