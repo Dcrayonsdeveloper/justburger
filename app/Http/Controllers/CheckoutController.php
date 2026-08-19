@@ -275,7 +275,11 @@ class CheckoutController extends Controller
                 'guest_email' => $validated['guest_email'] ?? null,
                 'guest_name' => $validated['guest_name'] ?? null,
                 'guest_phone' => $validated['guest_phone'] ?? null,
-                'status' => 'confirmed',
+                // Placing the order sends it straight to the kitchen; there is no
+                // intermediate state anyone acts on. preparing_at starts the
+                // collection clock — see Order::releaseOrdersDueForCollection().
+                'status' => Order::STATUS_PREPARING,
+                'preparing_at' => now(),
                 'payment_status' => 'pending',
                 'subtotal' => $cart->subtotal,
                 'discount' => $totalDiscount,
@@ -565,7 +569,9 @@ class CheckoutController extends Controller
                 'guest_email' => $validated['guest_email'] ?? null,
                 'guest_name' => $validated['guest_name'] ?? null,
                 'guest_phone' => $validated['guest_phone'] ?? null,
-                'status' => 'pending',
+                // Same as the direct path above: the kitchen starts on it now.
+                'status' => Order::STATUS_PREPARING,
+                'preparing_at' => now(),
                 'payment_status' => 'pending',
                 'subtotal' => $cart->subtotal,
                 'discount' => $totalDiscount,

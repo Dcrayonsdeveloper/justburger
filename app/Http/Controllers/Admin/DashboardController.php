@@ -51,7 +51,11 @@ class DashboardController extends Controller
         $totalCustomers = $dateFilter(User::where('role', 'customer'))->count();
         $totalProducts = Product::count();
         $totalSellers = Seller::count();
-        $pendingOrders = $dateFilter(Order::where('status', 'confirmed'))->count();
+        // Orders still being made. Legacy rows carry pre-collection statuses, so
+        // count everything that is not finished or cancelled.
+        $pendingOrders = $dateFilter(
+            Order::whereNotIn('status', [Order::STATUS_READY, Order::STATUS_CANCELLED, 'delivered', 'packed', 'shipped', 'out_for_delivery', 'returned'])
+        )->count();
 
         // Returns stats
         $totalReturns = $dateFilter(OrderReturn::query())->count();
@@ -154,11 +158,24 @@ class DashboardController extends Controller
             }
         }
 
-        // Order status distribution (filtered)
-        $orderStatusCounts = $dateFilter(Order::selectRaw('status, COUNT(*) as count'))
+        // Order status distribution, folded onto the three collection stages so
+        // the chart shows what the shop actually deals in rather than a spread
+        // of delivery-era statuses left on historical rows.
+        $orderStatusCounts = collect([
+            Order::STATUS_PREPARING => 0,
+            Order::STATUS_READY => 0,
+            Order::STATUS_CANCELLED => 0,
+        ]);
+
+        $dateFilter(Order::selectRaw('status, COUNT(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
-            ->toArray();
+            ->each(function ($count, $status) use ($orderStatusCounts) {
+                $stage = Order::stageFor((string) $status);
+                $orderStatusCounts[$stage] = $orderStatusCounts[$stage] + $count;
+            });
+
+        $orderStatusCounts = $orderStatusCounts->filter()->toArray();
 
         // Monthly revenue (last 6 months or within filter range, paid only)
         $monthQuery = Order::selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(total) as total')
@@ -194,7 +211,10 @@ class DashboardController extends Controller
         }
 
         // Circle progress metrics (filtered)
-        $completedOrders = $dateFilter(Order::where('status', 'delivered'))->count();
+        // "Completed" for a collection shop means ready and handed over.
+        $completedOrders = $dateFilter(
+            Order::whereIn('status', [Order::STATUS_READY, 'delivered', 'packed', 'shipped', 'out_for_delivery'])
+        )->count();
         $cancelledOrders = $dateFilter(Order::where('status', 'cancelled'))->count();
         $completionRate = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
         $cancellationRate = $totalOrders > 0 ? round(($cancelledOrders / $totalOrders) * 100) : 0;

@@ -117,16 +117,17 @@ class OrderManagementTest extends TestCase
 
     public function test_admin_can_update_order_status(): void
     {
-        // Update order to 'confirmed' first so we can test a valid transition
-        $this->order->update(['status' => 'confirmed']);
+        // Collection orders move preparing -> ready; the delivery-era statuses
+        // are no longer settable. See Order::SETTABLE_STATUSES.
+        $this->order->update(['status' => Order::STATUS_PREPARING]);
 
-        $response = $this->actingAs($this->adminUser, 'admin')
+        $this->actingAs($this->adminUser, 'admin')
             ->put('/admin/orders/' . $this->order->id . '/status', [
-                'status' => 'processing',
+                'status' => Order::STATUS_READY,
             ]);
 
         $this->order->refresh();
-        $this->assertEquals('processing', $this->order->status);
+        $this->assertEquals(Order::STATUS_READY, $this->order->status);
     }
 
     public function test_admin_order_listing_requires_authentication(): void

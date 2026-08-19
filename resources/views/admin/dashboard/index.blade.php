@@ -50,7 +50,7 @@
                 <p class="text-2xl font-semibold" style="color:#1a1a1a">{{ number_format($totalCustomers) }}</p>
             </div>
             <div class="flex-1 px-5 py-4" style="border-left:1px solid #e3e3e3">
-                <p class="text-xs font-medium mb-1" style="color:#6d7175">Confirmed</p>
+                <p class="text-xs font-medium mb-1" style="color:#6d7175">Preparing</p>
                 <p class="text-2xl font-semibold" style="color:#1a1a1a">{{ number_format($pendingOrders) }}</p>
             </div>
             <div class="flex-1 px-5 py-4" style="border-left:1px solid #e3e3e3">
@@ -95,7 +95,7 @@
             </div>
             <div class="p-5 space-y-5">
                 @foreach([
-                    ['label' => 'Completion Rate', 'value' => $completionRate, 'detail' => number_format($completedOrders).' of '.number_format($totalOrders).' delivered', 'color' => '#10b981'],
+                    ['label' => 'Completion Rate', 'value' => $completionRate, 'detail' => number_format($completedOrders).' of '.number_format($totalOrders).' ready', 'color' => '#10b981'],
                     ['label' => 'Cancellation Rate', 'value' => $cancellationRate, 'detail' => number_format($cancelledOrders).' of '.number_format($totalOrders).' cancelled', 'color' => '#ef4444'],
                     ['label' => 'Active Products', 'value' => $productActiveRate, 'detail' => number_format($activeProducts).' of '.number_format($totalProducts).' active', 'color' => '#6366f1'],
                 ] as $metric)
@@ -145,8 +145,15 @@
                         </td>
                         <td class="px-4 py-3 text-sm" style="color:#1a1a1a">{{ $order->user->full_name ?? 'Guest' }}</td>
                         <td class="px-4 py-3">
-                            @php $sc = match($order->status) { 'delivered','completed' => ['#e3f1df','#1a7431'], 'cancelled' => ['#fde8e8','#c53030'], default => ['#fef3c7','#92400e'] }; @endphp
-                            <span class="text-xs font-medium px-2 py-0.5 rounded" style="background:{{ $sc[0] }};color:{{ $sc[1] }}">{{ ucfirst(str_replace('_',' ',$order->status)) }}</span>
+                            @php
+                                $stage = $order->collectionStage();
+                                $sc = match($stage) {
+                                    \App\Models\Order::STATUS_READY => ['#e3f1df','#1a7431'],
+                                    \App\Models\Order::STATUS_CANCELLED => ['#fde8e8','#c53030'],
+                                    default => ['#fef3c7','#92400e'],
+                                };
+                            @endphp
+                            <span class="text-xs font-medium px-2 py-0.5 rounded" style="background:{{ $sc[0] }};color:{{ $sc[1] }}">{{ \App\Models\Order::SETTABLE_STATUSES[$stage] ?? ucfirst($stage) }}</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-right font-medium" style="color:#1a1a1a">@price($order->total)</td>
                     </tr>
@@ -220,7 +227,7 @@
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(statusData).map(s => s.charAt(0).toUpperCase()+s.slice(1).replace('_',' ')),
-                    datasets: [{ data: Object.values(statusData), backgroundColor: Object.keys(statusData).map(s => ({pending:'#f59e0b',confirmed:'#3b82f6',processing:'#8b5cf6',packed:'#6366f1',shipped:'#06b6d4',out_for_delivery:'#14b8a6',delivered:'#10b981',completed:'#059669',cancelled:'#ef4444',returned:'#f97316'})[s]||'#bbb'), borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }]
+                    datasets: [{ data: Object.values(statusData), backgroundColor: Object.keys(statusData).map(s => ({preparing:'#f59e0b',ready:'#10b981',cancelled:'#ef4444'})[s]||'#bbb'), borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 10, font: { size: 11, family: fontFamily } } } } }
             });

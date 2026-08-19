@@ -18,16 +18,7 @@
 
                     {{-- Status Filter Tabs --}}
                     @php
-                        $statuses = [
-                            '' => 'All',
-                            'confirmed' => 'Confirmed',
-                            'processing' => 'Processing',
-                            'packed' => 'Preparing',
-                            'shipped' => 'Out for Delivery',
-                            'out_for_delivery' => 'Out for Delivery',
-                            'delivered' => 'Delivered',
-                            'cancelled' => 'Cancelled',
-                        ];
+                        $statuses = ['' => 'All'] + \App\Models\Order::SETTABLE_STATUSES;
                         $currentStatus = request('status', '');
                     @endphp
                     <div class="flex items-center gap-1.5 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
@@ -43,19 +34,12 @@
                     {{-- Orders List --}}
                     @forelse($orders as $order)
                         @php
-                            $statusColors = [
-                                'pending' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                'confirmed' => 'bg-[#205258]/5 text-[#1b454a] border-[#205258]/30',
-                                'processing' => 'bg-[#205258]/5 text-[#1b454a] border-[#205258]/30',
-                                'packed' => 'bg-[#205258]/10 text-[#1b454a] border-[#205258]/30',
-                                'shipped' => 'bg-[#205258]/15 text-[#15383c] border-[#205258]/40',
-                                'out_for_delivery' => 'bg-[#205258]/5 text-[#1b454a] border-[#205258]/30',
-                                'delivered' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                'cancelled' => 'bg-red-50 text-red-700 border-red-200',
-                                'returned' => 'bg-neutral-100 text-neutral-600 border-neutral-200',
-                            ];
-                            $color = $statusColors[$order->status] ?? 'bg-neutral-50 text-neutral-600 border-neutral-200';
+                            $stage = $order->collectionStage();
+                            $color = match($stage) {
+                                \App\Models\Order::STATUS_READY => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                \App\Models\Order::STATUS_CANCELLED => 'bg-red-50 text-red-700 border-red-200',
+                                default => 'bg-amber-50 text-amber-700 border-amber-200',
+                            };
                         @endphp
                         <div class="bg-white rounded-xl border border-neutral-200 mb-3 overflow-hidden hover:shadow-sm transition-shadow">
                             {{-- Header --}}
@@ -65,7 +49,7 @@
                                         {{ $order->order_number }}
                                     </a>
                                     <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border {{ $color }}">
-                                        {{ str_replace('_', ' ', ucfirst($order->status)) }}
+                                        {{ \App\Models\Order::SETTABLE_STATUSES[$stage] ?? ucfirst($stage) }}
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-3 text-xs text-neutral-600">
@@ -121,7 +105,8 @@
                                         </a>
                                     @endif
                                 </div>
-                                @if(in_array($order->status, ['confirmed', 'processing']))
+                                {{-- Cancellable only while it is still being made. --}}
+                                @if($order->isPreparing())
                                     <form action="{{ route('account.orders.cancel', $order) }}" method="POST"
                                           onsubmit="return confirm('Are you sure you want to cancel this order?')">
                                         @csrf
