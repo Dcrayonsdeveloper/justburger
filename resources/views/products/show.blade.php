@@ -642,7 +642,7 @@
                         @endforelse
 
                         {{-- Write a review --}}
-                        @php $reviewErrors = $errors->hasAny(['guest_name','guest_email','rating','content','honeypot']); @endphp
+                        @php $reviewErrors = $errors->hasAny(['guest_name','rating','content','honeypot']); @endphp
                         <div style="margin-top:1.25rem;" x-data="{ open: {{ $reviewErrors ? 'true' : 'false' }} }"
                              @if($reviewErrors) x-init="$nextTick(() => $el.scrollIntoView({ behavior:'smooth', block:'center' }))" @endif>
                             <button @click="open = !open" class="btn-outline" style="width:auto;padding:.55rem 1.25rem;font-size:.85rem;">
@@ -664,15 +664,9 @@
                                         @endforeach
                                     </div>
                                 @endif
-                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-                                    <div>
-                                        <label class="r-label">Your Name</label>
-                                        <input type="text" name="guest_name" value="{{ old('guest_name') }}" required class="r-input" placeholder="e.g. James T.">
-                                    </div>
-                                    <div>
-                                        <label class="r-label">Email Address</label>
-                                        <input type="email" name="guest_email" value="{{ old('guest_email') }}" required class="r-input" placeholder="your@email.com">
-                                    </div>
+                                <div style="margin-bottom:1rem;">
+                                    <label class="r-label">Your Name</label>
+                                    <input type="text" name="guest_name" value="{{ old('guest_name') }}" required class="r-input" placeholder="e.g. James T.">
                                 </div>
                                 <div style="margin-bottom:1rem;">
                                     <label class="r-label">Rating</label>
