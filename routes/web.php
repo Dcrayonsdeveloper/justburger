@@ -180,7 +180,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [App\Http\Controllers\Account\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile', [App\Http\Controllers\Account\ProfileController::class, 'edit'])->name('profile');
-        Route::put('/profile', [App\Http\Controllers\Account\ProfileController::class, 'update'])->name('profile.update');
+        // No profile.update route: an account is a username and a password, and
+        // neither is editable here. Only the password change below remains.
         Route::put('/password', [App\Http\Controllers\Account\ProfileController::class, 'updatePassword'])->name('password.update');
 
         // Addresses
