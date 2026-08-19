@@ -12,6 +12,10 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
+        // No cron on this host — apply the collection window on read so a
+        // customer refreshing sees "Ready" the moment it is due.
+        Order::releaseOrdersDueForCollection();
+
         $query = $request->user()->orders()->with('items.product');
 
         // Filter by status
@@ -29,7 +33,9 @@ class OrderController extends Controller
         // Ensure user owns this order
         abort_if($order->user_id !== $request->user()->id, 403);
 
-        $order->load(['items.product', 'statusHistory', 'coupon']);
+        Order::releaseOrdersDueForCollection();
+
+        $order->refresh()->load(['items.product', 'statusHistory', 'coupon']);
 
         return view('account.orders.show', compact('order'));
     }

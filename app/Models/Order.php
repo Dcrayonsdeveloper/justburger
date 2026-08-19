@@ -9,6 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
+    /** The three states a collection order moves through, plus cancelled. */
+    public const STATUS_PREPARING = 'preparing';
+    public const STATUS_READY = 'ready';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    /** What an admin is allowed to set by hand. */
+    public const SETTABLE_STATUSES = [
+        self::STATUS_PREPARING => 'Preparing',
+        self::STATUS_READY => 'Ready',
+        self::STATUS_CANCELLED => 'Cancelled',
+    ];
+
     protected $fillable = [
         'order_number',
         'user_id',
@@ -36,6 +48,8 @@ class Order extends Model
         'source',
         'metadata',
         'confirmed_at',
+        'preparing_at',
+        'ready_at',
         'packed_at',
         'shipped_at',
         'out_for_delivery_at',
@@ -59,6 +73,8 @@ class Order extends Model
             'billing_address_snapshot' => 'array',
             'metadata' => 'array',
             'confirmed_at' => 'datetime',
+            'preparing_at' => 'datetime',
+            'ready_at' => 'datetime',
             'packed_at' => 'datetime',
             'shipped_at' => 'datetime',
             'out_for_delivery_at' => 'datetime',
@@ -218,6 +234,8 @@ class Order extends Model
         // Update timestamps
         match ($status) {
             'confirmed' => $this->update(['confirmed_at' => now()]),
+            self::STATUS_PREPARING => $this->update(['preparing_at' => now(), 'ready_at' => null]),
+            self::STATUS_READY => $this->update(['ready_at' => now()]),
             'packed' => $this->update(['packed_at' => now()]),
             'shipped' => $this->update(['shipped_at' => now()]),
             'out_for_delivery' => $this->update(['out_for_delivery_at' => now()]),
@@ -227,52 +245,105 @@ class Order extends Model
         };
     }
 
+    /**
+     * An order is placed, made, and then ready to collect. Three steps, and the
+     * customer is standing in the shop for the third — anything more is noise.
+     *
+     * Historical orders still carry delivery-era statuses, so each step reads
+     * from collectionStage() rather than matching on the raw value.
+     */
     public function getTrackingSteps(): array
     {
-        $steps = [
+        $stage = $this->collectionStage();
+
+        return [
             [
-                'key' => 'confirmed',
+                'key' => 'ordered',
                 'label' => 'Ordered',
                 'icon' => 'clipboard-check',
-                'completed' => $this->isConfirmed(),
-                'current' => $this->status === 'confirmed',
-                'timestamp' => $this->confirmed_at,
+                'completed' => true,
+                'current' => false,
+                'timestamp' => $this->created_at,
             ],
             [
-                'key' => 'packed',
+                'key' => self::STATUS_PREPARING,
                 'label' => 'Preparing',
                 'icon' => 'cube',
-                'completed' => $this->isPacked(),
-                'current' => $this->status === 'packed',
-                'timestamp' => $this->packed_at,
+                'completed' => $stage === self::STATUS_READY,
+                'current' => $stage === self::STATUS_PREPARING,
+                'timestamp' => $this->preparing_at,
             ],
             [
-                'key' => 'shipped',
-                'label' => 'On Its Way',
-                'icon' => 'truck',
-                'completed' => $this->isShipped(),
-                'current' => $this->status === 'shipped',
-                'timestamp' => $this->shipped_at,
-            ],
-            [
-                'key' => 'out_for_delivery',
-                'label' => 'Out for Delivery',
-                'icon' => 'map-pin',
-                'completed' => $this->isOutForDelivery(),
-                'current' => $this->status === 'out_for_delivery',
-                'timestamp' => $this->out_for_delivery_at,
-            ],
-            [
-                'key' => 'delivered',
-                'label' => 'Delivered',
+                'key' => self::STATUS_READY,
+                'label' => 'Ready',
                 'icon' => 'check-circle',
-                'completed' => $this->isDelivered(),
-                'current' => $this->status === 'delivered',
-                'timestamp' => $this->delivered_at,
+                'completed' => $stage === self::STATUS_READY,
+                'current' => $stage === self::STATUS_READY,
+                'timestamp' => $this->ready_at,
             ],
         ];
+    }
 
-        return $steps;
+    /**
+     * Which of the three steps this order sits at, whatever its stored status.
+     * Delivery-era values are folded in so old orders still render.
+     */
+    public function collectionStage(): string
+    {
+        return self::stageFor((string) $this->status);
+    }
+
+    /** The same mapping without needing a model — for grouping query results. */
+    public static function stageFor(string $status): string
+    {
+        return match ($status) {
+            self::STATUS_CANCELLED, 'returned' => self::STATUS_CANCELLED,
+            self::STATUS_READY, 'packed', 'shipped', 'out_for_delivery', 'delivered' => self::STATUS_READY,
+            default => self::STATUS_PREPARING,
+        };
+    }
+
+    public function isPreparing(): bool
+    {
+        return $this->collectionStage() === self::STATUS_PREPARING;
+    }
+
+    public function isReady(): bool
+    {
+        return $this->collectionStage() === self::STATUS_READY;
+    }
+
+    /** How long the kitchen is given before an order counts as ready. */
+    public static function collectionPrepMinutes(): int
+    {
+        return max(0, (int) Setting::get('collection_prep_minutes', 15));
+    }
+
+    /**
+     * Move every order that has been preparing for longer than the prep window
+     * to ready.
+     *
+     * This server has no cron (`crontab` is not even installed), so the console
+     * command that would normally do this on a schedule cannot be relied on.
+     * Calling it when order pages load keeps the stored status honest without
+     * any infrastructure; the command still exists for when a scheduler is
+     * available, and the two are idempotent.
+     *
+     * @return int number of orders released
+     */
+    public static function releaseOrdersDueForCollection(): int
+    {
+        $cutoff = now()->subMinutes(self::collectionPrepMinutes());
+
+        return static::query()
+            ->where('status', self::STATUS_PREPARING)
+            ->whereNotNull('preparing_at')
+            ->where('preparing_at', '<=', $cutoff)
+            ->update([
+                'status' => self::STATUS_READY,
+                'ready_at' => now(),
+                'updated_at' => now(),
+            ]);
     }
 
     public function getBalanceDueAttribute(): float

@@ -26,33 +26,26 @@
                             </div>
                         </div>
                         @php
-                            $statusColors = [
-                                'confirmed' => 'bg-[#205258]/5 text-[#1b454a] border-[#205258]/30',
-                                'processing' => 'bg-[#205258]/5 text-[#1b454a] border-[#205258]/30',
-                                'packed' => 'bg-[#205258]/10 text-[#1b454a] border-[#205258]/30',
-                                'shipped' => 'bg-[#205258]/15 text-[#15383c] border-[#205258]/40',
-                                'out_for_delivery' => 'bg-[#205258]/5 text-[#1b454a] border-[#205258]/30',
-                                'delivered' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                'cancelled' => 'bg-red-50 text-red-700 border-red-200',
-                                'returned' => 'bg-neutral-100 text-neutral-700 border-neutral-200',
-                            ];
-                            $statusIcons = [
-                                'confirmed' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
-                                'processing' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
-                                'packed' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>',
-                                'shipped' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>',
-                                'delivered' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
-                                'cancelled' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
-                            ];
+                            $stage = $order->collectionStage();
+                            $statusColor = match($stage) {
+                                \App\Models\Order::STATUS_READY => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                \App\Models\Order::STATUS_CANCELLED => 'bg-red-50 text-red-700 border-red-200',
+                                default => 'bg-amber-50 text-amber-700 border-amber-200',
+                            };
+                            $statusIcon = match($stage) {
+                                \App\Models\Order::STATUS_READY => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+                                \App\Models\Order::STATUS_CANCELLED => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+                                default => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
+                            };
                         @endphp
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[16px] font-semibold {{ $statusColors[$order->status] ?? 'bg-neutral-100 text-neutral-700 border-neutral-200' }}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $statusIcons[$order->status] ?? $statusIcons['confirmed'] !!}</svg>
-                            {{ str_replace('_', ' ', ucfirst($order->status)) }}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[16px] font-semibold {{ $statusColor }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $statusIcon !!}</svg>
+                            {{ \App\Models\Order::SETTABLE_STATUSES[$stage] ?? ucfirst($stage) }}
                         </span>
                     </div>
 
-                    {{-- Delivered Confirmation Banner --}}
-                    @if($order->status === 'delivered')
+                    {{-- Ready for collection --}}
+                    @if($stage === \App\Models\Order::STATUS_READY)
                         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 flex items-start gap-3">
                             <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                                 <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,10 +53,13 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-[14px] font-semibold text-emerald-800">Your order has been delivered!</h3>
-                                <p class="text-[16px] text-emerald-600 mt-0.5">
-                                    Delivered on {{ $order->delivered_at ? $order->delivered_at->format('d M Y, h:i A') : 'N/A' }}
-                                </p>
+                                <h3 class="text-[14px] font-semibold text-emerald-800">Your order is ready to collect</h3>
+                                @php $readyAt = $order->ready_at ?? $order->delivered_at; @endphp
+                                @if($readyAt)
+                                    <p class="text-[16px] text-emerald-600 mt-0.5">
+                                        Ready since {{ $readyAt->format('d M Y, h:i A') }}
+                                    </p>
+                                @endif
                             </div>
                         </div>
                     @endif

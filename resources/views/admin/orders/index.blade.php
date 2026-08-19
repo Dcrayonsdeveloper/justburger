@@ -24,14 +24,7 @@
     @php
         $currentStatus = request('status', '');
         $currentPayment = request('payment_status', '');
-        $tabs = [
-            '' => 'All',
-            'confirmed' => 'Unfulfilled',
-            'processing' => 'Processing',
-            'shipped' => 'On Its Way',
-            'delivered' => 'Completed',
-            'cancelled' => 'Cancelled',
-        ];
+        $tabs = ['' => 'All'] + \App\Models\Order::SETTABLE_STATUSES;
     @endphp
 
     <div class="card overflow-hidden">
@@ -123,11 +116,10 @@
                             </td>
                             <td class="px-4 py-3">
                                 @php
-                                    $fulfillColor = match($order->status) {
-                                        'delivered', 'completed' => ['bg' => '#e3f1df', 'text' => '#1a7431', 'label' => 'Fulfilled'],
-                                        'shipped', 'out_for_delivery' => ['bg' => '#dbeafe', 'text' => '#1e40af', 'label' => 'In transit'],
-                                        'cancelled', 'returned' => ['bg' => '#fde8e8', 'text' => '#c53030', 'label' => 'Cancelled'],
-                                        default => ['bg' => '#fef3c7', 'text' => '#92400e', 'label' => 'Unfulfilled'],
+                                    $fulfillColor = match($order->collectionStage()) {
+                                        \App\Models\Order::STATUS_READY => ['bg' => '#e3f1df', 'text' => '#1a7431', 'label' => 'Ready'],
+                                        \App\Models\Order::STATUS_CANCELLED => ['bg' => '#fde8e8', 'text' => '#c53030', 'label' => 'Cancelled'],
+                                        default => ['bg' => '#fef3c7', 'text' => '#92400e', 'label' => 'Preparing'],
                                     };
                                 @endphp
                                 <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded" style="background:{{ $fulfillColor['bg'] }};color:{{ $fulfillColor['text'] }}">

@@ -188,21 +188,21 @@
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Update Order Status -->
-            <div class="card overflow-hidden" x-data="{ status: '{{ $order->status }}' }">
+            <div class="card overflow-hidden" x-data="{ status: '{{ $order->collectionStage() }}' }">
                 <div class="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
                     <h2 class="font-semibold text-neutral-900">Update Status</h2>
+                    {{-- Legacy orders still hold delivery-era statuses; collectionStage()
+                         folds them onto the three the shop actually uses. --}}
                     @php
-                        $currentClass = match($order->status) {
-                            'delivered', 'completed' => 'badge-success',
-                            'confirmed' => 'badge-warning',
-                            'processing', 'packed' => 'badge-info',
-                            'shipped', 'out_for_delivery' => 'badge-primary',
-                            'cancelled', 'returned' => 'badge-error',
-                            default => 'badge-neutral',
+                        $stage = $order->collectionStage();
+                        $currentClass = match($stage) {
+                            \App\Models\Order::STATUS_READY => 'badge-success',
+                            \App\Models\Order::STATUS_CANCELLED => 'badge-error',
+                            default => 'badge-info',
                         };
                     @endphp
                     <span class="badge {{ $currentClass }}">
-                        {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                        {{ \App\Models\Order::SETTABLE_STATUSES[$stage] ?? ucfirst($stage) }}
                     </span>
                 </div>
                 <div class="p-5">
@@ -212,14 +212,9 @@
                         <div>
                             <label class="form-label">New Status</label>
                             <select name="status" x-model="status" class="form-select w-full">
-                                <option value="confirmed">Confirmed</option>
-                                <option value="processing">Processing</option>
-                                <option value="packed">Packed</option>
-                                <option value="shipped">Shipped</option>
-                                <option value="out_for_delivery">Out for Delivery</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="cancelled">Cancelled</option>
-                                <option value="returned">Returned</option>
+                                @foreach(\App\Models\Order::SETTABLE_STATUSES as $value => $label)
+                                    <option value="{{ $value }}" @selected($stage === $value)>{{ $label }}</option>
+                                @endforeach
                             </select>
                         </div>
 

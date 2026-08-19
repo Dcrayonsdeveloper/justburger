@@ -32,3 +32,8 @@ Schedule::command('instagram:refresh-token')->dailyAt('03:00')->when(function ()
     if (!$lastRefresh) return true;
     return now()->diffInDays(\Carbon\Carbon::parse($lastRefresh)) >= 50;
 });
+
+// Release orders for collection once the prep window has passed.
+// The order pages do this on load too, because this host has no cron — this
+// entry only matters where a scheduler is actually running. Both are idempotent.
+Schedule::command('orders:release-ready')->everyMinute();

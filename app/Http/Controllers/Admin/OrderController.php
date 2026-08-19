@@ -10,12 +10,17 @@ use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OrderController extends Controller
 {
     public function index(Request $request): View
     {
+        // No cron on this host, so the collection window is applied whenever
+        // someone looks at the orders. Cheap, indexed, and idempotent.
+        Order::releaseOrdersDueForCollection();
+
         // Show all orders including unpaid 'pending' ones. Payment state is surfaced by
         // the "Payment status" column, and the Stripe webhook (StripeOrderService::confirm)
         // flips an order to paid/confirmed once payment actually completes — so nothing is
@@ -62,6 +67,9 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
+        Order::releaseOrdersDueForCollection();
+        $order->refresh();
+
         $order->load([
             'user',
             'items.product',
@@ -80,7 +88,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:confirmed,processing,packed,shipped,out_for_delivery,delivered,cancelled,returned'],
+            'status' => ['required', Rule::in(array_keys(Order::SETTABLE_STATUSES))],
             'comment' => ['nullable', 'string', 'max:500'],
             'carrier' => ['nullable', 'string', 'max:100'],
             'tracking_number' => ['nullable', 'string', 'max:100'],
