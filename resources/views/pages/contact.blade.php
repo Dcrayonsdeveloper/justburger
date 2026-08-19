@@ -330,8 +330,8 @@
                             @error('name')<p class="ct-error">{{ $message }}</p>@enderror
                         </div>
                         <div class="ct-field">
-                            <label class="ct-label">Email <span class="req">*</span></label>
-                            <input type="email" name="email" value="{{ old('email') }}" required
+                            <label class="ct-label">Email</label>
+                            <input type="email" name="email" value="{{ old('email') }}"
                                    class="ct-input @error('email') error @enderror"
                                    placeholder="you@example.com">
                             @error('email')<p class="ct-error">{{ $message }}</p>@enderror
