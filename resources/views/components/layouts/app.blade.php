@@ -185,10 +185,13 @@
                  class="px-6 py-4">
                 <form @submit.prevent="$store.authModal.login(email, password, remember)" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Email Address</label>
-                        <input type="email" x-model="email" required autofocus
+                        {{-- Still bound to `email`: that is the key /login expects, and the
+                             controller resolves it as a username, address or phone number. --}}
+                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Username</label>
+                        <input type="text" x-model="email" required autofocus
+                               autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"
                                class="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#C8102E] focus:ring-0 transition-colors"
-                               placeholder="you@example.com">
+                               placeholder="Enter your username">
                         <template x-if="$store.authModal.errors.email">
                             <p class="mt-1 text-xs text-error-600" x-text="$store.authModal.errors.email[0]"></p>
                         </template>
@@ -235,58 +238,19 @@
                 </p>
             </div>
 
-            {{-- REGISTER FORM --}}
-            <div x-show="$store.authModal.mode === 'register'" x-cloak
-                 x-data="{ name: '', email: '', password: '', password_confirmation: '' }"
-                 class="px-6 py-4">
-                <form @submit.prevent="$store.authModal.register(name, email, password, password_confirmation)" class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Full Name</label>
-                        <input type="text" x-model="name" required
-                               class="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#C8102E] focus:ring-0 transition-colors"
-                               placeholder="Enter your full name">
-                        <template x-if="$store.authModal.errors.full_name">
-                            <p class="mt-1 text-xs text-error-600" x-text="$store.authModal.errors.full_name[0]"></p>
-                        </template>
-                    </div>
+            {{-- REGISTER --}}
+            {{-- Sign-up lives on the full page rather than being duplicated here.
+                 Choosing a username needs the live availability check, and keeping
+                 one registration flow means the two can never drift apart. --}}
+            <div x-show="$store.authModal.mode === 'register'" x-cloak class="px-6 py-4">
+                <p class="text-sm text-neutral-600 leading-relaxed">
+                    Creating an account takes a username and a password — no email or phone number needed.
+                </p>
 
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Email Address</label>
-                        <input type="email" x-model="email" required
-                               class="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#C8102E] focus:ring-0 transition-colors"
-                               placeholder="you@example.com">
-                        <template x-if="$store.authModal.errors.email">
-                            <p class="mt-1 text-xs text-error-600" x-text="$store.authModal.errors.email[0]"></p>
-                        </template>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Password</label>
-                        <input type="password" x-model="password" required
-                               class="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#C8102E] focus:ring-0 transition-colors"
-                               placeholder="Min 8 characters">
-                        <template x-if="$store.authModal.errors.password">
-                            <p class="mt-1 text-xs text-error-600" x-text="$store.authModal.errors.password[0]"></p>
-                        </template>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Confirm Password</label>
-                        <input type="password" x-model="password_confirmation" required
-                               class="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#C8102E] focus:ring-0 transition-colors"
-                               placeholder="Repeat password">
-                    </div>
-
-                    <button type="submit"
-                            :disabled="$store.authModal.isLoading"
-                            class="w-full py-2 bg-[#F8931D] hover:bg-[#E07E0A] text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50">
-                        <span x-show="!$store.authModal.isLoading">CREATE ACCOUNT</span>
-                        <span x-show="$store.authModal.isLoading" x-cloak class="flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                            Creating account...
-                        </span>
-                    </button>
-                </form>
+                <a href="{{ route('login', ['mode' => 'register']) }}"
+                   class="mt-4 block w-full py-2 bg-[#F8931D] hover:bg-[#E07E0A] text-white font-semibold rounded-lg text-sm text-center transition-colors">
+                    CREATE ACCOUNT
+                </a>
 
                 <p class="mt-4 text-center text-sm text-neutral-600">
                     Already have an account?

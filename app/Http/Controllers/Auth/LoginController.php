@@ -20,32 +20,27 @@ class LoginController extends Controller
 
     public function login(Request $request): RedirectResponse|JsonResponse
     {
-        // The sign-in form asks for "email or phone number" in one box, so the
-        // identifier arrives here as `email` whichever it is. Decide which
-        // column to authenticate against rather than assuming an address.
+        // Sign-in takes one box, so the identifier arrives as `email` whatever
+        // the visitor typed — the field name is kept for the storefront modal,
+        // which posts the same key. New accounts have only a username; older
+        // ones may still be reached by email or phone.
         $validated = $request->validate([
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        $identifier = trim($validated['email']);
-        $field = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $user = $this->resolveUser(trim($validated['email']));
 
-        if ($field === 'phone') {
-            // Match however the number was stored: with or without spaces,
-            // dashes or a leading +.
-            $digits = preg_replace('/\D/', '', $identifier);
-            $user = User::whereRaw(
-                "REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?",
-                ['%' . $digits]
-            )->first();
+        // Authenticate on the primary key once the account is found. Matching on
+        // username or email instead would be a trap: both are nullable, and a
+        // null lookup becomes `IS NULL`, which matches every account missing
+        // that field rather than none of them.
+        $credentials = [
+            'id' => $user?->getKey(),
+            'password' => $validated['password'],
+        ];
 
-            $identifier = $user?->email ?? $identifier;
-        }
-
-        $credentials = ['email' => $identifier, 'password' => $validated['password']];
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if ($user && Auth::attempt($credentials, $request->boolean('remember'))) {
             $this->mergeGuestCart($request);
             $request->session()->regenerate();
 
@@ -61,14 +56,46 @@ class LoginController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Incorrect email or password. Please try again.',
-                'errors' => ['email' => ['Incorrect email or password. Please try again.']],
+                'message' => 'Incorrect username or password. Please try again.',
+                'errors' => ['email' => ['Incorrect username or password. Please try again.']],
             ], 422);
         }
 
         return back()->withErrors([
-            'email' => 'Incorrect email or password. Please try again.',
+            'email' => 'Incorrect username or password. Please try again.',
         ])->onlyInput('email');
+    }
+
+    /**
+     * Find the account behind whatever was typed: a username, or — for accounts
+     * that predate username sign-in — an email address or phone number.
+     */
+    private function resolveUser(string $identifier): ?User
+    {
+        if ($identifier === '') {
+            return null;
+        }
+
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            return User::where('email', $identifier)->first();
+        }
+
+        if ($user = User::where('username', strtolower($identifier))->first()) {
+            return $user;
+        }
+
+        $digits = preg_replace('/\D/', '', $identifier) ?? '';
+
+        if ($digits === '') {
+            return null;
+        }
+
+        // Match however the number was stored: with or without spaces, dashes,
+        // brackets or a leading +.
+        return User::whereRaw(
+            "REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') LIKE ?",
+            ['%' . $digits]
+        )->first();
     }
 
     private function mergeGuestCart(Request $request): void
