@@ -168,35 +168,9 @@
                 </div>
             </div>
 
-            <!-- Shipping Address -->
-            <div class="card overflow-hidden">
-                <div class="px-5 py-4 border-b border-neutral-200">
-                    <h2 class="font-semibold text-neutral-900">Shipping Address</h2>
-                </div>
-                <div class="p-5">
-                    @php $shipping = $order->shipping_address_snapshot; @endphp
-                    @if($shipping)
-                        <div class="flex items-start gap-3">
-                            <div class="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
-                                <svg class="w-4.5 h-4.5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                            </div>
-                            <div class="text-sm text-neutral-600 space-y-0.5">
-                                <p class="font-semibold text-neutral-900">{{ $shipping['name'] ?? ($shipping['first_name'] ?? '') . ' ' . ($shipping['last_name'] ?? '') }}</p>
-                                @if(!empty($shipping['phone'])) <p>{{ $shipping['phone'] }}</p> @endif
-                                @if(!empty($shipping['address'])) <p>{{ $shipping['address'] }}</p> @endif
-                                @if(!empty($shipping['address_line_1'])) <p>{{ $shipping['address_line_1'] }}</p> @endif
-                                <p>{{ $shipping['city'] ?? '' }}{{ !empty($shipping['state']) ? ', ' . $shipping['state'] : '' }} {{ $shipping['postal_code'] ?? $shipping['zip'] ?? '' }}</p>
-                            </div>
-                        </div>
-                    @elseif($order->user)
-                        <p class="text-sm text-neutral-600">{{ $order->user->full_name }}</p>
-                        <p class="text-sm text-neutral-600">{{ $order->user->email }}</p>
-                    @endif
-                </div>
-            </div>
+            {{-- No Shipping Address card: orders are collected from the shop, and
+                 checkout only asks for a name, so the snapshot has no address to
+                 show. The customer's name is already in the Customer panel. --}}
 
             <!-- Order Notes -->
             @if($order->notes)
