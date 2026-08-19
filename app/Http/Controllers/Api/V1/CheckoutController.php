@@ -147,7 +147,8 @@ class CheckoutController extends Controller
                     'seller_id' => $item->product->seller_id,
                     'product_name' => $item->product->name,
                     'sku' => $item->product->sku ?? '',
-                    'variant_name' => $item->variant?->attributeValues->pluck('value')->join(' / '),
+                    // attributeValues is a Product relation, not a variant one.
+                    'variant_name' => $item->variant?->name,
                     'quantity' => $item->quantity,
                     'mrp' => $item->product->mrp ?? $item->price,
                     'price' => $item->price,
