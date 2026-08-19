@@ -192,6 +192,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{order}', [App\Http\Controllers\Account\OrderController::class, 'show'])->name('show');
             Route::post('/{order}/cancel', [App\Http\Controllers\Account\OrderController::class, 'cancel'])->name('cancel');
             Route::get('/{order}/invoice', [App\Http\Controllers\Account\OrderController::class, 'invoice'])->name('invoice');
+            Route::get('/{order}/receipt', [App\Http\Controllers\Account\OrderController::class, 'receipt'])->name('receipt');
             Route::get('/{order}/track', [App\Http\Controllers\Account\OrderController::class, 'track'])->name('track');
         });
 

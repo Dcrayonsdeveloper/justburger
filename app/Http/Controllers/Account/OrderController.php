@@ -65,6 +65,23 @@ class OrderController extends Controller
         return view('account.orders.invoice', compact('order'));
     }
 
+    /**
+     * The same thermal receipt the shop prints, so a customer sees exactly what
+     * was handed over the counter rather than a separate invoice document.
+     */
+    public function receipt(Request $request, Order $order): View
+    {
+        // Ensure user owns this order
+        abort_if($order->user_id !== $request->user()->id, 403);
+
+        $order->load(['items.product', 'payments']);
+
+        return view('orders.receipt', [
+            'order' => $order,
+            'backUrl' => route('account.orders.show', $order),
+        ]);
+    }
+
     public function track(Request $request, Order $order): View
     {
         // Ensure user owns this order

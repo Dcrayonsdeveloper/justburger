@@ -167,6 +167,9 @@ class OrderController extends Controller
     {
         $order->load(['items.product', 'payments']);
 
-        return view('admin.orders.receipt', compact('order'));
+        return view('orders.receipt', [
+            'order' => $order,
+            'backUrl' => route('admin.orders.show', $order),
+        ]);
     }
 }

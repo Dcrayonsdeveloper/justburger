@@ -149,30 +149,36 @@
                                 </div>
                             </div>
 
-                            <!-- Delivery & Billing -->
+                            <!-- Collection & Billing -->
+                            {{-- Orders are collected from the shop, so both cards carry the shop's
+                                 address. Checkout only asks for a name, so the snapshot's street,
+                                 city and postcode are empty and printing them left stray commas. --}}
+                            @php
+                                $shipping = $order->shipping_address_snapshot;
+                                $collectName = $shipping['name'] ?? $order->guest_name ?? ($order->user->full_name ?? 'Customer');
+                                $shopAddress = \App\Models\Setting::get('site_address', '525 Staines Road, Bedfont, Middx. TW14 8BP');
+                                $shopPhone = \App\Models\Setting::get('contact_phone');
+                            @endphp
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <!-- Delivery Address -->
+                                <!-- Collection -->
                                 <div class="bg-white rounded-xl border border-neutral-100 p-4">
                                     <div class="flex items-center gap-2 mb-3">
                                         <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         </svg>
-                                        <h3 class="text-[16px] font-semibold text-neutral-900">Delivery Address</h3>
+                                        <h3 class="text-[16px] font-semibold text-neutral-900">Collection</h3>
                                     </div>
-                                    @php $shipping = $order->shipping_address_snapshot; @endphp
-                                    @if($shipping)
-                                        <div class="text-[16px] text-neutral-600 leading-relaxed">
-                                            <p class="font-medium text-neutral-800">{{ $shipping['name'] ?? '' }}</p>
-                                            @if(!empty($shipping['phone']))
-                                                <p class="text-neutral-600 text-[12px]">{{ $shipping['phone'] }}</p>
-                                            @endif
-                                            <p class="mt-1">
-                                                {{ $shipping['address_line_1'] ?? '' }}@if(!empty($shipping['address_line_2'])), {{ $shipping['address_line_2'] }}@endif<br>
-                                                {{ $shipping['city'] ?? '' }}, {{ $shipping['state'] ?? '' }} {{ $shipping['postal_code'] ?? '' }}
-                                            </p>
-                                        </div>
-                                    @endif
+                                    <div class="text-[16px] text-neutral-600 leading-relaxed">
+                                        <p class="font-medium text-neutral-800">{{ $collectName }}</p>
+                                        <p class="mt-1 text-[13px]">
+                                            <span class="text-neutral-600">Collect from:</span><br>
+                                            {{ $shopAddress }}
+                                        </p>
+                                        @if($shopPhone)
+                                            <p class="mt-1 text-[13px]">{{ $shopPhone }}</p>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <!-- Billing Address -->
@@ -183,18 +189,10 @@
                                         </svg>
                                         <h3 class="text-[16px] font-semibold text-neutral-900">Billing Address</h3>
                                     </div>
-                                    @php $billing = $order->billing_address_snapshot; @endphp
-                                    @if($billing)
-                                        <div class="text-[16px] text-neutral-600 leading-relaxed">
-                                            <p class="font-medium text-neutral-800">{{ $billing['name'] ?? '' }}</p>
-                                            <p class="mt-1">
-                                                {{ $billing['address_line_1'] ?? '' }}<br>
-                                                {{ $billing['city'] ?? '' }}, {{ $billing['state'] ?? '' }} {{ $billing['postal_code'] ?? '' }}
-                                            </p>
-                                        </div>
-                                    @else
-                                        <p class="text-[16px] text-neutral-600 italic">Same as delivery</p>
-                                    @endif
+                                    <div class="text-[16px] text-neutral-600 leading-relaxed">
+                                        <p class="font-medium text-neutral-800">{{ $collectName }}</p>
+                                        <p class="mt-1 text-[13px]">{{ $shopAddress }}</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -278,12 +276,12 @@
                                     </a>
                                 @endif
 
-                                <a href="{{ route('account.orders.invoice', $order) }}" target="_blank"
+                                <a href="{{ route('account.orders.receipt', $order) }}" target="_blank"
                                    class="flex items-center justify-center gap-2 w-full px-4 py-2.5 border border-neutral-200 text-neutral-700 text-[16px] font-medium rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14h6m-6-4h6m4 11V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l2.5-1.5L10 21l2-1.5L14 21l2.5-1.5L19 21z"/>
                                     </svg>
-                                    Download Invoice
+                                    View Receipt
                                 </a>
 
                                 @if($order->canBeCancelled())
