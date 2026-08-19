@@ -5,6 +5,7 @@
         <div class="flex items-center justify-between">
             <h1 class="text-xl font-semibold text-neutral-900">Orders</h1>
             <div class="flex items-center gap-2">
+                @include('admin.partials.auto-print')
                 <a href="{{ route('admin.orders.index', ['export' => 'csv']) }}" class="btn btn-secondary text-sm">Export</a>
             </div>
         </div>
@@ -78,6 +79,7 @@
                         <th class="px-4 py-3 text-right text-xs font-medium text-neutral-500">Total</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500">Payment status</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500">Fulfillment status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500">Receipt</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500">Items</th>
                     </tr>
                 </thead>
@@ -127,13 +129,28 @@
                                     {{ $fulfillColor['label'] }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3">
+                                @if($order->receipt_printed_at)
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded"
+                                          style="background:#e3f1df;color:#1a7431"
+                                          title="Printed {{ $order->receipt_printed_at->format('d M, H:i') }}">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#1a7431"></span>
+                                        Printed
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded" style="background:#fde8e8;color:#c53030">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#c53030"></span>
+                                        Not printed
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 <span class="text-sm text-neutral-600">{{ $order->items->count() }} {{ Str::plural('item', $order->items->count()) }}</span>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-16 text-center">
+                            <td colspan="9" class="px-4 py-16 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3" style="background:#f0f0f0">
                                         <svg class="w-6 h-6 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>

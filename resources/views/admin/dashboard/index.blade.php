@@ -2,7 +2,10 @@
     <x-slot name="title">Dashboard</x-slot>
 
     <x-slot name="header">
-        <h1 class="text-xl font-semibold text-neutral-900">Home</h1>
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-semibold text-neutral-900">Home</h1>
+            @include('admin.partials.auto-print')
+        </div>
     </x-slot>
 
     {{-- Date Filter Pills --}}

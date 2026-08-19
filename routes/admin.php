@@ -95,6 +95,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::prefix('orders')->name('orders.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('index');
+
+                // Auto-print till. Declared before /{order} so "pending-prints" is
+                // not swallowed by the wildcard and looked up as an order id.
+                Route::get('/pending-prints', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'pending'])->name('pending-prints');
+                Route::post('/{order}/printed', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'markPrinted'])->name('printed');
+
                 Route::get('/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('show');
                 Route::put('/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('status');
                 Route::post('/{order}/ship', [App\Http\Controllers\Admin\OrderController::class, 'ship'])->name('ship');
