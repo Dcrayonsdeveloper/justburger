@@ -18,20 +18,6 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $request->user()->id,
-            'phone' => 'nullable|string|max:20',
-        ]);
-
-        $request->user()->update($validated);
-
-        return back()->with('success', 'Profile updated successfully.');
-    }
-
     public function updatePassword(Request $request): RedirectResponse
     {
         $validated = $request->validate([

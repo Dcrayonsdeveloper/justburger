@@ -32,71 +32,22 @@
                         </div>
                     </div>
 
-                    {{-- Personal Information --}}
+                    {{-- Account --}}
+                    {{-- Accounts are a username and a password; no email or phone is
+                         held, so there is nothing else here to edit. --}}
                     <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden mb-4">
                         <div class="px-5 py-3 border-b border-neutral-100 flex items-center gap-2">
                             <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                            <h2 class="text-sm font-bold text-neutral-900">Personal Information</h2>
+                            <h2 class="text-sm font-bold text-neutral-900">Account</h2>
                         </div>
 
-                        <form action="{{ route('account.profile.update') }}" method="POST" class="p-5">
-                            @csrf
-                            @method('PUT')
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label for="first_name" class="block text-xs font-medium text-neutral-600 mb-1">First Name</label>
-                                    <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $user->first_name) }}" required
-                                           class="w-full rounded-lg border {{ $errors->has('first_name') ? 'border-red-300' : 'border-neutral-200' }} text-sm px-3 py-2.5 focus:border-[#205258]/50 focus:ring focus:ring-[#205258]/15 focus:ring-opacity-50">
-                                    @error('first_name')
-                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <div>
-                                    <label for="last_name" class="block text-xs font-medium text-neutral-600 mb-1">Last Name</label>
-                                    <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $user->last_name) }}" required
-                                           class="w-full rounded-lg border {{ $errors->has('last_name') ? 'border-red-300' : 'border-neutral-200' }} text-sm px-3 py-2.5 focus:border-[#205258]/50 focus:ring focus:ring-[#205258]/15 focus:ring-opacity-50">
-                                    @error('last_name')
-                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="email" class="block text-xs font-medium text-neutral-600 mb-1">Email Address</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                    </div>
-                                    <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required
-                                           class="w-full rounded-lg border {{ $errors->has('email') ? 'border-red-300' : 'border-neutral-200' }} text-sm pl-9 pr-3 py-2.5 focus:border-[#205258]/50 focus:ring focus:ring-[#205258]/15 focus:ring-opacity-50">
-                                </div>
-                                @error('email')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="mb-5">
-                                <label for="phone" class="block text-xs font-medium text-neutral-600 mb-1">Phone Number</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-xs text-neutral-600 font-medium">+91</span>
-                                    </div>
-                                    <input type="tel" name="phone" id="phone" value="{{ old('phone', $user->phone) }}"
-                                           placeholder="9876543210"
-                                           class="w-full rounded-lg border {{ $errors->has('phone') ? 'border-red-300' : 'border-neutral-200' }} text-sm pl-11 pr-3 py-2.5 focus:border-[#205258]/50 focus:ring focus:ring-[#205258]/15 focus:ring-opacity-50">
-                                </div>
-                                @error('phone')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <button type="submit"
-                                    class="inline-flex items-center gap-2 bg-[#F8931D] hover:bg-[#E07E0A] text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                                Save Changes
-                            </button>
-                        </form>
+                        <div class="p-5">
+                            <label class="block text-xs font-medium text-neutral-600 mb-1">Username</label>
+                            <p class="text-sm font-semibold text-neutral-900">{{ $user->username ?? $user->first_name }}</p>
+                            <p class="mt-2 text-xs text-neutral-500">
+                                Your username cannot be changed. We do not store an email address or phone number for your account.
+                            </p>
+                        </div>
                     </div>
 
                     {{-- Change Password --}}
