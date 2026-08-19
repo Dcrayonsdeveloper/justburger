@@ -105,7 +105,7 @@
                         </div>
                         <div>
                             <p class="font-medium text-neutral-900">{{ $enquiry->name }}</p>
-                            <p class="text-xs text-neutral-600">{{ $enquiry->email }}</p>
+                            <p class="text-xs text-neutral-600">{{ $enquiry->email ?: 'No email provided' }}</p>
                         </div>
                     </div>
 
@@ -118,12 +118,18 @@
                         </div>
                     @endif
 
-                    <div class="flex items-center gap-2 text-sm text-neutral-600">
-                        <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        <a href="mailto:{{ $enquiry->email }}" class="text-primary-600 hover:underline">{{ $enquiry->email }}</a>
-                    </div>
+                    @if($enquiry->email)
+                        <div class="flex items-center gap-2 text-sm text-neutral-600">
+                            <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <a href="mailto:{{ $enquiry->email }}" class="text-primary-600 hover:underline">{{ $enquiry->email }}</a>
+                        </div>
+                    @endif
+
+                    @if(!$enquiry->email && !$enquiry->phone)
+                        <p class="text-sm text-neutral-500 italic">This enquiry has no reply-to details.</p>
+                    @endif
                 </div>
             </div>
 

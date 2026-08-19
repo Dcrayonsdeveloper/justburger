@@ -86,7 +86,7 @@
                             <td class="px-4 py-3">
                                 <div>
                                     <p class="font-medium text-gray-900">{{ $enquiry->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $enquiry->email }}</p>
+                                    <p class="text-xs text-gray-500">{{ $enquiry->email ?: ($enquiry->phone ?: 'No contact details') }}</p>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-gray-700">
