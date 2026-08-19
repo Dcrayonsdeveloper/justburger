@@ -106,14 +106,17 @@
                     <div class="p-4 border-b border-neutral-200">
                         <h2 class="font-semibold text-neutral-900">Role</h2>
                     </div>
+                    {{-- Only some back-office users have a row in `admins`; staff and
+                         admins created directly on the user record do not. Fall back to
+                         the user's own columns rather than dereferencing a null. --}}
                     <div class="p-4 space-y-2 text-sm">
                         <div class="flex justify-between">
                             <span class="text-neutral-600">Role</span>
-                            <span class="badge badge-info">{{ ucwords(str_replace('_', ' ', $admin->role)) }}</span>
+                            <span class="badge badge-info">{{ ucwords(str_replace('_', ' ', $admin?->role ?? $user->role ?? 'staff')) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-neutral-600">Status</span>
-                            @if($admin->is_active)
+                            @if($admin?->is_active ?? $user->is_active)
                                 <span class="badge badge-success">Active</span>
                             @else
                                 <span class="badge badge-error">Inactive</span>
@@ -121,7 +124,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-neutral-600">Member Since</span>
-                            <span class="font-medium">{{ $admin->created_at->format('M d, Y') }}</span>
+                            <span class="font-medium">{{ optional($admin?->created_at ?? $user->created_at)->format('M d, Y') ?? '—' }}</span>
                         </div>
                     </div>
                 </div>
