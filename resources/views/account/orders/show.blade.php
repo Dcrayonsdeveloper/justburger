@@ -134,16 +134,14 @@
                                             <span class="text-neutral-700">@price($order->tax)</span>
                                         </div>
                                     @endif
-                                    <div class="flex justify-between text-[16px]">
-                                        <span class="text-neutral-600">Delivery</span>
-                                        <span class="text-neutral-700">
-                                            @if($order->shipping_cost > 0)
-                                                @price($order->shipping_cost)
-                                            @else
-                                                <span class="text-emerald-600">Free</span>
-                                            @endif
-                                        </span>
-                                    </div>
+                                    {{-- Orders are collected, so there is no delivery to price.
+                                         Shown only if a delivery charge was actually taken. --}}
+                                    @if($order->shipping_cost > 0)
+                                        <div class="flex justify-between text-[16px]">
+                                            <span class="text-neutral-600">Delivery</span>
+                                            <span class="text-neutral-700">@price($order->shipping_cost)</span>
+                                        </div>
+                                    @endif
                                     <div class="flex justify-between pt-2.5 mt-1 border-t border-dashed border-neutral-200">
                                         <span class="text-sm font-bold text-neutral-900">Total</span>
                                         <span class="text-sm font-bold text-neutral-900">@price($order->total)</span>
