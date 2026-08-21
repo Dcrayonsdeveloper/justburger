@@ -73,14 +73,17 @@ class SendOrderNotification
             );
         }
 
-        // In-app bell notification for admin/staff users
-        $this->notifyAdmins(
-            'admin_new_order',
-            "New order #{$order->order_number}",
-            $customerName . ' placed an order · £' . number_format($order->total, 2)
-                . ' · ' . ($order->payment_status === 'paid' ? 'Paid online' : 'Pay on collection'),
-            ['order_id' => $order->id, 'url' => "/admin/orders/{$order->id}"]
-        );
+        // In-app bell notification for admin/staff users. Paid only, to match the
+        // orders list — announcing an order the panel then refuses to show it is
+        // worse than saying nothing, and the bell links straight at that order.
+        if ($order->payment_status === 'paid') {
+            $this->notifyAdmins(
+                'admin_new_order',
+                "New order #{$order->order_number}",
+                $customerName . ' placed an order · £' . number_format($order->total, 2) . ' · Paid online',
+                ['order_id' => $order->id, 'url' => "/admin/orders/{$order->id}"]
+            );
+        }
     }
 
     public function handleOrderShipped(OrderShipped $event): void
