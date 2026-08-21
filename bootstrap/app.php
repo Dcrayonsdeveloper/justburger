@@ -21,6 +21,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/abandoned-capture',
         ]);
 
+        // Payment providers post server-to-server and cannot carry the
+        // maintenance bypass cookie. Blocking them during a maintenance window
+        // means a customer is charged while the order never gets confirmed —
+        // so these stay reachable even while the site is closed.
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'api/webhook/*',
+            'webhook/*',
+        ]);
+
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
