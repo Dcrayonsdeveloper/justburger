@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -346,6 +347,22 @@ class Order extends Model
                 'ready_at' => now(),
                 'updated_at' => now(),
             ]);
+    }
+
+    /**
+     * Orders whose money is actually in. The admin panel is built on this: an
+     * order exists from the moment checkout starts, but until Stripe confirms
+     * payment it is only an intention to buy, and showing it to the shop invites
+     * food being made for an order that was never paid for.
+     *
+     * Note this also hides cash-on-collection orders, which are 'pending' until
+     * the customer pays at the counter. That is deliberate and was chosen
+     * explicitly — if collection orders need to be worked from the panel, this
+     * is the one place to relax.
+     */
+    public function scopePaid(Builder $query): Builder
+    {
+        return $query->where('payment_status', 'paid');
     }
 
     public function getBalanceDueAttribute(): float
