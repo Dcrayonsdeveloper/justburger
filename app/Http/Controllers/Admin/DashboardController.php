@@ -36,17 +36,19 @@ class DashboardController extends Controller
         // Revenue filter: paid + not cancelled/returned
         $revenueFilter = fn ($query) => $query->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses);
 
+        // Order counts are paid-only, matching the orders list — otherwise the
+        // dashboard reports more orders than the panel will ever show.
         // Top-row stats: filtered when date filter active, otherwise today
         if ($hasDateFilter) {
-            $topOrders = $dateFilter(Order::query())->count();
+            $topOrders = $dateFilter(Order::paid())->count();
             $topRevenue = $revenueFilter($dateFilter(Order::query()))->sum('total');
         } else {
-            $topOrders = Order::whereDate('created_at', today())->count();
+            $topOrders = Order::paid()->whereDate('created_at', today())->count();
             $topRevenue = $revenueFilter(Order::whereDate('created_at', today()))->sum('total');
         }
 
         // Filtered stats
-        $totalOrders = $dateFilter(Order::query())->count();
+        $totalOrders = $dateFilter(Order::paid())->count();
         $totalRevenue = $revenueFilter($dateFilter(Order::query()))->sum('total');
         $totalCustomers = $dateFilter(User::where('role', 'customer'))->count();
         $totalProducts = Product::count();
@@ -54,7 +56,7 @@ class DashboardController extends Controller
         // Orders still being made. Legacy rows carry pre-collection statuses, so
         // count everything that is not finished or cancelled.
         $pendingOrders = $dateFilter(
-            Order::whereNotIn('status', [Order::STATUS_READY, Order::STATUS_CANCELLED, 'delivered', 'packed', 'shipped', 'out_for_delivery', 'returned'])
+            Order::paid()->whereNotIn('status', [Order::STATUS_READY, Order::STATUS_CANCELLED, 'delivered', 'packed', 'shipped', 'out_for_delivery', 'returned'])
         )->count();
 
         // Returns stats
@@ -62,7 +64,7 @@ class DashboardController extends Controller
         $pendingReturns = $dateFilter(OrderReturn::where('status', 'requested'))->count();
 
         // Recent orders (filtered)
-        $recentOrders = $dateFilter(Order::with(['user', 'items']))
+        $recentOrders = $dateFilter(Order::paid()->with(['user', 'items']))
             ->latest()
             ->take(10)
             ->get();
@@ -167,7 +169,7 @@ class DashboardController extends Controller
             Order::STATUS_CANCELLED => 0,
         ]);
 
-        $dateFilter(Order::selectRaw('status, COUNT(*) as count'))
+        $dateFilter(Order::paid()->selectRaw('status, COUNT(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->each(function ($count, $status) use ($orderStatusCounts) {
@@ -213,9 +215,9 @@ class DashboardController extends Controller
         // Circle progress metrics (filtered)
         // "Completed" for a collection shop means ready and handed over.
         $completedOrders = $dateFilter(
-            Order::whereIn('status', [Order::STATUS_READY, 'delivered', 'packed', 'shipped', 'out_for_delivery'])
+            Order::paid()->whereIn('status', [Order::STATUS_READY, 'delivered', 'packed', 'shipped', 'out_for_delivery'])
         )->count();
-        $cancelledOrders = $dateFilter(Order::where('status', 'cancelled'))->count();
+        $cancelledOrders = $dateFilter(Order::paid()->where('status', 'cancelled'))->count();
         $completionRate = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
         $cancellationRate = $totalOrders > 0 ? round(($cancelledOrders / $totalOrders) * 100) : 0;
         $activeProducts = Product::where('is_active', true)->count();
