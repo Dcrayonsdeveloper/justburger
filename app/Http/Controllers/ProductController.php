@@ -38,11 +38,16 @@ class ProductController extends Controller
             }
         }
 
-        // Category filter
+        // Category filter — "Popular Items" is a curated tab that surfaces featured
+        // products from across the menu, so an item appears there AND in its own category.
         if ($request->filled('category')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('slug', $request->category);
-            });
+            if ($request->category === 'popular-items') {
+                $query->where('is_featured', true);
+            } else {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', $request->category);
+                });
+            }
         }
 
         // Subcategory filter
