@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attribute;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Seller;
@@ -126,7 +127,12 @@ class ProductController extends Controller
             'short_description' => 'nullable|string|max:500',
             'sku' => 'required|string|max:100|unique:products',
             'price' => 'required|numeric|min:0',
-            'large_price' => 'nullable|numeric|min:0',
+            'variants' => 'nullable|array',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.name' => 'nullable|string|max:255',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'toppings' => 'nullable|array',
+            'toppings.*' => 'integer|exists:toppings,id',
             'mrp' => 'nullable|numeric|min:0|gte:price',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -164,7 +170,7 @@ class ProductController extends Controller
             ->toArray();
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
-        unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['large_price']);
+        unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['variants'], $validated['toppings']);
 
         $product = Product::create($validated);
 
@@ -193,8 +199,10 @@ class ProductController extends Controller
             }
         }
 
-        // Create/refresh the Regular + Large size variants.
-        $this->syncSizeVariants($product, $request->input('large_price'));
+        // Sync the admin-defined size variants (name + price rows) and the
+        // per-product topping selection shown in the storefront Customize popup.
+        $this->syncVariants($product, $request->input('variants', []));
+        $product->toppings()->sync($request->input('toppings', []));
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product created successfully.');
@@ -226,7 +234,12 @@ class ProductController extends Controller
             'short_description' => 'nullable|string|max:500',
             'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
             'price' => 'required|numeric|min:0',
-            'large_price' => 'nullable|numeric|min:0',
+            'variants' => 'nullable|array',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.name' => 'nullable|string|max:255',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'toppings' => 'nullable|array',
+            'toppings.*' => 'integer|exists:toppings,id',
             'mrp' => 'nullable|numeric|min:0|gte:price',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -266,7 +279,7 @@ class ProductController extends Controller
             ->toArray();
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
-        unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['large_price']);
+        unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['variants'], $validated['toppings']);
 
         $product->update($validated);
 
@@ -316,32 +329,77 @@ class ProductController extends Controller
             }
         }
 
-        // Create/refresh the Regular + Large size variants.
-        $this->syncSizeVariants($product, $request->input('large_price'));
+        // Sync the admin-defined size variants (name + price rows) and the
+        // per-product topping selection shown in the storefront Customize popup.
+        $this->syncVariants($product, $request->input('variants', []));
+        $product->toppings()->sync($request->input('toppings', []));
 
         return redirect()->route('admin.products.edit', $product)
             ->with('success', 'Product updated successfully.');
     }
 
     /**
-     * Create/refresh a product's "Regular" and "Large" size variants from the
-     * admin form's large price. Regular mirrors the product's base price. If no
-     * large price is given, any existing size variants are removed.
+     * Sync a product's size variants from the admin form's repeater rows. Each
+     * row is a name + price (e.g. "Regular" / "Large"). Existing rows (matched by
+     * id) are updated, new rows are created with a generated unique SKU, and rows
+     * the admin removed from the form are deleted. Leaving the repeater empty
+     * removes all variants — the product falls back to its single base price.
      */
-    private function syncSizeVariants(Product $product, $largePrice): void
+    private function syncVariants(Product $product, array $variants): void
     {
-        if ($largePrice !== null && $largePrice !== '' && (float) $largePrice > 0) {
-            $product->variants()->updateOrCreate(
-                ['name' => 'Regular'],
-                ['price' => $product->price, 'mrp' => $product->mrp, 'sku' => $product->sku . '-REG', 'stock_quantity' => $product->stock_quantity, 'is_active' => true],
-            );
-            $product->variants()->updateOrCreate(
-                ['name' => 'Large'],
-                ['price' => (float) $largePrice, 'mrp' => (float) $largePrice, 'sku' => $product->sku . '-LRG', 'stock_quantity' => $product->stock_quantity, 'is_active' => true],
-            );
-        } else {
-            $product->variants()->whereIn('name', ['Regular', 'Large'])->delete();
+        // Keep only rows that carry both a name and a numeric price.
+        $rows = collect($variants)->filter(function ($v) {
+            return is_array($v)
+                && isset($v['name'], $v['price'])
+                && trim((string) $v['name']) !== ''
+                && $v['price'] !== '' && is_numeric($v['price']);
+        })->values();
+
+        $keptIds = [];
+
+        foreach ($rows as $i => $row) {
+            $name = trim((string) $row['name']);
+            $price = (float) $row['price'];
+            $id = isset($row['id']) && $row['id'] !== '' ? (int) $row['id'] : null;
+
+            $variant = $id ? $product->variants()->whereKey($id)->first() : null;
+
+            if ($variant) {
+                $variant->update(['name' => $name, 'price' => $price, 'mrp' => $price, 'is_active' => true]);
+            } else {
+                $variant = $product->variants()->create([
+                    'name' => $name,
+                    'price' => $price,
+                    'mrp' => $price,
+                    'sku' => $this->uniqueVariantSku($product, $name, $i),
+                    'stock_quantity' => $product->stock_quantity,
+                    'is_active' => true,
+                ]);
+            }
+
+            $keptIds[] = $variant->id;
         }
+
+        // Drop variants the admin deleted from the form (0 = match nothing).
+        $product->variants()->whereNotIn('id', $keptIds ?: [0])->delete();
+    }
+
+    /**
+     * Build a unique SKU for a new variant from the product SKU + variant name,
+     * within the product_variants.sku unique(50) column.
+     */
+    private function uniqueVariantSku(Product $product, string $name, int $index): string
+    {
+        $base = strtoupper(Str::slug(($product->sku ?: 'VAR') . '-' . $name)) ?: 'VAR';
+        $base = substr($base, 0, 40);
+        $sku = $base;
+        $n = $index;
+
+        while (ProductVariant::where('sku', $sku)->exists()) {
+            $sku = substr($base, 0, 38) . '-' . (++$n);
+        }
+
+        return substr($sku, 0, 50);
     }
 
     public function destroy(Product $product): RedirectResponse
