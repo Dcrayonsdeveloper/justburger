@@ -443,6 +443,22 @@
                 {{-- ═══ LEFT COLUMN ═══ --}}
                 <div class="ck-left">
 
+                    {{-- ── Opening hours notice ── --}}
+                    <div class="ck-card" style="margin-bottom:.6rem;">
+                        <div style="padding:.7rem .9rem;border-left:4px solid {{ $shopOpen ? '#16a34a' : '#C8102E' }};background:{{ $shopOpen ? 'rgba(22,163,74,.06)' : 'rgba(200,16,46,.06)' }};border-radius:.4rem;">
+                            <p style="margin:0;font-weight:700;font-size:.82rem;color:{{ $shopOpen ? '#166534' : '#C8102E' }};display:flex;align-items:center;gap:.4rem;">
+                                <span style="width:.55rem;height:.55rem;border-radius:50%;background:{{ $shopOpen ? '#16a34a' : '#C8102E' }};display:inline-block;flex-shrink:0;"></span>
+                                {{ $shopStatus }}
+                            </p>
+                            <div style="margin-top:.55rem;display:grid;grid-template-columns:auto 1fr;gap:.12rem .9rem;font-size:.72rem;color:rgba(0,0,0,.55);">
+                                @foreach($shopWeekly as $row)
+                                    <span style="font-weight:600;color:rgba(0,0,0,.72);white-space:nowrap;">{{ $row[0] }}</span>
+                                    <span>{{ $row[1] }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ── Collection only ── --}}
                     <div class="ck-card">
                         <div class="ck-card-head">
