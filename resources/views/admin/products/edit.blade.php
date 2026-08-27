@@ -270,18 +270,6 @@
                                     <p class="text-xs text-neutral-400 mt-1">This is the <strong>Regular</strong> (base) price.</p>
                                 </div>
                                 <div>
-                                    <label for="large_price" class="form-label">Large price <span class="text-neutral-400 font-normal">(optional)</span></label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">£</span>
-                                        <input type="number" name="large_price" id="large_price"
-                                               value="{{ old('large_price', optional($product->variants->firstWhere('name', 'Large'))->price) }}"
-                                               step="0.01" min="0"
-                                               class="form-input w-full pl-7"
-                                               placeholder="e.g. 8.20">
-                                    </div>
-                                    <p class="text-xs text-neutral-400 mt-1">Fill this to add a <strong>Large</strong> size. Leave blank for a single size.</p>
-                                </div>
-                                <div>
                                     <label for="sale_price" class="form-label">Compare at price / MRP</label>
                                     <div class="relative">
                                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">$</span>
@@ -305,6 +293,43 @@
                                         <p class="form-error">{{ $message }}</p>
                                     @enderror
                                 </div>
+                            </div>
+
+                            {{-- Size variants repeater --}}
+                            @php
+                                $existingVariantRows = $product->variants
+                                    ->map(fn ($v) => ['id' => $v->id, 'name' => $v->name, 'price' => (float) $v->price])
+                                    ->values()->all();
+                                $variantRows = array_values(old('variants', $existingVariantRows));
+                            @endphp
+                            <div class="mt-5 pt-5 border-t border-neutral-100" x-data="{ rows: {{ \Illuminate\Support\Js::from($variantRows) }} }">
+                                <label class="form-label">Sizes / variants <span class="text-neutral-400 font-normal">(optional)</span></label>
+                                <p class="text-xs text-neutral-400 mb-3">Add sizes like <strong>Regular</strong> and <strong>Large</strong>, each with its own price — customers pick a size on the product page. Leave empty for a single-price item (uses the <strong>Price</strong> above).</p>
+
+                                <div class="space-y-2 mb-3" x-show="rows.length">
+                                    <template x-for="(row, i) in rows" :key="i">
+                                        <div class="flex items-center gap-2">
+                                            <input type="hidden" :name="`variants[${i}][id]`" :value="row.id ?? ''">
+                                            <input type="text" :name="`variants[${i}][name]`" x-model="row.name"
+                                                   placeholder="Size name (e.g. Regular)" class="form-input flex-1">
+                                            <div class="relative w-32 shrink-0">
+                                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">£</span>
+                                                <input type="number" step="0.01" min="0" :name="`variants[${i}][price]`" x-model="row.price"
+                                                       placeholder="0.00" class="form-input w-full pl-7">
+                                            </div>
+                                            <button type="button" @click="rows.splice(i, 1)"
+                                                    class="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Remove size">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <button type="button" @click="rows.push({ id: null, name: rows.length ? '' : 'Regular', price: '' })"
+                                        class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-800 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    Add size
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -528,13 +553,14 @@
             </div>
 
             {{-- Customize (toppings) --}}
-            <div class="card overflow-hidden mt-5" x-data="{ on: {{ (bool) old('customize_enabled', $product->customize_enabled) ? 'true' : 'false' }} }">
+            <div class="card overflow-hidden mt-5"
+                 x-data="{ on: {{ (bool) old('customize_enabled', $product->customize_enabled) ? 'true' : 'false' }}, setAll(v) { this.$root.querySelectorAll('.js-topping').forEach(c => c.checked = v) } }">
                 <div class="px-5 py-4 flex items-start justify-between gap-4">
                     <div>
                         <h2 class="text-base font-semibold text-neutral-900">Customize</h2>
                         <p class="text-xs text-neutral-500 mt-0.5">
-                            Off by default. Turn it on and customers get the topping popup for this item, offering every topping on the
-                            <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Customize</a> page.
+                            Off by default. Turn it on, then tick which toppings appear in this item's popup.
+                            Manage the full topping list on the <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Customize</a> page.
                             Leave it off and no popup appears &mdash; the item goes straight to the basket.
                         </p>
                     </div>
@@ -546,6 +572,45 @@
                         </span>
                         <span class="text-sm font-medium" :class="on ? 'text-primary-700' : 'text-neutral-500'" x-text="on ? 'Enabled' : 'Disabled'"></span>
                     </label>
+                </div>
+
+                {{-- Per-product topping picker --}}
+                <div x-show="on" x-cloak class="px-5 pb-5 border-t border-neutral-100 pt-4">
+                    @php
+                        $selectedToppingIds = collect(old('toppings', $product->toppings->pluck('id')->all()))
+                            ->map(fn ($id) => (int) $id)->all();
+                    @endphp
+                    @if($toppings->isEmpty())
+                        <p class="text-sm text-neutral-500">No toppings exist yet. <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Add toppings</a> first, then choose which apply to this item.</p>
+                    @else
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs text-neutral-500">Tick the toppings customers can add to <strong>{{ $product->name }}</strong>.</p>
+                            <div class="flex items-center gap-2 text-xs shrink-0">
+                                <button type="button" class="text-primary-600 hover:underline" @click="setAll(true)">Select all</button>
+                                <span class="text-neutral-300">|</span>
+                                <button type="button" class="text-neutral-500 hover:underline" @click="setAll(false)">Clear</button>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            @foreach($toppings->groupBy('group') as $group => $items)
+                                <div>
+                                    <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">{{ $group ?: 'Other' }}</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                        @foreach($items as $t)
+                                            <label class="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 cursor-pointer">
+                                                <input type="checkbox" name="toppings[]" value="{{ $t->id }}" class="form-checkbox js-topping"
+                                                       @checked(in_array((int) $t->id, $selectedToppingIds))>
+                                                <span class="flex-1 text-sm text-neutral-800">{{ $t->name }}</span>
+                                                <span class="text-xs {{ $t->is_preselected ? 'text-green-600' : 'text-neutral-400' }}">
+                                                    {{ $t->is_preselected ? 'Included' : ((float) $t->price > 0 ? '+£'.number_format($t->price, 2) : 'Free') }}
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\Topping;
 use Illuminate\Http\JsonResponse;
 
 class ProductToppingController extends Controller
@@ -24,9 +23,15 @@ class ProductToppingController extends Controller
             ]);
         }
 
-        // Every active topping from the Customize page is offered — there is no
-        // per-product selection, the toggle above is the only switch.
-        $toppings = Topping::active()->ordered()->get();
+        // Only the toppings the admin picked for THIS product are offered (the
+        // product_topping pivot). The Customize toggle above is the master switch;
+        // this narrows the popup to the selected toppings. Whether each starts
+        // ticked is still the topping's own is_preselected flag.
+        $toppings = $product->toppings()
+            ->where('toppings.is_active', true)
+            ->orderBy('toppings.position')
+            ->orderBy('toppings.name')
+            ->get();
 
         $defaults = [];
         $optionals = [];
