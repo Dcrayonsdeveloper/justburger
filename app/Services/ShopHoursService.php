@@ -113,4 +113,59 @@ class ShopHoursService
 
         return "{$base} Online ordering opens {$when}.";
     }
+
+    /** Short status line for the checkout banner. */
+    public function statusMessage(): string
+    {
+        if ($this->isOpen()) {
+            $close = $this->closeTimeToday();
+            return $close
+                ? "Open now — ordering until {$close->format('g:i A')}."
+                : 'We are open now.';
+        }
+
+        return $this->closedMessage();
+    }
+
+    private function closeTimeToday(): ?Carbon
+    {
+        $now = $this->now();
+        $hours = $this->hours();
+        $dow = (int) $now->isoWeekday();
+
+        return empty($hours[$dow])
+            ? null
+            : $now->copy()->setTimeFromTimeString($hours[$dow][1]);
+    }
+
+    /**
+     * Weekly opening hours grouped for display, e.g.
+     * [['Mon & Tue','12:00 PM – 10:00 PM'], ['Sunday','4:00 PM – 10:00 PM'], …].
+     *
+     * @return array<int, array{0:string,1:string}>
+     */
+    public function weekly(): array
+    {
+        $hours = $this->hours();
+        $short = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
+        $full  = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+
+        $label = static fn (string $t): string => Carbon::createFromFormat('H:i', $t)->format('g:i A');
+        $windowFor = static fn (?array $w): string => $w ? $label($w[0]) . ' – ' . $label($w[1]) : 'Closed';
+
+        $rows = [];
+        $d = 1;
+        while ($d <= 7) {
+            $window = $hours[$d] ?? null;
+            $e = $d;
+            while ($e < 7 && ($hours[$e + 1] ?? null) == $window) {
+                $e++;
+            }
+            $name = $e > $d ? "{$short[$d]} & {$short[$e]}" : $full[$d];
+            $rows[] = [$name, $windowFor($window)];
+            $d = $e + 1;
+        }
+
+        return $rows;
+    }
 }

@@ -122,10 +122,17 @@ class CheckoutController extends Controller
             $loyaltyValue = round($loyaltyPoints * (float) Setting::get('loyalty_redeem_rate', 0.25), 2);
         }
 
+        // Shop opening-hours notice for the checkout banner.
+        $shopHours = app(ShopHoursService::class);
+        $shopOpen = $shopHours->isOpen();
+        $shopStatus = $shopHours->statusMessage();
+        $shopWeekly = $shopHours->weekly();
+
         return view('checkout.index', compact(
             'cart', 'addresses', 'defaultAddress', 'paymentSettings',
             'isGuest', 'availableCoupons', 'fbEventId',
-            'oneClickReady', 'checkoutPreference', 'loyaltyPoints', 'loyaltyValue'
+            'oneClickReady', 'checkoutPreference', 'loyaltyPoints', 'loyaltyValue',
+            'shopOpen', 'shopStatus', 'shopWeekly'
         ));
     }
 
