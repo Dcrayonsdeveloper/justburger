@@ -12,6 +12,7 @@ use App\Models\OrderItem;
 use App\Models\Setting;
 use App\Models\UserAddress;
 use App\Services\AnalyticsService;
+use App\Services\ShopHoursService;
 use App\Services\StripeOrderService;
 use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
@@ -130,6 +131,12 @@ class CheckoutController extends Controller
 
     public function process(Request $request): RedirectResponse
     {
+        // Shop opening-hours guard — customers can only order while the shop is open.
+        if (!app(ShopHoursService::class)->isOpen()) {
+            return redirect()->route('checkout.index')
+                ->with('error', app(ShopHoursService::class)->closedMessage());
+        }
+
         $isGuest = !auth()->check();
 
         $rules = [
@@ -433,6 +440,12 @@ class CheckoutController extends Controller
     public function createStripeSession(Request $request): JsonResponse
     {
         $this->logActivity('payment_initiated', ['method' => 'stripe'], $request);
+
+        // Shop opening-hours guard — customers can only order while the shop is open.
+        if (!app(ShopHoursService::class)->isOpen()) {
+            return response()->json(['error' => app(ShopHoursService::class)->closedMessage()], 422);
+        }
+
         $isGuest = !auth()->check();
 
         $rules = [
