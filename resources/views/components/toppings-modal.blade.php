@@ -63,7 +63,7 @@
                                 </span>
                                 <span class="flex-1 text-sm font-medium text-neutral-800" x-text="topping.name"></span>
                                 <span class="text-xs font-semibold" :class="topping.price > 0 ? 'text-neutral-600' : 'text-green-600'"
-                                      x-text="topping.price > 0 ? '+' + formatCurrency(topping.price) : 'Free'"></span>
+                                      x-text="topping.price > 0 ? '+' + formatCurrency(topping.price) : 'Included'"></span>
                             </label>
                         </template>
                     </div>
