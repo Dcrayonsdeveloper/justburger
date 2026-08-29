@@ -536,7 +536,7 @@
                                                        @checked(in_array((int) $t->id, $selectedToppingIds))>
                                                 <span class="flex-1 text-sm text-neutral-800">{{ $t->name }}</span>
                                                 <span class="text-xs {{ $t->is_preselected ? 'text-green-600' : 'text-neutral-400' }}">
-                                                    {{ $t->is_preselected ? 'Included' : ((float) $t->price > 0 ? '+£'.number_format($t->price, 2) : 'Free') }}
+                                                    {{ $t->is_preselected ? 'Included' : ((float) $t->price > 0 ? '+£'.number_format($t->price, 2) : 'Included') }}
                                                 </span>
                                             </label>
                                         @endforeach

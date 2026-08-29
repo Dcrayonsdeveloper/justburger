@@ -42,7 +42,7 @@
                     <label for="price" class="block text-sm font-medium text-neutral-700 mb-1">Price (&pound;)</label>
                     <input type="number" name="price" id="price" step="0.01" min="0" value="{{ old('price', '0.00') }}"
                            class="w-32 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <p class="text-xs text-neutral-400 mt-1">0.00 shows as &ldquo;Free&rdquo;</p>
+                    <p class="text-xs text-neutral-400 mt-1">0.00 shows as &ldquo;Included&rdquo;</p>
                 </div>
 
                 <div class="md:col-span-5 flex flex-col gap-2 md:pt-7">
@@ -97,7 +97,7 @@
                             @if($topping->price > 0)
                                 <span class="font-semibold">&pound;{{ number_format($topping->price, 2) }}</span>
                             @else
-                                <span class="text-green-600 font-medium">Free</span>
+                                <span class="text-green-600 font-medium">Included</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
