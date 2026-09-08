@@ -30,6 +30,10 @@
         .receipt {
             width:80mm; margin:0 auto; background:#fff; padding:3mm 4mm;
             font-family:'Courier New', ui-monospace, monospace; font-size:9pt; line-height:1.45; color:#000;
+            /* Thermal heads print thin strokes faintly. Courier New is monospace,
+               so bold has identical advance widths - nothing reflows, it just
+               lands darker and reads across the counter. */
+            font-weight:700;
             box-shadow:0 2px 14px rgba(0,0,0,.12);
         }
         .center { text-align:center; }
