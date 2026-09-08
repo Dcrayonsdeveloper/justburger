@@ -22,12 +22,6 @@
         <span x-text="on ? 'Auto-print ON' : 'Auto-print OFF'"></span>
     </button>
 
-    {{-- Proves the printer end to end without waiting for a customer to order. --}}
-    <a href="{{ route('admin.orders.print-test') }}" target="_blank" rel="noopener"
-       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border bg-white border-neutral-300 text-neutral-600 hover:border-neutral-400 transition-colors">
-        Test print
-    </a>
-
     <span x-show="on && note" x-cloak x-text="note" class="text-xs text-neutral-500"></span>
 </div>
 
