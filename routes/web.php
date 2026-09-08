@@ -287,6 +287,16 @@ Route::match(['get', 'post'], '/auth/instagram/delete', [\App\Http\Controllers\A
 // Load Admin Routes
 require __DIR__.'/admin.php';
 
+/*
+| The till's front door.
+|
+| The shop's setup sheet and the Chrome kiosk shortcut on their desktop both
+| point at this one address, so it has to keep working while the site is closed
+| for maintenance — it is exempted in bootstrap/app.php along with the orders
+| screen it lands on. It is only a door: the admin login still stands behind it.
+*/
+Route::get('/jb-till-2026', fn () => redirect()->route('admin.orders.index'))->name('till');
+
 // Load Seller Routes
 require __DIR__.'/seller.php';
 

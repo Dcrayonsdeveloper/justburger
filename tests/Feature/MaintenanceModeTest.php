@@ -33,6 +33,22 @@ class MaintenanceModeTest extends TestCase
         $this->assertContains('webhook/*', $except);
     }
 
+    /**
+     * The shop still has to feed the kitchen while the site is closed, so the
+     * till's front door, the orders screen it lands on and the login it needs
+     * stay open. All of it is still behind the admin guard — this exempts a
+     * till, not the panel.
+     */
+    public function test_the_till_stays_reachable_during_maintenance(): void
+    {
+        $except = $this->exceptions();
+
+        $this->assertContains('jb-till-2026', $except, 'the shop opens the till by this address');
+        $this->assertContains('admin/login', $except, 'staff cannot reach the till if they cannot sign in');
+        $this->assertContains('admin/orders', $except, 'the till is the orders screen');
+        $this->assertContains('admin/orders/*', $except, 'it polls, prints and marks printed through these paths');
+    }
+
     /** The exemption must be narrow — the storefront still has to close. */
     public function test_the_storefront_is_not_exempt(): void
     {

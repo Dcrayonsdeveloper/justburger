@@ -116,6 +116,13 @@
     </div>
 
     <div class="receipt">
+        @if($isTest ?? false)
+            {{-- Unmistakable on paper: nobody should cook from this slip. --}}
+            <div class="center rc-type">*** TEST PRINT ***</div>
+            <div class="center rc-note">Not a real order — no food required.</div>
+            <hr class="hr">
+        @endif
+
         {{-- Header --}}
         <div class="center">
             <div class="rc-name">{{ $siteName }}</div>
@@ -213,5 +220,15 @@
             window.addEventListener('beforeprint', setPageHeight);
         })();
     </script>
+
+    @if($isTest ?? false)
+        {{-- The point of the test page is the print itself, so fire it unprompted.
+             What lands on the roll is then a true rehearsal of a real order. --}}
+        <script>
+            window.addEventListener('load', function () {
+                setTimeout(function () { window.print(); }, 500);
+            });
+        </script>
+    @endif
 </body>
 </html>

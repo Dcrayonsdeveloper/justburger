@@ -28,6 +28,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->preventRequestsDuringMaintenance(except: [
             'api/webhook/*',
             'webhook/*',
+
+            // The till. A closed shop still has to hand the kitchen the orders
+            // that were already paid for, so the front door, the orders screen it
+            // lands on and the login it needs stay open. Kept to these exact
+            // paths — the rest of /admin stays shut, and all of it is still
+            // behind the admin guard, so this opens a till, not the panel.
+            'jb-till-2026',
+            'admin/login',
+            'admin/orders',
+            'admin/orders/*',
         ]);
 
         $middleware->api(prepend: [
