@@ -38,9 +38,10 @@ class ReceiptPrintController extends Controller
             ? max($floor->timestamp, strtotime($validated['since']))
             : $floor->timestamp;
 
-        // Paid only. A receipt coming off the till is the kitchen's instruction to
-        // cook, so an unpaid or abandoned checkout must never produce one.
-        $orders = Order::paid()
+        // Confirmed only. A receipt coming off the till is the kitchen's instruction
+        // to cook, so an abandoned checkout must never produce one — but a cash
+        // order must, or the shop never learns it was placed.
+        $orders = Order::confirmed()
             ->whereNull('receipt_printed_at')
             ->where('status', '!=', Order::STATUS_CANCELLED)
             ->where('created_at', '>=', date('Y-m-d H:i:s', $since))

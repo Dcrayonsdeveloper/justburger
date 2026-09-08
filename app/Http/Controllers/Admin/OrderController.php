@@ -21,12 +21,12 @@ class OrderController extends Controller
         // someone looks at the orders. Cheap, indexed, and idempotent.
         Order::releaseOrdersDueForCollection();
 
-        // Paid orders only. An order row is created the moment checkout starts, so
-        // an abandoned card payment leaves a 'pending' order behind that was never
-        // bought — those must never reach the shop. The Stripe webhook
-        // (StripeOrderService::confirm) flips an order to paid, and that is what
-        // admits it here.
-        $query = Order::paid()->with(['user', 'items']);
+        // Confirmed orders only — paid by card, or placed for payment at the
+        // counter. An order row is created the moment checkout starts, so an
+        // abandoned card payment leaves a 'pending' row behind that was never
+        // bought; that is what this keeps out. A cash order is a real order from
+        // the moment the customer is told we are cooking it. See Order::scopeConfirmed().
+        $query = Order::confirmed()->with(['user', 'items']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -57,12 +57,12 @@ class OrderController extends Controller
         // Counted on the same basis as the list above, so the tiles can never
         // total to more orders than the page actually shows.
         $stats = [
-            'total' => Order::paid()->count(),
-            'confirmed' => Order::paid()->where('status', 'confirmed')->count(),
-            'processing' => Order::paid()->whereIn('status', ['processing', 'packed'])->count(),
-            'shipped' => Order::paid()->whereIn('status', ['shipped', 'out_for_delivery'])->count(),
-            'completed' => Order::paid()->where('status', 'delivered')->count(),
-            'cancelled' => Order::paid()->where('status', 'cancelled')->count(),
+            'total' => Order::confirmed()->count(),
+            'confirmed' => Order::confirmed()->where('status', 'confirmed')->count(),
+            'processing' => Order::confirmed()->whereIn('status', ['processing', 'packed'])->count(),
+            'shipped' => Order::confirmed()->whereIn('status', ['shipped', 'out_for_delivery'])->count(),
+            'completed' => Order::confirmed()->where('status', 'delivered')->count(),
+            'cancelled' => Order::confirmed()->where('status', 'cancelled')->count(),
         ];
 
         return view('admin.orders.index', compact('orders', 'stats'));
@@ -72,7 +72,7 @@ class OrderController extends Controller
     {
         // Hidden from the list means unreachable by URL too, otherwise the rule is
         // only cosmetic and a stale bookmark still opens an unpaid order.
-        abort_unless($order->payment_status === 'paid', 404);
+        abort_unless($order->hasReachedShop(), 404);
 
         Order::releaseOrdersDueForCollection();
         $order->refresh();

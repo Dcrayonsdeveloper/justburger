@@ -350,19 +350,54 @@ class Order extends Model
     }
 
     /**
-     * Orders whose money is actually in. The admin panel is built on this: an
-     * order exists from the moment checkout starts, but until Stripe confirms
-     * payment it is only an intention to buy, and showing it to the shop invites
-     * food being made for an order that was never paid for.
+     * Orders whose money is actually in. Revenue is counted on this basis.
      *
-     * Note this also hides cash-on-collection orders, which are 'pending' until
-     * the customer pays at the counter. That is deliberate and was chosen
-     * explicitly — if collection orders need to be worked from the panel, this
-     * is the one place to relax.
+     * This is NOT the right filter for the panel or the printer: it hides every
+     * cash order, which stays 'pending' until the customer pays at the counter.
+     * Use scopeConfirmed() for anything the shop works from.
      */
     public function scopePaid(Builder $query): Builder
     {
         return $query->where('payment_status', 'paid');
+    }
+
+    /** Methods where the money arrives at the counter rather than through Stripe. */
+    public const PAY_AT_COUNTER = ['cod', 'partial_pay'];
+
+    /**
+     * Orders the shop should actually work from.
+     *
+     * An order row exists from the moment checkout starts, so an abandoned card
+     * payment leaves a 'pending' row behind that was never bought — that must
+     * never reach the kitchen, and filtering it out is why this scope exists.
+     *
+     * A cash order is not that. Its row is written only once the customer has
+     * come out the far side of checkout and been shown "Order Confirmed —
+     * collect in 15 minutes", so it is a real instruction to cook from the
+     * moment it exists; the money simply arrives at the counter. Judging it by
+     * payment_status hid every cash order from the panel and, worse, from the
+     * receipt printer — the shop never learned the order had been placed.
+     */
+    public function scopeConfirmed(Builder $query): Builder
+    {
+        // Grouped, so a caller chaining its own where() cannot have the OR
+        // swallow it and drag abandoned card checkouts back into the list.
+        return $query->where(function (Builder $q) {
+            $q->where('payment_status', 'paid')
+              ->orWhereIn('metadata->payment_method', self::PAY_AT_COUNTER);
+        });
+    }
+
+    /**
+     * The row-level twin of scopeConfirmed(), for guarding a single order.
+     *
+     * Not isConfirmed() — that one is already taken, and asks about the
+     * fulfilment status rather than whether the order counts at all.
+     */
+    public function hasReachedShop(): bool
+    {
+        return $this->payment_status === 'paid'
+            || in_array($this->metadata['payment_method'] ?? null, self::PAY_AT_COUNTER, true);
     }
 
     public function getBalanceDueAttribute(): float
