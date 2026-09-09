@@ -94,6 +94,8 @@ class ReceiptPrintController extends Controller
             'paid_amount' => 14.50,
             'metadata' => ['delivery_method' => 'collection', 'payment_method' => 'card'],
             'shipping_address_snapshot' => ['name' => 'Printer test — not a real order'],
+            // Exercises the note box, so a test print proves it prints legibly.
+            'notes' => 'Test note — no onions on the burger, extra napkins please.',
         ]);
         $order->created_at = now();
 
@@ -101,10 +103,17 @@ class ReceiptPrintController extends Controller
         $order->setRelation('items', collect([
             new OrderItem([
                 'product_name' => 'Classic Cheeseburger',
-                'variant_name' => 'Large · No onions',
+                'variant_name' => 'Large 8oz',
                 'quantity' => 1,
                 'price' => 7.50,
                 'total' => 7.50,
+                // One of each kind, so a test print shows whether the
+                // customisation lines come out readable on the roll.
+                'product_snapshot' => ['toppings' => [
+                    'kept' => [['name' => 'Lettuce'], ['name' => 'Tomato']],
+                    'added' => [['name' => 'Extra Cheese', 'price' => 0.60]],
+                    'removed' => [['name' => 'Onion']],
+                ]],
             ]),
             new OrderItem([
                 'product_name' => 'Loaded Fries',

@@ -52,6 +52,18 @@
         .rc-item .amt { white-space:nowrap; text-align:right; }
         .rc-item-variant { font-size:8pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
 
+        /* Customisations. Indented under their item so it is unambiguous which
+           burger they belong to, and marked with +/- rather than colour: the
+           print head is monochrome, so green and red would both come out black. */
+        .rc-opt { font-size:8pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
+        .rc-opt .lead { font-weight:700; }
+
+        /* Order note. The one thing on the slip the kitchen must not skim past,
+           so it gets a box of its own — the only boxed element on the receipt. */
+        .rc-kitchen-note { border:1.5px solid #000; padding:1.5mm 2mm; margin:2mm 0; page-break-inside:avoid; }
+        .rc-kitchen-note .hdr { font-size:8pt; font-weight:700; letter-spacing:.3mm; margin-bottom:.8mm; }
+        .rc-kitchen-note .body { font-size:9pt; font-weight:700; overflow-wrap:anywhere; }
+
         .rc-row { display:flex; justify-content:space-between; gap:2mm; margin:.8mm 0; font-size:9pt; page-break-inside:avoid; }
         .rc-row.total { font-weight:700; font-size:11pt; }
 
@@ -157,7 +169,35 @@
             @if($item->variant_name)
                 <div class="rc-item-variant">{{ $item->variant_name }}</div>
             @endif
+
+            {{-- What the customer chose. Priced extras carry their price so the
+                 line can be checked against the total; kept and removed do not,
+                 because they cost nothing. --}}
+            @php $opts = $item->toppings_list; @endphp
+            @if(!empty($opts['kept']))
+                <div class="rc-opt"><span class="lead">With:</span>
+                    {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</div>
+            @endif
+            @if(!empty($opts['added']))
+                <div class="rc-opt"><span class="lead">+</span>
+                    {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</div>
+            @endif
+            @if(!empty($opts['removed']))
+                <div class="rc-opt"><span class="lead">NO:</span>
+                    {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</div>
+            @endif
         @endforeach
+
+        {{-- Order note. Optional — most orders carry none, and the box only
+             appears when the customer actually wrote something. Placed directly
+             under the items it applies to, and boxed so it cannot be skimmed
+             past on a busy pass. --}}
+        @if(filled($order->notes))
+            <div class="rc-kitchen-note">
+                <div class="hdr">** CUSTOMER NOTE **</div>
+                <div class="body">{{ $order->notes }}</div>
+            </div>
+        @endif
 
         <hr class="hr">
 
