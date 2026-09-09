@@ -101,6 +101,24 @@
                                     @if($item->variant_name)
                                         <p class="text-[12px] text-neutral-600 mt-0.5">{{ $item->variant_name }}</p>
                                     @endif
+
+                                    {{-- The customer's own choices, echoed back so this
+                                         page confirms what was ordered rather than just
+                                         that something was. --}}
+                                    @php $opts = $item->toppings_list; @endphp
+                                    @if(!empty($opts['kept']))
+                                        <p class="text-[12px] text-neutral-600 mt-0.5">With:
+                                            {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</p>
+                                    @endif
+                                    @if(!empty($opts['added']))
+                                        <p class="text-[12px] text-emerald-700 mt-0.5">+
+                                            {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</p>
+                                    @endif
+                                    @if(!empty($opts['removed']))
+                                        <p class="text-[12px] text-red-600 mt-0.5">No
+                                            {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</p>
+                                    @endif
+
                                     <p class="text-[12px] text-neutral-600 mt-0.5">Qty: {{ $item->quantity }}</p>
                                 </div>
                                 <div class="text-right shrink-0">

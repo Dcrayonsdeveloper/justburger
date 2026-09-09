@@ -290,6 +290,10 @@ class CheckoutController extends Controller
                 'tax' => 0,
                 'total' => $finalTotal,
                 'paid_amount' => $codAdvance,
+                // Without this the row falls back to the orders table default of
+                // 'INR', and the admin panel — which prints the column raw —
+                // showed a Feltham burger shop's takings in rupees.
+                'currency' => currency_config('code'),
                 'coupon_id' => $cart->coupon_id,
                 'affiliate_id' => $affiliateId,
                 'affiliate_referral_code' => $affiliateRefCode,
@@ -591,7 +595,7 @@ class CheckoutController extends Controller
                 'tax' => 0,
                 'total' => $finalTotal,
                 'paid_amount' => 0,
-                'currency' => 'GBP',
+                'currency' => currency_config('code'),
                 'coupon_id' => $cart->coupon_id,
                 'affiliate_id' => $affiliateId,
                 'affiliate_referral_code' => $affiliateRefCode,
