@@ -7,11 +7,18 @@
     <link rel="icon" type="image/svg+xml" href="/images/icons/favicon.svg?v=3">
     <link rel="shortcut icon" href="/images/icons/favicon.svg?v=3">
     {{-- Page size is written here at runtime so the roll feeds exactly the receipt's length, then cuts. --}}
-    <style id="page-size">@page { size: 80mm 297mm; margin: 0; }</style>
+    <style id="page-size">@page { size: 72mm 297mm; margin: 0; }</style>
     <style>
         /*
-         | Sized for an 80mm thermal roll (Epson TM-T20II and compatibles):
-         | 80mm paper, 72mm printable area, 4mm non-printable edge each side.
+         | Sized for an 80mm thermal roll (Epson TM-T20II and compatibles).
+         |
+         | The paper is 80mm but the head only prints about 72mm of it, and it
+         | starts at the left edge rather than centring. Laying the page out at
+         | the full 80mm therefore pushed the last few millimetres past what the
+         | head can reach, and every right-aligned price lost its pence: "£47.10"
+         | came out as "£47.". So the PAGE is 72mm — the printable width, not the
+         | paper width — and the content sits inside that with its own gutters.
+         |
          | Screen and print use identical metrics, so the preview is true size
          | and the printed height can be measured from the on-screen layout.
          */
@@ -19,17 +26,17 @@
         body { background:#e9eaed; font-family:'Segoe UI', system-ui, sans-serif; color:#111; padding:24px 12px; }
 
         /* Toolbar + hint (screen only) */
-        .toolbar { width:80mm; margin:0 auto 10px; display:flex; gap:8px; justify-content:center; }
+        .toolbar { width:72mm; margin:0 auto 10px; display:flex; gap:8px; justify-content:center; }
         .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border:none; border-radius:8px;
                font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; }
         .btn-primary { background:#111; color:#fff; }
         .btn-light { background:#fff; color:#111; border:1px solid #d0d0d0; }
-        .print-hint { width:80mm; margin:0 auto 14px; font-size:10.5px; line-height:1.6; color:#555; text-align:center; }
+        .print-hint { width:72mm; margin:0 auto 14px; font-size:10.5px; line-height:1.6; color:#555; text-align:center; }
 
-        /* Receipt paper — 80mm wide, 4mm gutters, 72mm of printable content */
+        /* Receipt paper — 72mm of printable width, 3mm gutters, 66mm of text */
         .receipt {
-            width:80mm; margin:0 auto; background:#fff; padding:3mm 4mm;
-            font-family:'Courier New', ui-monospace, monospace; font-size:9pt; line-height:1.45; color:#000;
+            width:72mm; margin:0 auto; background:#fff; padding:3mm 3mm;
+            font-family:'Courier New', ui-monospace, monospace; font-size:10pt; line-height:1.45; color:#000;
             /* Thermal heads print thin strokes faintly. Courier New is monospace,
                so bold has identical advance widths - nothing reflows, it just
                lands darker and reads across the counter. */
@@ -37,43 +44,43 @@
             box-shadow:0 2px 14px rgba(0,0,0,.12);
         }
         .center { text-align:center; }
-        .rc-name { font-size:13pt; font-weight:700; letter-spacing:.3mm; }
-        .rc-sub { font-size:8pt; }
-        .rc-type { font-weight:700; font-size:11pt; letter-spacing:.6mm; margin:2mm 0 1mm; }
-        .rc-note { font-size:8pt; }
+        .rc-name { font-size:14pt; font-weight:700; letter-spacing:.3mm; }
+        .rc-sub { font-size:9pt; }
+        .rc-type { font-weight:700; font-size:12pt; letter-spacing:.6mm; margin:2mm 0 1mm; }
+        .rc-note { font-size:9pt; }
         .hr { border:0; border-top:1px dashed #000; margin:2mm 0; }
 
-        .rc-meta { font-size:8.5pt; }
+        .rc-meta { font-size:9.5pt; }
         .rc-meta strong { font-weight:700; }
 
         .rc-item { display:flex; justify-content:space-between; gap:2mm; margin:1mm 0; page-break-inside:avoid; }
         .rc-item .qty { white-space:nowrap; }
         .rc-item .nm { flex:1; overflow-wrap:anywhere; }
         .rc-item .amt { white-space:nowrap; text-align:right; }
-        .rc-item-variant { font-size:8pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
+        .rc-item-variant { font-size:9pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
 
         /* Customisations. Indented under their item so it is unambiguous which
            burger they belong to, and marked with +/- rather than colour: the
            print head is monochrome, so green and red would both come out black. */
-        .rc-opt { font-size:8pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
+        .rc-opt { font-size:9pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
         .rc-opt .lead { font-weight:700; }
 
         /* Order note. The one thing on the slip the kitchen must not skim past,
            so it gets a box of its own — the only boxed element on the receipt. */
         .rc-kitchen-note { border:1.5px solid #000; padding:1.5mm 2mm; margin:2mm 0; page-break-inside:avoid; }
-        .rc-kitchen-note .hdr { font-size:8pt; font-weight:700; letter-spacing:.3mm; margin-bottom:.8mm; }
-        .rc-kitchen-note .body { font-size:9pt; font-weight:700; overflow-wrap:anywhere; }
+        .rc-kitchen-note .hdr { font-size:9.5pt; font-weight:700; letter-spacing:.3mm; margin-bottom:.8mm; }
+        .rc-kitchen-note .body { font-size:10.5pt; font-weight:700; overflow-wrap:anywhere; }
 
-        .rc-row { display:flex; justify-content:space-between; gap:2mm; margin:.8mm 0; font-size:9pt; page-break-inside:avoid; }
-        .rc-row.total { font-weight:700; font-size:11pt; }
+        .rc-row { display:flex; justify-content:space-between; gap:2mm; margin:.8mm 0; font-size:10pt; page-break-inside:avoid; }
+        .rc-row.total { font-weight:700; font-size:12.5pt; }
 
         /* Monochrome print head — no colour, no grey. Everything stays solid black. */
-        .rc-paid { font-weight:700; text-align:center; letter-spacing:.3mm; padding:2mm 0; font-size:9.5pt; }
+        .rc-paid { font-weight:700; text-align:center; letter-spacing:.3mm; padding:2mm 0; font-size:11pt; }
 
-        .rc-foot { font-size:7.5pt; text-align:center; }
+        .rc-foot { font-size:8.5pt; text-align:center; }
 
         @media print {
-            html, body { width:80mm; background:#fff; padding:0; margin:0; }
+            html, body { width:72mm; background:#fff; padding:0; margin:0; }
             .toolbar, .print-hint { display:none !important; }
             .receipt { box-shadow:none; margin:0; }
         }
@@ -256,7 +263,7 @@
                 if (!receipt) return;
                 var mm = receipt.getBoundingClientRect().height * PX_TO_MM + CUT_FEED_MM;
                 document.getElementById('page-size').textContent =
-                    '@page { size: 80mm ' + mm.toFixed(1) + 'mm; margin: 0; }';
+                    '@page { size: 72mm ' + mm.toFixed(1) + 'mm; margin: 0; }';
             }
 
             setPageHeight();
