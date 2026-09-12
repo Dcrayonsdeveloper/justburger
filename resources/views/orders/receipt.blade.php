@@ -33,10 +33,10 @@
         .btn-light { background:#fff; color:#111; border:1px solid #d0d0d0; }
         .print-hint { width:72mm; margin:0 auto 14px; font-size:10.5px; line-height:1.6; color:#555; text-align:center; }
 
-        /* Receipt paper — 72mm of printable width, 3mm gutters, 66mm of text */
+        /* Receipt paper — 72mm of printable width, 2mm gutters, 68mm of text */
         .receipt {
-            width:72mm; margin:0 auto; background:#fff; padding:3mm 3mm;
-            font-family:'Courier New', ui-monospace, monospace; font-size:11pt; line-height:1.4; color:#000;
+            width:72mm; margin:0 auto; background:#fff; padding:3mm 2mm;
+            font-family:'Courier New', ui-monospace, monospace; font-size:12pt; line-height:1.35; color:#000;
             /* Thermal heads print thin strokes faintly. Courier New is monospace,
                so bold has identical advance widths - nothing reflows, it just
                lands darker and reads across the counter. */
@@ -44,40 +44,40 @@
             box-shadow:0 2px 14px rgba(0,0,0,.12);
         }
         .center { text-align:center; }
-        .rc-name { font-size:15pt; font-weight:700; letter-spacing:.3mm; }
-        .rc-sub { font-size:9.5pt; }
-        .rc-type { font-weight:700; font-size:13pt; letter-spacing:.6mm; margin:2mm 0 1mm; }
-        .rc-note { font-size:9.5pt; }
+        .rc-name { font-size:16pt; font-weight:700; letter-spacing:.15mm; }
+        .rc-sub { font-size:10pt; }
+        .rc-type { font-weight:700; font-size:14pt; letter-spacing:.4mm; margin:2mm 0 1mm; }
+        .rc-note { font-size:10pt; }
         .hr { border:0; border-top:1px dashed #000; margin:2mm 0; }
 
-        .rc-meta { font-size:10.5pt; }
+        .rc-meta { font-size:11.5pt; }
         .rc-meta strong { font-weight:700; }
 
         .rc-item { display:flex; justify-content:space-between; gap:2mm; margin:1mm 0; page-break-inside:avoid; }
         .rc-item .qty { white-space:nowrap; }
         .rc-item .nm { flex:1; overflow-wrap:anywhere; }
         .rc-item .amt { white-space:nowrap; text-align:right; }
-        .rc-item-variant { font-size:10pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
+        .rc-item-variant { font-size:11pt; padding-left:4mm; overflow-wrap:anywhere; page-break-inside:avoid; }
 
         /* Customisations. Indented under their item so it is unambiguous which
            burger they belong to, and marked with +/- rather than colour: the
            print head is monochrome, so green and red would both come out black. */
-        .rc-opt { font-size:10pt; padding-left:6mm; overflow-wrap:anywhere; page-break-inside:avoid; }
+        .rc-opt { font-size:11pt; padding-left:4mm; overflow-wrap:anywhere; page-break-inside:avoid; }
         .rc-opt .lead { font-weight:700; }
 
         /* Order note. The one thing on the slip the kitchen must not skim past,
            so it gets a box of its own — the only boxed element on the receipt. */
         .rc-kitchen-note { border:1.5px solid #000; padding:1.5mm 2mm; margin:2mm 0; page-break-inside:avoid; }
-        .rc-kitchen-note .hdr { font-size:10.5pt; font-weight:700; letter-spacing:.3mm; margin-bottom:.8mm; }
-        .rc-kitchen-note .body { font-size:11.5pt; font-weight:700; overflow-wrap:anywhere; }
+        .rc-kitchen-note .hdr { font-size:11.5pt; font-weight:700; letter-spacing:.3mm; margin-bottom:.8mm; }
+        .rc-kitchen-note .body { font-size:12.5pt; font-weight:700; overflow-wrap:anywhere; }
 
-        .rc-row { display:flex; justify-content:space-between; gap:2mm; margin:.8mm 0; font-size:11pt; page-break-inside:avoid; }
-        .rc-row.total { font-weight:700; font-size:13.5pt; }
+        .rc-row { display:flex; justify-content:space-between; gap:2mm; margin:.8mm 0; font-size:12pt; page-break-inside:avoid; }
+        .rc-row.total { font-weight:700; font-size:15pt; }
 
         /* Monochrome print head — no colour, no grey. Everything stays solid black. */
-        .rc-paid { font-weight:700; text-align:center; letter-spacing:.3mm; padding:2mm 0; font-size:12pt; }
+        .rc-paid { font-weight:700; text-align:center; letter-spacing:.3mm; padding:2mm 0; font-size:13pt; }
 
-        .rc-foot { font-size:9pt; text-align:center; }
+        .rc-foot { font-size:10pt; text-align:center; }
 
         @media print {
             html, body { width:72mm; background:#fff; padding:0; margin:0; }
