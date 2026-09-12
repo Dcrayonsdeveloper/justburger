@@ -472,15 +472,15 @@
                         </div>
                     </div>
 
-                    {{-- Featured Card --}}
+                    {{-- Best Seller Card --}}
                     <div class="card overflow-hidden">
                         <div class="px-5 py-4">
                             <label class="flex items-center gap-2.5 cursor-pointer">
-                                <input type="checkbox" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}
+                                <input type="checkbox" name="is_bestseller" value="1" {{ old('is_bestseller') ? 'checked' : '' }}
                                        class="form-checkbox">
-                                <span class="text-sm font-semibold text-neutral-900">Featured product</span>
+                                <span class="text-sm font-semibold text-neutral-900">Best seller</span>
                             </label>
-                            <p class="text-xs text-neutral-500 mt-1 ml-6">Show this product in featured sections on the storefront.</p>
+                            <p class="text-xs text-neutral-500 mt-1 ml-6">Show this product in the Best Sellers row on the homepage.</p>
                         </div>
                     </div>
 

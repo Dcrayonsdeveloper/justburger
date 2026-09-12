@@ -46,18 +46,31 @@ class HomeController extends Controller
             ->take($newArrivalsCount)
             ->get();
 
-        // Bestsellers
-        $bestsellers = Product::query()
+        // Best Sellers — hand-picked by the shop, because ranking by sales_count
+        // alone put a bottle of water at the top of "what everyone orders" on the
+        // strength of two test orders. Falls back to sales_count while nothing is
+        // ticked, so the row is never empty on a fresh install.
+        $bestsellerQuery = fn () => Product::query()
             ->where('is_active', true)
             ->where('stock_quantity', '>', 0)
             ->where(function ($query) {
                 $query->whereDoesntHave('category')
                     ->orWhereHas('category', fn ($q) => $q->where('exclude_from_bestsellers', false));
             })
-            ->with($productEager)
+            ->with($productEager);
+
+        $bestsellers = $bestsellerQuery()
+            ->where('is_bestseller', true)
             ->orderBy('sales_count', 'desc')
             ->take($bestsellersCount)
             ->get();
+
+        if ($bestsellers->isEmpty()) {
+            $bestsellers = $bestsellerQuery()
+                ->orderBy('sales_count', 'desc')
+                ->take($bestsellersCount)
+                ->get();
+        }
 
         // Deal products (where price < mrp)
         $deals = Product::query()
