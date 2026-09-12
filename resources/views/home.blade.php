@@ -678,7 +678,7 @@
         <div class="ps-head">
             <div class="ps-head-text">
                 <p class="ps-eyebrow">What Everyone Orders</p>
-                <h2 class="jbp-h ps-title">Most Popular</h2>
+                <h2 class="jbp-h ps-title">Best Sellers</h2>
             </div>
             <a href="{{ route('products.index') }}" class="ps-view-all">
                 View All
