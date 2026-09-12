@@ -8,14 +8,16 @@ use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|StreamedResponse
     {
         // No cron on this host, so the collection window is applied whenever
         // someone looks at the orders. Cheap, indexed, and idempotent.
@@ -51,6 +53,14 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
+        // Export sits here rather than on its own route so it inherits every
+        // filter applied above: what downloads is exactly the list on screen,
+        // not the whole table. The button has always linked to ?export=csv —
+        // there was simply nothing answering it, so it re-rendered the page.
+        if ($request->get('export') === 'csv') {
+            return $this->exportCsv($query);
+        }
+
         $perPage = min((int) $request->input('per_page', 10), 100);
         $orders = $query->latest()->paginate($perPage)->withQueryString();
 
@@ -66,6 +76,74 @@ class OrderController extends Controller
         ];
 
         return view('admin.orders.index', compact('orders', 'stats'));
+    }
+
+    /**
+     * Stream the filtered orders as a CSV.
+     *
+     * Streamed rather than built in memory: a year of orders is far more rows
+     * than the page ever shows, and the shop should not have to think about
+     * that before clicking Export.
+     */
+    private function exportCsv(Builder $query): StreamedResponse
+    {
+        $orders = $query->with(['items', 'user'])->latest()->get();
+
+        $filename = 'orders-' . now()->format('Y-m-d-His') . '.csv';
+
+        return response()->streamDownload(function () use ($orders) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'order_number', 'placed_at', 'customer', 'phone', 'status',
+                'payment_status', 'payment_method', 'items', 'item_count',
+                'subtotal', 'discount', 'total', 'currency', 'receipt_printed_at', 'notes',
+            ]);
+
+            foreach ($orders as $order) {
+                // Each line as the kitchen saw it, customisations included — an
+                // export that drops them cannot be reconciled against a receipt.
+                $items = $order->items->map(function ($item) {
+                    $line = $item->quantity . ' x ' . $item->product_name;
+                    $opts = $item->toppings_list;
+
+                    $extras = collect($opts['added'] ?? [])->pluck('name')->filter();
+                    $without = collect($opts['removed'] ?? [])->pluck('name')->filter();
+
+                    $notes = [];
+                    if ($extras->isNotEmpty()) {
+                        $notes[] = '+' . $extras->implode(', ');
+                    }
+                    if ($without->isNotEmpty()) {
+                        $notes[] = 'no ' . $without->implode(', ');
+                    }
+
+                    return $line . ($notes ? ' (' . implode('; ', $notes) . ')' : '');
+                })->implode(' | ');
+
+                fputcsv($handle, [
+                    $order->order_number,
+                    $order->created_at?->format('Y-m-d H:i'),
+                    $order->shipping_address_snapshot['name'] ?? $order->guest_name ?? ($order->user->full_name ?? 'Guest'),
+                    $order->shipping_address_snapshot['phone'] ?? $order->guest_phone ?? ($order->user->phone ?? ''),
+                    $order->status,
+                    $order->payment_status,
+                    $order->metadata['payment_method'] ?? '',
+                    $items,
+                    $order->items->sum('quantity'),
+                    $order->subtotal,
+                    $order->discount,
+                    $order->total,
+                    $order->currency,
+                    $order->receipt_printed_at?->format('Y-m-d H:i'),
+                    $order->notes,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     public function show(Order $order): View

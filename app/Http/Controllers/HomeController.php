@@ -74,7 +74,14 @@ class HomeController extends Controller
             ->select('id', 'name', 'slug', 'image_url', 'icon')
             ->where('is_active', true)
             ->withCount(['products' => fn($q) => $q->where('is_active', true)])
+            // One product per category, purely to borrow its photo for the tile —
+            // so it has to be one that actually has a photo. Without whereHas the
+            // single row picked was arbitrary, and a category whose first product
+            // happened to have no image fell through to the emoji even though its
+            // other products were all photographed. That is what put a chicken
+            // drumstick emoji on the Chicken Strips tile.
             ->with(['products' => fn($q) => $q->where('is_active', true)
+                ->whereHas('primaryImage')
                 ->select('id', 'category_id')
                 ->with('primaryImage')
                 ->limit(1)])
