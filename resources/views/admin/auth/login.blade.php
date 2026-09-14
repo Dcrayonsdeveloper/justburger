@@ -261,5 +261,6 @@
             &copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', config('app.name')) }}
         </div>
     </div>
+    @include('partials.password-toggle')
 </body>
 </html>

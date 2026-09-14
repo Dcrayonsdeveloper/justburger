@@ -193,5 +193,6 @@
         </div>
 
     </div>
+    @include('partials.password-toggle')
 </body>
 </html>

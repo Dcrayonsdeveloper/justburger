@@ -67,5 +67,6 @@
     </div>
 
     @include('partials.footer')
+    @include('partials.password-toggle')
 </body>
 </html>

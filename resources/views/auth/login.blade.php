@@ -266,10 +266,7 @@
                     @csrf
                     <input type="hidden" name="email" :value="identifier">
                     <div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
-                            <label class="auth-label" style="margin:0;">Password</label>
-                            <a href="{{ route('password.request') }}" class="auth-link">Forgot?</a>
-                        </div>
+                        <label class="auth-label" style="display:block;margin:0 0 .4rem;">Password</label>
                         <input type="password" name="password" required autocomplete="current-password"
                                class="auth-input" :class="{ 'auth-input-error': error }">
                     </div>
@@ -502,5 +499,6 @@ function otpReset() {
     };
 }
 </script>
+    @include('partials.password-toggle')
 </body>
 </html>
