@@ -259,7 +259,7 @@
                                 <div>
                                     <label for="price" class="form-label form-label-required">Price</label>
                                     <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">$</span>
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">&pound;</span>
                                         <input type="number" name="price" id="price" value="{{ old('price', $product->price) }}" required
                                                step="0.01" min="0"
                                                class="form-input w-full pl-7 @error('price') form-input-error @enderror">
@@ -272,7 +272,7 @@
                                 <div>
                                     <label for="sale_price" class="form-label">Compare at price / MRP</label>
                                     <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">$</span>
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">&pound;</span>
                                         <input type="number" name="sale_price" id="sale_price" value="{{ old('sale_price', $product->sale_price) }}"
                                                step="0.01" min="0"
                                                class="form-input w-full pl-7 @error('sale_price') form-input-error @enderror">
@@ -284,7 +284,7 @@
                                 <div>
                                     <label for="cost_price" class="form-label">Cost price</label>
                                     <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">$</span>
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">&pound;</span>
                                         <input type="number" name="cost_price" id="cost_price" value="{{ old('cost_price', $product->cost_price) }}"
                                                step="0.01" min="0"
                                                class="form-input w-full pl-7 @error('cost_price') form-input-error @enderror">
@@ -551,8 +551,6 @@
 
                 </div>
             </div>
-
-            @include('admin.products._ingredients-panel')
 
             @include('admin.products._customize-panel')
 
