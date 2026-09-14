@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Topping;
 use App\Models\ToppingGroup;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -128,6 +130,40 @@ class CustomizeController extends Controller
             . ($topping->is_active ? 'active' : 'inactive') . '.');
     }
 
+
+    /**
+     * Flip Pre-select for an option across the whole menu.
+     *
+     * Pre-select is a per-product decision (product_topping.is_default) — the
+     * same option can be included on a burger and optional on chips. This is
+     * the "set it everywhere" control: it writes the option's default, for
+     * products that offer it later, and applies it to every product already
+     * offering it. An individual item can still be overridden on its own edit
+     * screen afterwards.
+     *
+     * The price is left exactly as it is: pre-select decides what starts
+     * ticked, the price decides what it costs, and the customer pays for
+     * whatever they leave ticked either way.
+     */
+    public function togglePreselected(Topping $topping): RedirectResponse
+    {
+        $on = ! $topping->is_preselected;
+
+        DB::transaction(function () use ($topping, $on) {
+            $topping->update(['is_preselected' => $on]);
+
+            DB::table('product_topping')
+                ->where('topping_id', $topping->id)
+                ->update(['is_default' => $on]);
+        });
+
+        $count = DB::table('product_topping')->where('topping_id', $topping->id)->count();
+
+        return back()->with('success', $on
+            ? "\"{$topping->name}\" now arrives ticked on {$count} " . Str::plural('item', $count) . '.'
+            : "\"{$topping->name}\" is now optional on {$count} " . Str::plural('item', $count) . '.');
+    }
+
     /**
      * Shared validation for the add form and the edit dialog.
      *
@@ -152,6 +188,7 @@ class CustomizeController extends Controller
 
         if (! $topping) {
             $data['is_active'] = $request->boolean('is_active');
+            $data['is_preselected'] = $request->boolean('is_preselected');
             // Legacy free-text column, superseded by topping_group_id. Kept in
             // step so a rollback of the sections migration still reads sanely.
             $data['group'] = 'extras';

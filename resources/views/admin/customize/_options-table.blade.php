@@ -9,6 +9,7 @@
             <tr class="bg-neutral-50 border-b border-neutral-200">
                 <th class="text-left px-4 py-2.5 font-semibold text-neutral-600">Option</th>
                 <th class="text-left px-4 py-2.5 font-semibold text-neutral-600">Price</th>
+                <th class="text-center px-4 py-2.5 font-semibold text-neutral-600">Pre-select</th>
                 <th class="text-center px-4 py-2.5 font-semibold text-neutral-600">Status</th>
                 <th class="text-right px-4 py-2.5 font-semibold text-neutral-600">Actions</th>
             </tr>
@@ -23,6 +24,20 @@
                         @else
                             <span class="text-green-600 font-medium">Included</span>
                         @endif
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        {{-- Sets the option everywhere: the default for items that
+                             take it on later, and every item already offering it.
+                             A single item can still be overridden on its own screen. --}}
+                        <form action="{{ route('admin.customize.toggle-preselected', $topping) }}" method="POST" class="inline-flex items-center gap-2">
+                            @csrf @method('PUT')
+                            <button type="submit" role="switch" aria-checked="{{ $topping->is_preselected ? 'true' : 'false' }}"
+                                    title="{{ $topping->is_preselected ? 'Stop this arriving ticked on every item that offers it' : 'Make this arrive ticked on every item that offers it' }}"
+                                    style="position:relative;display:inline-block;width:2.5rem;height:1.35rem;border:none;border-radius:99px;cursor:pointer;transition:background .15s;background:{{ $topping->is_preselected ? '#C8102E' : '#d4d4d4' }};">
+                                <span style="position:absolute;top:.15rem;left:.15rem;width:1.05rem;height:1.05rem;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s;{{ $topping->is_preselected ? 'transform:translateX(1.15rem);' : '' }}"></span>
+                            </button>
+                            <span class="text-xs font-medium {{ $topping->is_preselected ? 'text-primary-700' : 'text-neutral-400' }}">{{ $topping->is_preselected ? 'On' : 'Off' }}</span>
+                        </form>
                     </td>
                     <td class="px-4 py-3 text-center">
                         <form action="{{ route('admin.customize.toggle-active', $topping) }}" method="POST" class="inline-flex items-center gap-2">
@@ -59,7 +74,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="px-4 py-6 text-center text-neutral-400">
+                    <td colspan="5" class="px-4 py-6 text-center text-neutral-400">
                         No options in this section yet.
                     </td>
                 </tr>

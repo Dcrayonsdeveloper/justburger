@@ -167,6 +167,13 @@
                                    class="w-32 px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <p class="text-xs text-neutral-400 mt-1">Leave blank (or 0) and it shows as &ldquo;Included&rdquo;.</p>
                         </div>
+                        <div>
+                            <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" name="is_preselected" value="1" class="form-checkbox">
+                                <span class="text-sm text-neutral-700">Pre-select</span>
+                            </label>
+                            <p class="text-xs text-neutral-400 mt-1">Arrives already ticked on every item that offers it.</p>
+                        </div>
                     </div>
                     <div class="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-neutral-100">
                         <button type="button" @click="addingTo = null" class="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900">Cancel</button>

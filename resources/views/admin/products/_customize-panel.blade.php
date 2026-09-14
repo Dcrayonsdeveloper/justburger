@@ -18,10 +18,21 @@
     $offeredIds = collect(old('toppings', $isEdit ? $product->toppings->pluck('id')->all() : []))
         ->map(fn ($id) => (int) $id)->all();
 
-    $preselectIds = collect(old(
-        'topping_preselect',
-        $isEdit ? $product->toppings->where('pivot.is_default', true)->pluck('id')->all() : []
-    ))->map(fn ($id) => (int) $id)->all();
+    // An option already on this product keeps whatever was chosen for it here.
+    // One that is not yet on it falls back to the option's own Pre-select
+    // switch on the Customize page, which is what that switch is for — the
+    // default for items that take the option on later.
+    $savedPreselect = $isEdit
+        ? $product->toppings->where('pivot.is_default', true)->pluck('id')->all()
+        : [];
+    $linkedIds = $isEdit ? $product->toppings->pluck('id')->all() : [];
+
+    $preselectIds = collect(old('topping_preselect', array_merge(
+        $savedPreselect,
+        $toppingGroups->flatMap->toppings
+            ->filter(fn ($t) => $t->is_preselected && ! in_array($t->id, $linkedIds, true))
+            ->pluck('id')->all()
+    )))->map(fn ($id) => (int) $id)->all();
 
     // A section with no saved row has never been chosen for this product, so it
     // stays off until someone picks it. On create everything starts off.
