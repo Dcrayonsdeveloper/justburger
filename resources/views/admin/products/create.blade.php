@@ -487,11 +487,13 @@
                 </div>
             </div>
 
+            @include('admin.products._ingredients-panel')
+
             @include('admin.products._customize-panel')
 
 
             {{-- Sticky Save Bar --}}
-            <div class="sticky bottom-0 z-40 mt-5 -mx-6 px-6 py-3 bg-white border-t border-neutral-200 flex items-center justify-end gap-3" style="margin-left: -1.5rem; margin-right: -1.5rem; padding-left: 1.5rem; padding-right: 1.5rem;">
+            <div class="sticky bottom-0 z-40 mt-5 py-3 bg-white border-t border-neutral-200 flex items-center justify-end gap-3" style="margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px;">
                 <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">Discard</a>
                 <button type="button" class="btn btn-primary" @click="submitProduct()">Save</button>
             </div>

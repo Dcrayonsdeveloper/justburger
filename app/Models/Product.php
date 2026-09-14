@@ -209,6 +209,16 @@ class Product extends Model
     }
 
     /**
+     * What this item is made of. Typed on the product itself rather than
+     * picked from the shared topping library, and always included — the popup
+     * shows them ticked so the customer can only take one off.
+     */
+    public function ingredients(): HasMany
+    {
+        return $this->hasMany(ProductIngredient::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
      * Which sections of the customize popup this product shows. A section
      * switched off hides its options here without disturbing which ones are
      * ticked, so switching it back on restores the earlier selection.
