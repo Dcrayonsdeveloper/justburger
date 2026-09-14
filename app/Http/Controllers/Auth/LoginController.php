@@ -40,6 +40,24 @@ class LoginController extends Controller
             'password' => $validated['password'],
         ];
 
+        // A deactivated account is told why, rather than being left to guess at
+        // a password that is in fact correct. Checked before the attempt so a
+        // deactivated customer is never signed in, even briefly. Deleted
+        // accounts are gone outright, so they fall through to the generic
+        // message below and the person is free to sign up again.
+        if ($user && ! $user->is_active) {
+            $message = 'This account has been deactivated. Please contact us if you think this is a mistake.';
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'errors' => ['email' => [$message]],
+                ], 422);
+            }
+
+            return back()->withErrors(['email' => $message])->onlyInput('email');
+        }
+
         if ($user && Auth::attempt($credentials, $request->boolean('remember'))) {
             $this->mergeGuestCart($request);
             $request->session()->regenerate();

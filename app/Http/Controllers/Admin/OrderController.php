@@ -11,6 +11,8 @@ use App\Models\OrderStatusHistory;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -264,5 +266,33 @@ class OrderController extends Controller
             'order' => $order,
             'backUrl' => route('admin.orders.show', $order),
         ]);
+    }
+
+    /**
+     * Delete the orders ticked in the list.
+     *
+     * Orders are not soft-deleted, so this is permanent — every child row
+     * (items, payments, status history, commissions) goes with it via the
+     * cascading foreign keys. The list warns before submitting.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:orders,id'],
+        ]);
+
+        $count = 0;
+
+        DB::transaction(function () use ($validated, &$count) {
+            // Deleted one at a time rather than in a single mass delete so the
+            // model's own delete path still runs for each order.
+            foreach (Order::whereIn('id', $validated['ids'])->get() as $order) {
+                $order->delete();
+                $count++;
+            }
+        });
+
+        return back()->with('success', $count . ' ' . Str::plural('order', $count) . ' deleted.');
     }
 }

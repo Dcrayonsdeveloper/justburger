@@ -13,7 +13,8 @@
     </div>
 
     {{-- Main card --}}
-    <div style="background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.07)">
+    <div style="background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.07)"
+         x-data="categoryBulkActions()">
 
         {{-- Tab row + toolbar --}}
         <div class="flex items-center justify-between" style="padding:0 12px;border-bottom:1px solid #e1e1e1">
@@ -22,35 +23,26 @@
                 <button style="font-size:13px;font-weight:500;color:#1a1a1a;padding:10px 12px;border-bottom:2px solid #1a1a1a;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer">
                     All
                 </button>
-                {{-- "+" tab button --}}
-                <button style="font-size:13px;color:#616161;padding:10px 8px;background:none;border:none;cursor:pointer;display:flex;align-items:center" title="Create view">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 5v10M5 10h10" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                </button>
             </div>
+        </div>
 
-            {{-- Right toolbar: search, filter, sort --}}
-            <div class="flex items-center gap-1" style="padding:6px 0">
-                {{-- Search --}}
-                <button style="padding:6px;background:none;border:1px solid #ccc;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Search">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path d="M8.5 3a5.5 5.5 0 014.383 8.823l3.896 3.9a.75.75 0 01-1.06 1.06l-3.9-3.896A5.5 5.5 0 118.5 3zm0 1.5a4 4 0 100 8 4 4 0 000-8z" fill="#616161"/>
-                    </svg>
+        {{-- Bulk actions bar — only once something is ticked --}}
+        <div x-show="selected.length > 0" x-cloak
+             class="flex items-center gap-3"
+             style="padding:10px 12px;background:#f7f7f7;border-bottom:1px solid #e1e1e1">
+            <span style="font-size:13px;color:#1a1a1a" x-text="selected.length + ' selected'"></span>
+            <form method="POST" action="{{ route('admin.categories.bulk-delete') }}" class="inline" @submit="return confirmDelete($event)">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit"
+                        style="background:#fff;border:1px solid #ccc;color:#d72c0d;font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px;cursor:pointer"
+                        onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='#fff'">
+                    Delete selected
                 </button>
-                {{-- Filter --}}
-                <button style="padding:6px;background:none;border:1px solid #ccc;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Filter">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path d="M2 5.5A.5.5 0 012.5 5h15a.5.5 0 010 1h-15a.5.5 0 01-.5-.5zm3 5a.5.5 0 01.5-.5h9a.5.5 0 010 1h-9a.5.5 0 01-.5-.5zm3 5a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5z" fill="#616161"/>
-                    </svg>
-                </button>
-                {{-- Sort --}}
-                <button style="padding:6px;background:none;border:1px solid #ccc;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Sort">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                        <path d="M6 4.5a.75.75 0 01.75.75v8.69l1.72-1.72a.75.75 0 011.06 1.06l-3 3a.75.75 0 01-1.06 0l-3-3a.75.75 0 111.06-1.06l1.72 1.72V5.25A.75.75 0 016 4.5zm8 11a.75.75 0 01-.75-.75V6.06l-1.72 1.72a.75.75 0 01-1.06-1.06l3-3a.75.75 0 011.06 0l3 3a.75.75 0 01-1.06 1.06L14.75 6.06v8.69a.75.75 0 01-.75.75z" fill="#616161"/>
-                    </svg>
-                </button>
-            </div>
+            </form>
+            <button type="button" @click="selected = []" style="font-size:12px;color:#616161;background:none;border:none;cursor:pointer">Clear</button>
         </div>
 
         {{-- Table --}}
@@ -59,7 +51,10 @@
                 <thead>
                     <tr style="border-bottom:1px solid #e1e1e1">
                         <th style="width:28px;padding:10px 0 10px 12px;text-align:left">
-                            <input type="checkbox" style="width:16px;height:16px;accent-color:#1a1a1a;cursor:pointer;border-radius:4px" />
+                            <input type="checkbox" @change="toggleAll($event)"
+                                   :checked="allTicked" x-effect="$el.indeterminate = someTicked"
+                                   title="Select all on this page"
+                                   style="width:16px;height:16px;accent-color:#1a1a1a;cursor:pointer;border-radius:4px" />
                         </th>
                         <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:500;color:#616161">Title</th>
                         <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:500;color:#616161">Products</th>
@@ -73,7 +68,8 @@
                             onmouseenter="this.style.background='#f9f9f9'"
                             onmouseleave="this.style.background='#fff'">
                             <td style="width:28px;padding:10px 0 10px 12px" onclick="event.stopPropagation()">
-                                <input type="checkbox" value="{{ $category->id }}" style="width:16px;height:16px;accent-color:#1a1a1a;cursor:pointer;border-radius:4px" />
+                                <input type="checkbox" value="{{ $category->id }}" x-model="selected"
+                                       style="width:16px;height:16px;accent-color:#1a1a1a;cursor:pointer;border-radius:4px" />
                             </td>
                             <td style="padding:10px 12px">
                                 <div class="flex items-center gap-3">
@@ -170,4 +166,34 @@
             </div>
         @endif
     </div>
+
+@push('scripts')
+<script>
+    // Ticking rows reveals the bulk bar; the header box drives every row on the
+    // page and shows the indeterminate dash while only some are ticked.
+    function categoryBulkActions() {
+        return {
+            selected: [],
+            ids: @json($categories->pluck('id')->map(fn ($id) => (string) $id)),
+            get allTicked() {
+                return this.ids.length > 0 && this.selected.length === this.ids.length;
+            },
+            get someTicked() {
+                return this.selected.length > 0 && this.selected.length < this.ids.length;
+            },
+            toggleAll(e) {
+                this.selected = e.target.checked ? [...this.ids] : [];
+            },
+            confirmDelete(e) {
+                const n = this.selected.length;
+                if (!confirm('Delete ' + n + ' ' + (n === 1 ? 'collection' : 'collections') + '? Products in them are kept but left with no category.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            },
+        };
+    }
+</script>
+@endpush
 </x-layouts.admin>

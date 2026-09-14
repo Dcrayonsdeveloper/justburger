@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -196,6 +197,39 @@ class CategoryController extends Controller
             ->with('success', 'Category deleted successfully.');
     }
 
+
+    /**
+     * Delete the categories ticked in the list.
+     *
+     * Same rules as deleting one: children move up to the parent and products
+     * are unassigned rather than deleted, so nothing disappears from the menu
+     * by accident — the items just end up with no category.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:categories,id'],
+        ]);
+
+        $count = 0;
+
+        DB::transaction(function () use ($validated, &$count) {
+            foreach (Category::whereIn('id', $validated['ids'])->get() as $category) {
+                $category->children()->update(['parent_id' => $category->parent_id]);
+                $category->products()->update(['category_id' => null]);
+
+                if ($category->image_url) {
+                    Storage::disk('public')->delete($category->image_url);
+                }
+
+                $category->delete();
+                $count++;
+            }
+        });
+
+        return back()->with('success', $count . ' ' . Str::plural('category', $count) . ' deleted.');
+    }
 
     public function toggleStatus(Category $category): RedirectResponse
     {

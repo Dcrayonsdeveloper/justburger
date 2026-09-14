@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
@@ -111,6 +113,105 @@ class CustomerController extends Controller
         $status = $customer->is_active ? 'activated' : 'deactivated';
 
         return back()->with('success', "Customer account {$status}.");
+    }
+
+
+    /**
+     * Deactivate the customers ticked in the list.
+     *
+     * A deactivated account stays in the system with its orders intact; the
+     * customer simply cannot sign in, and any session they already have is
+     * dropped so they are signed out wherever they are logged in right now.
+     */
+    public function bulkDeactivate(Request $request): RedirectResponse
+    {
+        $ids = $this->validatedCustomerIds($request);
+
+        $count = User::whereIn('id', $ids)
+            ->where('role', 'customer')
+            ->update(['is_active' => false]);
+
+        $this->forceLogout($ids);
+
+        return back()->with('success', $count . ' ' . Str::plural('customer', $count) . ' deactivated and signed out.');
+    }
+
+    /**
+     * Reactivate the customers ticked in the list, so a deactivation can be
+     * undone without going into each account.
+     */
+    public function bulkActivate(Request $request): RedirectResponse
+    {
+        $ids = $this->validatedCustomerIds($request);
+
+        $count = User::whereIn('id', $ids)
+            ->where('role', 'customer')
+            ->update(['is_active' => true]);
+
+        return back()->with('success', $count . ' ' . Str::plural('customer', $count) . ' reactivated.');
+    }
+
+    /**
+     * Delete the customers ticked in the list.
+     *
+     * Deleted for real, not soft-deleted: the email and phone are unique, so a
+     * row left behind would block the same person signing up again. Their past
+     * orders are kept — the customer's details are copied onto each order's
+     * guest fields first, so the order history stays readable afterwards
+     * instead of every one of them turning into an anonymous "Guest".
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->validatedCustomerIds($request);
+
+        $count = 0;
+
+        DB::transaction(function () use ($ids, &$count) {
+            $customers = User::whereIn('id', $ids)->where('role', 'customer')->get();
+
+            foreach ($customers as $customer) {
+                Order::where('user_id', $customer->id)
+                    ->whereNull('guest_email')
+                    ->update([
+                        'guest_email' => $customer->email,
+                        'guest_name' => trim($customer->first_name . ' ' . $customer->last_name) ?: $customer->username,
+                        'guest_phone' => $customer->phone,
+                    ]);
+
+                // orders.user_id is nullOnDelete, so the orders survive.
+                $customer->forceDelete();
+                $count++;
+            }
+        });
+
+        $this->forceLogout($ids);
+
+        return back()->with('success', $count . ' ' . Str::plural('customer', $count)
+            . ' deleted. Their orders are kept, and they can sign up again with the same details.');
+    }
+
+    private function validatedCustomerIds(Request $request): array
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:users,id'],
+        ]);
+
+        return array_map('intval', $validated['ids']);
+    }
+
+    /**
+     * Drop these users' sessions so they are signed out immediately rather than
+     * at the end of their session lifetime, and cycle the remember-me token so
+     * a saved cookie cannot quietly sign them back in.
+     */
+    private function forceLogout(array $ids): void
+    {
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->whereIn('user_id', $ids)->delete();
+        }
+
+        User::whereIn('id', $ids)->update(['remember_token' => null]);
     }
 
     public function orders(User $customer): View
