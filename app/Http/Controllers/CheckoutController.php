@@ -290,6 +290,10 @@ class CheckoutController extends Controller
                 'tax' => 0,
                 'total' => $finalTotal,
                 'paid_amount' => $codAdvance,
+                // Without this the row falls back to the orders table default of
+                // 'INR', and the admin panel — which prints the column raw —
+                // showed a Feltham burger shop's takings in rupees.
+                'currency' => currency_config('code'),
                 'coupon_id' => $cart->coupon_id,
                 'affiliate_id' => $affiliateId,
                 'affiliate_referral_code' => $affiliateRefCode,
@@ -313,12 +317,19 @@ class CheckoutController extends Controller
                     // it here returned null and fataled on ->pluck(). The variant
                     // carries its own name.
                     'variant_name' => $item->variant?->name,
+                    // The customer's choices, frozen at the moment of ordering.
+                    // Without this the kitchen is handed a bare product name and
+                    // has no idea the burger was meant to come without onions.
+                    'product_snapshot' => ['toppings' => $item->toppings_list],
                     'quantity' => $item->quantity,
                     'mrp' => $item->product->mrp ?? $item->price,
                     'price' => $item->price,
                     'tax' => 0,
                     'discount' => 0,
-                    'total' => $item->price * $item->quantity,
+                    // Toppings are charged for, so they belong in the line total.
+                    // Leaving them out made the lines fail to add up to the order
+                    // total the customer actually paid.
+                    'total' => ($item->price + $item->toppings_total) * $item->quantity,
                 ]);
 
                 // Atomic stock decrement with check to prevent overselling
@@ -584,7 +595,7 @@ class CheckoutController extends Controller
                 'tax' => 0,
                 'total' => $finalTotal,
                 'paid_amount' => 0,
-                'currency' => 'GBP',
+                'currency' => currency_config('code'),
                 'coupon_id' => $cart->coupon_id,
                 'affiliate_id' => $affiliateId,
                 'affiliate_referral_code' => $affiliateRefCode,
@@ -608,12 +619,19 @@ class CheckoutController extends Controller
                     // it here returned null and fataled on ->pluck(). The variant
                     // carries its own name.
                     'variant_name' => $item->variant?->name,
+                    // The customer's choices, frozen at the moment of ordering.
+                    // Without this the kitchen is handed a bare product name and
+                    // has no idea the burger was meant to come without onions.
+                    'product_snapshot' => ['toppings' => $item->toppings_list],
                     'quantity' => $item->quantity,
                     'mrp' => $item->product->mrp ?? $item->price,
                     'price' => $item->price,
                     'tax' => 0,
                     'discount' => 0,
-                    'total' => $item->price * $item->quantity,
+                    // Toppings are charged for, so they belong in the line total.
+                    // Leaving them out made the lines fail to add up to the order
+                    // total the customer actually paid.
+                    'total' => ($item->price + $item->toppings_total) * $item->quantity,
                 ]);
             }
 

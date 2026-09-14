@@ -133,11 +133,29 @@
                                 @if($item->variant_name)
                                     <p class="text-sm text-neutral-600 mt-0.5">{{ $item->variant_name }}</p>
                                 @endif
+
+                                {{-- What the customer actually asked for. Whoever is
+                                     checking an order against the bag needs this on
+                                     screen, not just on the printed slip. --}}
+                                @php $opts = $item->toppings_list; @endphp
+                                @if(!empty($opts['kept']))
+                                    <p class="text-xs text-neutral-600 mt-1">With:
+                                        {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</p>
+                                @endif
+                                @if(!empty($opts['added']))
+                                    <p class="text-xs text-emerald-700 mt-0.5">+
+                                        {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</p>
+                                @endif
+                                @if(!empty($opts['removed']))
+                                    <p class="text-xs text-red-600 mt-0.5">No
+                                        {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</p>
+                                @endif
+
                                 <p class="text-xs text-neutral-600 font-mono mt-1">SKU: {{ $item->sku }}</p>
                             </div>
                             <div class="text-right shrink-0">
-                                <p class="text-sm text-neutral-600">{{ $order->currency }} {{ number_format($item->price, 2) }} &times; {{ $item->quantity }}</p>
-                                <p class="text-base font-bold text-neutral-900 mt-1">{{ $order->currency }} {{ number_format($item->total, 2) }}</p>
+                                <p class="text-sm text-neutral-600">{{ format_price($item->price) }} &times; {{ $item->quantity }}</p>
+                                <p class="text-base font-bold text-neutral-900 mt-1">{{ format_price($item->total) }}</p>
                             </div>
                         </div>
                     @endforeach
@@ -145,25 +163,25 @@
                 <div class="px-5 py-4 bg-neutral-50/80 border-t border-neutral-200 space-y-2">
                     <div class="flex justify-between text-sm text-neutral-600">
                         <span>Subtotal</span>
-                        <span>{{ $order->currency }} {{ number_format($order->subtotal, 2) }}</span>
+                        <span>{{ format_price($order->subtotal) }}</span>
                     </div>
                     @if($order->discount > 0)
                         <div class="flex justify-between text-sm text-success-600">
                             <span>Discount</span>
-                            <span>-{{ $order->currency }} {{ number_format($order->discount, 2) }}</span>
+                            <span>-{{ format_price($order->discount) }}</span>
                         </div>
                     @endif
                     <div class="flex justify-between text-sm text-neutral-600">
                         <span>Shipping</span>
-                        <span>{{ $order->currency }} {{ number_format($order->shipping_cost, 2) }}</span>
+                        <span>{{ format_price($order->shipping_cost) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-neutral-600">
                         <span>Tax</span>
-                        <span>{{ $order->currency }} {{ number_format($order->tax, 2) }}</span>
+                        <span>{{ format_price($order->tax) }}</span>
                     </div>
                     <div class="flex justify-between text-base font-bold text-neutral-900 pt-2 border-t border-neutral-200">
                         <span>Total</span>
-                        <span>{{ $order->currency }} {{ number_format($order->total, 2) }}</span>
+                        <span>{{ format_price($order->total) }}</span>
                     </div>
                 </div>
             </div>

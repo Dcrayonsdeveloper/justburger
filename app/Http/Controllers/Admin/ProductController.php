@@ -141,6 +141,7 @@ class ProductController extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'is_bestseller' => 'boolean',
             'customize_enabled' => 'boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
@@ -153,7 +154,16 @@ class ProductController extends Controller
 
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
-        $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['is_bestseller'] = $request->boolean('is_bestseller');
+        // Only touch is_featured when the form actually submitted it. The product
+        // form no longer carries that checkbox, and boolean() on an absent field
+        // returns false — which would have quietly un-featured every product the
+        // moment anyone saved it.
+        if ($request->has('is_featured')) {
+            $validated['is_featured'] = $request->boolean('is_featured');
+        } else {
+            unset($validated['is_featured']);
+        }
         $validated['customize_enabled'] = $request->boolean('customize_enabled');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
@@ -248,6 +258,7 @@ class ProductController extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'is_bestseller' => 'boolean',
             'customize_enabled' => 'boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
@@ -262,7 +273,16 @@ class ProductController extends Controller
 
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
-        $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['is_bestseller'] = $request->boolean('is_bestseller');
+        // Only touch is_featured when the form actually submitted it. The product
+        // form no longer carries that checkbox, and boolean() on an absent field
+        // returns false — which would have quietly un-featured every product the
+        // moment anyone saved it.
+        if ($request->has('is_featured')) {
+            $validated['is_featured'] = $request->boolean('is_featured');
+        } else {
+            unset($validated['is_featured']);
+        }
         $validated['customize_enabled'] = $request->boolean('customize_enabled');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;

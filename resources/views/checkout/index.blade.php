@@ -181,6 +181,11 @@
         }
         .ck-item-img img { width:100%; height:100%; object-fit:cover; }
         .ck-item-name { font-size:.78rem; font-weight:600; color:#111111; line-height:1.3; }
+        /* Customisations, matching the cart's colour language: neutral for what
+           comes as standard, green for paid extras, red for what was taken off. */
+        .ck-item-opt { font-size:.68rem; line-height:1.3; margin:.1rem 0 0; color:#666666; }
+        .ck-item-opt--add { color:#16a34a; }
+        .ck-item-opt--del { color:#dc2626; }
         .ck-item-qty {
             display:inline-flex; align-items:center; gap:.35rem;
             margin-top:.25rem;
@@ -717,6 +722,24 @@
                                         </div>
                                         <div style="flex:1;min-width:0;">
                                             <p class="ck-item-name">{{ $item->product->name }}</p>
+
+                                            {{-- The same customisations the cart shows. Leaving them
+                                                 off here meant the last screen before paying was the
+                                                 one screen that did not say what had been ordered. --}}
+                                            @php $opts = $item->toppings_list; @endphp
+                                            @if(!empty($opts['kept']))
+                                                <p class="ck-item-opt">With:
+                                                    {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</p>
+                                            @endif
+                                            @if(!empty($opts['added']))
+                                                <p class="ck-item-opt ck-item-opt--add">+
+                                                    {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</p>
+                                            @endif
+                                            @if(!empty($opts['removed']))
+                                                <p class="ck-item-opt ck-item-opt--del">No
+                                                    {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</p>
+                                            @endif
+
                                             <div style="display:flex;align-items:center;justify-content:space-between;">
                                                 <span class="ck-item-qty">
                                                     <button type="button" class="ck-qty-btn" onclick="fetch('/cart/{{ $item->id }}',{method:'PUT',headers:{'Content-Type':'application/json','X-XSRF-TOKEN':decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]||''),'Accept':'application/json'},body:JSON.stringify({quantity:{{ max(1,$item->quantity-1) }}})}).then(()=>location.reload())">-</button>

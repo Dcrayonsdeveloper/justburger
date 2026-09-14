@@ -142,9 +142,23 @@
                 <span class="ml-auto text-xs rounded-full px-1.5" style="background:#C8102E;color:#fff">{{ $supportBadge }}</span>
                 @endif
             </button>
+            {{-- The parent badge totals both, which tells you something is waiting
+                 but not which. Each child carries its own count so a glance at the
+                 collapsed menu says where to go. Uses the counts already taken
+                 above — no extra queries per page load. --}}
             <div x-show="open" x-cloak class="ml-8 space-y-px mb-1">
-                <a href="{{ route('admin.enquiries.index') }}" class="{{ $subClass }} {{ $isActive('admin.enquiries.*') ? 'active' : '' }}">Enquiries</a>
-                <a href="{{ route('admin.support-tickets.index') }}" class="{{ $subClass }} {{ $isActive('admin.support-tickets.*') ? 'active' : '' }}">Tickets</a>
+                <a href="{{ route('admin.enquiries.index') }}" class="{{ $subClass }} flex items-center {{ $isActive('admin.enquiries.*') ? 'active' : '' }}">
+                    Enquiries
+                    @if($unreadEnquiries > 0)
+                        <span class="ml-auto text-[10px] leading-none rounded-full px-1.5 py-0.5" style="background:#C8102E;color:#fff">{{ $unreadEnquiries }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('admin.support-tickets.index') }}" class="{{ $subClass }} flex items-center {{ $isActive('admin.support-tickets.*') ? 'active' : '' }}">
+                    Tickets
+                    @if($openTickets > 0)
+                        <span class="ml-auto text-[10px] leading-none rounded-full px-1.5 py-0.5" style="background:#C8102E;color:#fff">{{ $openTickets }}</span>
+                    @endif
+                </a>
             </div>
         </div>
 

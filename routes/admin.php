@@ -99,6 +99,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 // Auto-print till. Declared before /{order} so "pending-prints" is
                 // not swallowed by the wildcard and looked up as an order id.
                 Route::get('/pending-prints', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'pending'])->name('pending-prints');
+
+                // Prints a stand-in receipt on demand, so the shop can prove the
+                // printer works before a real order depends on it.
+                Route::get('/print-test', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'test'])->name('print-test');
                 Route::post('/{order}/printed', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'markPrinted'])->name('printed');
 
                 Route::get('/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('show');

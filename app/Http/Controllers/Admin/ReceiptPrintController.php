@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * Backs the auto-print till.
@@ -36,9 +38,10 @@ class ReceiptPrintController extends Controller
             ? max($floor->timestamp, strtotime($validated['since']))
             : $floor->timestamp;
 
-        // Paid only. A receipt coming off the till is the kitchen's instruction to
-        // cook, so an unpaid or abandoned checkout must never produce one.
-        $orders = Order::paid()
+        // Confirmed only. A receipt coming off the till is the kitchen's instruction
+        // to cook, so an abandoned checkout must never produce one — but a cash
+        // order must, or the shop never learns it was placed.
+        $orders = Order::confirmed()
             ->whereNull('receipt_printed_at')
             ->where('status', '!=', Order::STATUS_CANCELLED)
             ->where('created_at', '>=', date('Y-m-d H:i:s', $since))
@@ -65,6 +68,66 @@ class ReceiptPrintController extends Controller
 
         return response()->json([
             'printed_at' => $order->receipt_printed_at?->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * A receipt that prints without waiting for a real order.
+     *
+     * Before a customer's dinner depends on it, the shop needs to prove the whole
+     * chain works — Chrome, the driver, the roll width, the cut. This renders the
+     * genuine receipt template with stand-in figures and fires print() on load,
+     * so what comes off the roll is exactly what a real order will look like.
+     * Nothing is saved: the order exists only for the length of this response.
+     */
+    public function test(): View
+    {
+        $order = new Order([
+            'order_number' => 'TEST-' . now()->format('Hi'),
+            'status' => Order::STATUS_PREPARING,
+            'payment_status' => 'paid',
+            'subtotal' => 14.50,
+            'discount' => 0,
+            'tax' => 0,
+            'shipping_cost' => 0,
+            'total' => 14.50,
+            'paid_amount' => 14.50,
+            'metadata' => ['delivery_method' => 'collection', 'payment_method' => 'card'],
+            'shipping_address_snapshot' => ['name' => 'Printer test — not a real order'],
+            // Exercises the note box, so a test print proves it prints legibly.
+            'notes' => 'Test note — no onions on the burger, extra napkins please.',
+        ]);
+        $order->created_at = now();
+
+        // Relations set by hand: an unsaved order has no id to query them with.
+        $order->setRelation('items', collect([
+            new OrderItem([
+                'product_name' => 'Classic Cheeseburger',
+                'variant_name' => 'Large 8oz',
+                'quantity' => 1,
+                'price' => 7.50,
+                'total' => 7.50,
+                // One of each kind, so a test print shows whether the
+                // customisation lines come out readable on the roll.
+                'product_snapshot' => ['toppings' => [
+                    'kept' => [['name' => 'Lettuce'], ['name' => 'Tomato']],
+                    'added' => [['name' => 'Extra Cheese', 'price' => 0.60]],
+                    'removed' => [['name' => 'Onion']],
+                ]],
+            ]),
+            new OrderItem([
+                'product_name' => 'Loaded Fries',
+                'quantity' => 2,
+                'price' => 3.50,
+                'total' => 7.00,
+            ]),
+        ]));
+        $order->setRelation('payments', collect());
+
+        return view('orders.receipt', [
+            'order' => $order,
+            'backUrl' => route('admin.orders.index'),
+            'isTest' => true,
         ]);
     }
 }

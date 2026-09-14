@@ -67,24 +67,6 @@
         .op-divider { display: none; width: 1px; background: rgba(255,255,255,.06); }
 
         /* ════════════════════════════════
-           LUNCHTIME DEAL  (rewards-style)
-        ════════════════════════════════ */
-        .ld-wrap  { background: #0d0a09; overflow: hidden; }
-        .ld-inner { max-width: 72rem; margin: 0 auto; padding: 5rem 1.5rem; display: flex; flex-direction: column; align-items: stretch; gap: 3rem; }
-        .ld-text  { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; order: 1; }
-        .ld-illus { flex: 1; min-height: 320px; order: 2; border-radius: 1.25rem; overflow: hidden; display: flex; }
-        .ld-illus img { flex: 1; width: 100%; object-fit: cover; display: block; min-height: 320px; }
-        .ld-tag   { display: inline-block; font-size: .68rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; background: #C8102E; color: #fff; padding: .3rem .85rem; margin-bottom: 1.1rem; border-radius: 2px; }
-        .ld-title { font-size: clamp(3rem, 7vw, 6rem); margin-bottom: .3rem; color: #fff; }
-        .ld-price { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight: 900; line-height: 1; color: #C8102E; font-size: clamp(4.5rem, 10vw, 8rem); margin-bottom: .25rem; }
-        .ld-note  { color: rgba(255,255,255,.32); font-size: .85rem; margin-bottom: 2.5rem; max-width: 320px; line-height: 1.6; }
-        .ld-btns  { display: flex; gap: .85rem; flex-wrap: wrap; justify-content: center; }
-        .ld-btn-p { display: inline-flex; align-items: center; gap: .5rem; background: #C8102E; color: #fff; font-size: .78rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; padding: .9rem 2.25rem; text-decoration: none; transition: background .2s; border-radius: 2px; }
-        .ld-btn-p:hover { background: #a50e25; }
-        .ld-btn-s { display: inline-flex; align-items: center; gap: .5rem; border: 1.5px solid rgba(255,255,255,.25); color: rgba(255,255,255,.6); font-size: .78rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; padding: .875rem 2.25rem; text-decoration: none; transition: all .2s; border-radius: 2px; }
-        .ld-btn-s:hover { border-color: #fff; color: #fff; }
-
-        /* ════════════════════════════════
            MENU CATEGORIES
         ════════════════════════════════ */
         .menu-section      { background: #111; padding: 3rem 0; }
@@ -187,11 +169,6 @@
             .hours-grid  { grid-template-columns: repeat(4, auto); gap: 1.25rem 2.5rem; }
         }
         @media (min-width: 1024px) {
-            .ld-inner { flex-direction: row; align-items: stretch; gap: 4rem; }
-            .ld-text  { align-items: flex-start; text-align: left; order: 1; }
-            .ld-illus { order: 2; min-height: 500px; border-radius: 1.5rem; flex: 1; }
-            .ld-illus img { min-height: 500px; height: 100%; }
-            .ld-btns  { justify-content: flex-start; }
             .cat-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (min-width: 1280px) {
@@ -301,9 +278,6 @@
         /* Our Story parallax */
         .story-bg { transition: transform .1s linear; will-change: transform; }
 
-        /* Lunchtime deal price animation */
-        .ld-price { transition: opacity .6s ease, transform .6s ease; }
-
         /* Fade-in on scroll — only hide when JS is ready (progressive enhancement) */
         .jb-ready .jb-reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; }
         .jb-ready .jb-reveal.jb-visible { opacity: 1; transform: translateY(0); }
@@ -394,32 +368,6 @@
                 const visible = Math.floor(this.track.offsetWidth / cw);
                 const idx = Math.round(this.track.scrollLeft / (cw * Math.max(visible, 1)));
                 this.cur = Math.min(idx + 1, this.pages);
-            }
-        };
-    }
-    function priceReveal(finalText) {
-        return {
-            display: finalText, finalText, animated: false,
-            animate() {
-                if (this.animated) return;
-                this.animated = true;
-                const match = this.finalText.match(/[\d.]+/);
-                if (!match) return;
-                const target = parseFloat(match[0]);
-                const prefix = this.finalText.slice(0, this.finalText.indexOf(match[0]));
-                const suffix = this.finalText.slice(this.finalText.indexOf(match[0]) + match[0].length);
-                const decimals = match[0].includes('.') ? match[0].split('.')[1].length : 0;
-                const duration = 800;
-                const start = performance.now();
-                const step = (now) => {
-                    const p = Math.min((now - start) / duration, 1);
-                    const ease = 1 - Math.pow(1 - p, 3);
-                    const val = (target * ease).toFixed(decimals);
-                    this.display = prefix + val + suffix;
-                    if (p < 1) requestAnimationFrame(step);
-                    else this.display = this.finalText;
-                };
-                requestAnimationFrame(step);
             }
         };
     }
@@ -590,7 +538,7 @@
 
         </div>
 
-        {{-- Slant → lunchtime deal --}}
+        {{-- Slant → next section --}}
         <span class="slant">
             <svg viewBox="0 0 1440 55" preserveAspectRatio="none"
                  style="display:block; height:44px; width:100%;" fill="#000">
@@ -598,50 +546,6 @@
             </svg>
         </span>
     </section>
-
-
-    {{-- ════════════════════════════════════════════════════════
-    ░░  S3 — LUNCHTIME DEAL  (Rewards-style promo)
-        Text LEFT · Illustration RIGHT (desktop)
-    ════════════════════════════════════════════════════════ --}}
-    @php $ld = $sections->get('lunchtime_deal'); @endphp
-    @if($ld)
-    <div class="ld-wrap jb-reveal">
-        <div class="ld-inner">
-
-            {{-- Text panel (left on desktop) --}}
-            <div class="ld-text">
-                @if(!empty($ld->content['tag']))
-                    <span class="ld-tag">{{ $ld->content['tag'] }}</span>
-                @endif
-                <h2 class="jbp-h ld-title">{!! nl2br(e($ld->title)) !!}</h2>
-                @if($ld->subtitle)
-                    <p style="color:rgba(255,255,255,.35);font-size:.95rem;margin-bottom:.4rem;font-weight:500;">{{ $ld->subtitle }}</p>
-                @endif
-                @if(!empty($ld->content['price']))
-                    <div class="ld-price" x-data="priceReveal('{{ $ld->content['price'] }}')" x-intersect:enter.once="animate()" x-text="display">{{ $ld->content['price'] }}</div>
-                @endif
-                @if(!empty($ld->content['note']))
-                    <p class="ld-note">{{ $ld->content['note'] }}</p>
-                @endif
-                <div class="ld-btns">
-                    <a href="{{ $ld->button_link ?: route('products.index') }}" class="ld-btn-p">
-                        {{ $ld->button_text ?: 'Order Now' }}
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
-                    </a>
-                    <a href="{{ route('products.index') }}" class="ld-btn-s">View Menu</a>
-                </div>
-            </div>
-
-            {{-- Illustration (right on desktop) --}}
-            <div class="ld-illus">
-                <img src="{{ $bannerImg($ld->image_url) }}" alt="{{ $ld->title }}"
-                     style="width:100%;height:100%;object-fit:cover;display:block;">
-            </div>
-
-        </div>
-    </div>
-    @endif
 
 
     {{-- ════════════════════════════════════════════════════════
@@ -774,7 +678,7 @@
         <div class="ps-head">
             <div class="ps-head-text">
                 <p class="ps-eyebrow">What Everyone Orders</p>
-                <h2 class="jbp-h ps-title">Most Popular</h2>
+                <h2 class="jbp-h ps-title">Best Sellers</h2>
             </div>
             <a href="{{ route('products.index') }}" class="ps-view-all">
                 View All
