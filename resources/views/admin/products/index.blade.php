@@ -77,25 +77,6 @@
                         @endif
                     </a>
                 @endforeach
-                {{-- Plus tab --}}
-                <button style="padding:10px 8px;color:#616161;background:none;border:none;cursor:pointer;font-size:16px;line-height:1" title="Create view">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
-                </button>
-            </div>
-            {{-- Right icons: search, filter, sort --}}
-            <div class="flex items-center gap-1">
-                {{-- Search icon --}}
-                <button style="padding:6px;color:#616161;background:none;border:none;cursor:pointer;border-radius:6px" onmouseover="this.style.background='#f1f1f1'" onmouseout="this.style.background='none'" title="Search">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
-                </button>
-                {{-- Filter icon --}}
-                <button style="padding:6px;color:#616161;background:none;border:none;cursor:pointer;border-radius:6px" onmouseover="this.style.background='#f1f1f1'" onmouseout="this.style.background='none'" title="Filter">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/></svg>
-                </button>
-                {{-- Sort icon --}}
-                <button style="padding:6px;color:#616161;background:none;border:none;cursor:pointer;border-radius:6px" onmouseover="this.style.background='#f1f1f1'" onmouseout="this.style.background='none'" title="Sort">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/></svg>
-                </button>
             </div>
         </div>
 

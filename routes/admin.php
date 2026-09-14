@@ -105,6 +105,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('/print-test', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'test'])->name('print-test');
                 Route::post('/{order}/printed', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'markPrinted'])->name('printed');
 
+                // Bulk delete from the list. Declared before /{order} so "bulk"
+                // is not looked up as an order id.
+                Route::post('/bulk-delete', [App\Http\Controllers\Admin\OrderController::class, 'bulkDestroy'])->name('bulk-delete');
+
                 Route::get('/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('show');
                 Route::put('/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('status');
                 Route::post('/{order}/ship', [App\Http\Controllers\Admin\OrderController::class, 'ship'])->name('ship');
@@ -140,6 +144,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/products/bulk-action', [App\Http\Controllers\Admin\ProductController::class, 'bulkAction'])->name('products.bulk-action');
 
             // Categories
+            // Declared before the resource routes so "bulk-delete" is not
+            // swallowed by categories/{category}.
+            Route::post('/categories/bulk-delete', [App\Http\Controllers\Admin\CategoryController::class, 'bulkDestroy'])->name('categories.bulk-delete');
             Route::resource('categories', App\Http\Controllers\Admin\CategoryController::class);
             Route::put('/categories/{category}/toggle-status', [App\Http\Controllers\Admin\CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
             Route::post('/categories/reorder', [App\Http\Controllers\Admin\CategoryController::class, 'reorder'])->name('categories.reorder');
@@ -147,13 +154,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Brands
             Route::resource('brands', App\Http\Controllers\Admin\BrandController::class);
 
-            // Customize (toppings) — single-screen manager
+            // Customize — single-screen manager for the popup's sections and options
             Route::get('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'index'])->name('customize.index');
+            Route::post('/customize/sections', [App\Http\Controllers\Admin\CustomizeController::class, 'storeGroup'])->name('customize.sections.store');
+            Route::put('/customize/sections/{group}', [App\Http\Controllers\Admin\CustomizeController::class, 'updateGroup'])->name('customize.sections.update');
+            Route::delete('/customize/sections/{group}', [App\Http\Controllers\Admin\CustomizeController::class, 'destroyGroup'])->name('customize.sections.destroy');
+            Route::put('/customize/sections/{group}/toggle-active', [App\Http\Controllers\Admin\CustomizeController::class, 'toggleGroupActive'])->name('customize.sections.toggle-active');
             Route::post('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'store'])->name('customize.store');
             Route::put('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'update'])->name('customize.update');
             Route::delete('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'destroy'])->name('customize.destroy');
             Route::put('/customize/{topping}/toggle-active', [App\Http\Controllers\Admin\CustomizeController::class, 'toggleActive'])->name('customize.toggle-active');
-            Route::put('/customize/{topping}/toggle-preselected', [App\Http\Controllers\Admin\CustomizeController::class, 'togglePreselected'])->name('customize.toggle-preselected');
 
             // Attributes
             Route::resource('attributes', App\Http\Controllers\Admin\AttributeController::class);
@@ -172,6 +182,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Customers
         Route::middleware('admin.section:customers')->group(function () {
+            // Declared before the resource routes so these are not looked up
+            // as customers/{customer}.
+            Route::post('/customers/bulk-deactivate', [App\Http\Controllers\Admin\CustomerController::class, 'bulkDeactivate'])->name('customers.bulk-deactivate');
+            Route::post('/customers/bulk-activate', [App\Http\Controllers\Admin\CustomerController::class, 'bulkActivate'])->name('customers.bulk-activate');
+            Route::post('/customers/bulk-delete', [App\Http\Controllers\Admin\CustomerController::class, 'bulkDestroy'])->name('customers.bulk-delete');
             Route::resource('customers', App\Http\Controllers\Admin\CustomerController::class)->except(['create', 'store', 'destroy']);
             Route::put('/customers/{customer}/toggle-status', [App\Http\Controllers\Admin\CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
             Route::get('/customers/{customer}/orders', [App\Http\Controllers\Admin\CustomerController::class, 'orders'])->name('customers.orders');

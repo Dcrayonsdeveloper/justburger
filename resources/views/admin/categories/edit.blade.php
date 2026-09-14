@@ -159,6 +159,15 @@
                             <span class="text-xs text-neutral-600">Keep products in this category out of the homepage bestsellers carousel (e.g. sauces, sides, add-ons)</span>
                         </label>
                     </div>
+
+                    <div>
+                        <label class="flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" name="show_on_homepage" value="1" {{ old('show_on_homepage', $category->show_on_homepage) ? 'checked' : '' }}
+                                   class="form-checkbox">
+                            <span class="text-sm text-neutral-700">Show on homepage</span>
+                            <span class="text-xs text-neutral-600">Give this category a tile in the "Our Menu" grid on the homepage. The grid shows the first six ticked categories, in Sort Order.</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 

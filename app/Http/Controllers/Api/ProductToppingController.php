@@ -14,53 +14,71 @@ class ProductToppingController extends Controller
         // the storefront skips the dialog and adds straight to the basket, even
         // if stale topping links are still on the row.
         if (! $product->customize_enabled) {
-            return response()->json([
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'defaults' => [],
-                'optionals' => [],
-                'has_toppings' => false,
-            ]);
+            return $this->empty($product);
         }
+
+        // Sections this product shows: active globally, and not switched off
+        // for this product. A section with no row on the pivot has never been
+        // saved against the product, so it stays hidden until someone picks it.
+        $disabledGroupIds = $product->toppingGroups()
+            ->wherePivot('is_enabled', false)
+            ->pluck('topping_groups.id')
+            ->all();
 
         // Only the toppings the admin picked for THIS product are offered (the
-        // product_topping pivot). The Customize toggle above is the master switch;
-        // this narrows the popup to the selected toppings. Whether each starts
-        // ticked is still the topping's own is_preselected flag.
+        // product_topping pivot). Whether each starts ticked is the per-product
+        // is_default flag on that same pivot.
         $toppings = $product->toppings()
             ->where('toppings.is_active', true)
+            ->whereNotNull('toppings.topping_group_id')
+            ->whereNotIn('toppings.topping_group_id', $disabledGroupIds)
+            ->with('toppingGroup')
             ->orderBy('toppings.position')
             ->orderBy('toppings.name')
-            ->get();
+            ->get()
+            ->filter(fn ($t) => $t->toppingGroup?->is_active);
 
-        $defaults = [];
-        $optionals = [];
+        $sections = $toppings
+            ->groupBy('topping_group_id')
+            ->map(fn ($items) => [
+                'id' => $items->first()->toppingGroup->id,
+                'name' => $items->first()->toppingGroup->name,
+                'position' => $items->first()->toppingGroup->position,
+                'options' => $items->map(fn ($t) => [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'price' => (float) $t->price,
+                    // Pre-select only decides what starts ticked; the customer
+                    // is charged for whatever they leave ticked either way.
+                    'preselected' => (bool) $t->pivot->is_default,
+                ])->values(),
+            ])
+            ->sortBy('position')
+            ->values();
 
-        foreach ($toppings as $topping) {
-            // Pre-select only decides what starts ticked; the price is charged
-            // for whatever the customer leaves ticked, pre-selected or not.
-            $isPreselected = (bool) $topping->is_preselected;
-
-            $item = [
-                'id' => $topping->id,
-                'name' => $topping->name,
-                'price' => (float) $topping->price,
-                'group' => $topping->group,
-            ];
-
-            if ($isPreselected) {
-                $defaults[] = $item;
-            } else {
-                $optionals[] = $item;
-            }
-        }
+        // The flat default/optional split the basket payload is still built
+        // from, kept in step with the sections above.
+        $flat = $sections->flatMap->options;
 
         return response()->json([
             'product_id' => $product->id,
             'product_name' => $product->name,
-            'defaults' => $defaults,
-            'optionals' => $optionals,
-            'has_toppings' => count($defaults) + count($optionals) > 0,
+            'sections' => $sections,
+            'defaults' => $flat->where('preselected', true)->values(),
+            'optionals' => $flat->where('preselected', false)->values(),
+            'has_toppings' => $flat->isNotEmpty(),
+        ]);
+    }
+
+    private function empty(Product $product): JsonResponse
+    {
+        return response()->json([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'sections' => [],
+            'defaults' => [],
+            'optionals' => [],
+            'has_toppings' => false,
         ]);
     }
 }

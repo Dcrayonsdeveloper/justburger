@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->append(\App\Http\Middleware\TrackAffiliateReferral::class);
+        // Signs out customers whose account was deactivated or deleted mid-session.
+        $middleware->append(\App\Http\Middleware\EnsureAccountIsActive::class);
 
         $middleware->validateCsrfTokens(except: [
             'webhook/*',

@@ -66,12 +66,32 @@
         </div>
 
         {{-- Orders Table --}}
+        <div x-data="orderBulkActions()">
+
+        {{-- Bulk actions bar — only once something is ticked --}}
+        <div x-show="selected.length > 0" x-cloak class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center gap-3">
+            <span class="text-sm text-neutral-700" x-text="selected.length + (selected.length === 1 ? ' selected' : ' selected')"></span>
+            <form method="POST" action="{{ route('admin.orders.bulk-delete') }}" class="inline"
+                  @submit="return confirmDelete($event)">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit"
+                        class="px-3 py-1 text-xs font-medium text-red-600 bg-white border border-neutral-300 rounded-md hover:bg-red-50 transition">
+                    Delete selected
+                </button>
+            </form>
+            <button type="button" @click="selected = []" class="text-xs text-neutral-500 hover:text-neutral-700">Clear</button>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr style="border-bottom:1px solid #e1e1e1">
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 w-8">
-                            <input type="checkbox" class="form-checkbox rounded">
+                            <input type="checkbox" class="form-checkbox rounded" @change="toggleAll($event)"
+                                   :checked="allTicked" x-effect="$el.indeterminate = someTicked" title="Select all on this page">
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500">Order</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500">Date</th>
@@ -87,7 +107,7 @@
                     @forelse($orders as $order)
                         <tr class="hover:bg-neutral-50 cursor-pointer" onclick="window.location='{{ route('admin.orders.show', $order) }}'" style="border-bottom:1px solid #f0f0f0">
                             <td class="px-4 py-3" onclick="event.stopPropagation()">
-                                <input type="checkbox" class="form-checkbox rounded" value="{{ $order->id }}">
+                                <input type="checkbox" class="form-checkbox rounded" value="{{ $order->id }}" x-model="selected">
                             </td>
                             <td class="px-4 py-3">
                                 <span class="text-sm font-medium" style="color:#005bd3">{{ $order->order_number }}</span>
@@ -170,6 +190,7 @@
                 </tbody>
             </table>
         </div>
+        </div>{{-- /bulk actions scope --}}
 
         {{-- Pagination --}}
         @if($orders->hasPages())
@@ -190,4 +211,34 @@
             </div>
         @endif
     </div>
+
+@push('scripts')
+<script>
+    // Ticking rows reveals the bulk bar; the header box drives every row on the
+    // page and shows the indeterminate dash while only some are ticked.
+    function orderBulkActions() {
+        return {
+            selected: [],
+            ids: @json($orders->pluck('id')->map(fn ($id) => (string) $id)),
+            get allTicked() {
+                return this.ids.length > 0 && this.selected.length === this.ids.length;
+            },
+            get someTicked() {
+                return this.selected.length > 0 && this.selected.length < this.ids.length;
+            },
+            toggleAll(e) {
+                this.selected = e.target.checked ? [...this.ids] : [];
+            },
+            confirmDelete(e) {
+                const n = this.selected.length;
+                if (!confirm('Delete ' + n + ' ' + (n === 1 ? 'order' : 'orders') + ' permanently? This also removes their items, payments and history, and cannot be undone.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            },
+        };
+    }
+</script>
+@endpush
 </x-layouts.admin>

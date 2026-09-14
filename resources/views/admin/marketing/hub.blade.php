@@ -158,31 +158,6 @@
             </div>
         </div>
 
-        {{-- Quick Actions --}}
-        <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-neutral-100">
-                <h2 class="text-base font-bold text-neutral-900">Quick Actions</h2>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-neutral-100">
-                <a href="{{ route('admin.coupons.index') }}" class="flex flex-col items-center gap-2 p-5 hover:bg-neutral-50 transition-colors text-center">
-                    <svg class="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-                    <span class="text-xs font-medium text-neutral-700">Coupons</span>
-                </a>
-                <a href="{{ route('admin.banners.index') }}" class="flex flex-col items-center gap-2 p-5 hover:bg-neutral-50 transition-colors text-center">
-                    <svg class="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span class="text-xs font-medium text-neutral-700">Banners</span>
-                </a>
-                <a href="{{ route('admin.flash-sales.index') }}" class="flex flex-col items-center gap-2 p-5 hover:bg-neutral-50 transition-colors text-center">
-                    <svg class="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    <span class="text-xs font-medium text-neutral-700">Flash Sales</span>
-                </a>
-                <a href="{{ route('admin.newsletter.index') }}" class="flex flex-col items-center gap-2 p-5 hover:bg-neutral-50 transition-colors text-center">
-                    <svg class="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    <span class="text-xs font-medium text-neutral-700">Newsletter</span>
-                </a>
-            </div>
-        </div>
-
         {{-- Setup Info --}}
         <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-5">
             <h3 class="text-sm font-semibold text-neutral-700 mb-2">Meta App Configuration</h3>

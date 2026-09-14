@@ -82,10 +82,13 @@ class HomeController extends Controller
             ->take($dealsCount)
             ->get();
 
-        // Category carousel — select only needed columns, single product image per category
+        // Category carousel — select only needed columns, single product image per category.
+        // Which categories appear is the shop's choice now ("Show on homepage" on
+        // the category), not simply the first six by position.
         $carouselCategories = Category::query()
             ->select('id', 'name', 'slug', 'image_url', 'icon')
             ->where('is_active', true)
+            ->where('show_on_homepage', true)
             ->withCount(['products' => fn($q) => $q->where('is_active', true)])
             // One product per category, purely to borrow its photo for the tile —
             // so it has to be one that actually has a photo. Without whereHas the

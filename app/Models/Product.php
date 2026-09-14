@@ -208,6 +208,17 @@ class Product extends Model
         return $this->toppings()->wherePivot('is_default', false);
     }
 
+    /**
+     * Which sections of the customize popup this product shows. A section
+     * switched off hides its options here without disturbing which ones are
+     * ticked, so switching it back on restores the earlier selection.
+     */
+    public function toppingGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(ToppingGroup::class, 'product_topping_group')
+            ->withPivot('is_enabled');
+    }
+
     public function wishlists(): HasMany
     {
         return $this->hasMany(Wishlist::class);
