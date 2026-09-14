@@ -63,6 +63,8 @@ class ProductToppingController extends Controller
         return response()->json([
             'product_id' => $product->id,
             'product_name' => $product->name,
+            'base_price' => (float) $product->price,
+            'variants' => $this->variants($product),
             'sections' => $sections,
             'defaults' => $flat->where('preselected', true)->values(),
             'optionals' => $flat->where('preselected', false)->values(),
@@ -70,11 +72,35 @@ class ProductToppingController extends Controller
         ]);
     }
 
+    /**
+     * The sizes this item comes in.
+     *
+     * Only the product page let anyone choose one: every other way into the
+     * popup — a card, a listing, the wishlist, a basket recommendation —
+     * opened it with no variant, so a customer could never ask for the large.
+     */
+    private function variants(Product $product): array
+    {
+        return $product->variants()
+            ->where('is_active', true)
+            ->orderBy('price')
+            ->get()
+            ->map(fn ($v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'price' => (float) $v->price,
+            ])
+            ->values()
+            ->all();
+    }
+
     private function empty(Product $product): JsonResponse
     {
         return response()->json([
             'product_id' => $product->id,
             'product_name' => $product->name,
+            'base_price' => (float) $product->price,
+            'variants' => [],
             'sections' => [],
             'defaults' => [],
             'optionals' => [],
