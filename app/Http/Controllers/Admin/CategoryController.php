@@ -79,6 +79,7 @@ class CategoryController extends Controller
             'position' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'exclude_from_bestsellers' => 'boolean',
+            'show_on_homepage' => 'boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
@@ -87,6 +88,7 @@ class CategoryController extends Controller
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['exclude_from_bestsellers'] = $request->boolean('exclude_from_bestsellers');
+        $validated['show_on_homepage'] = $request->boolean('show_on_homepage');
         $validated['position'] = $validated['position'] ?? 0;
 
         if ($request->hasFile('image')) {
@@ -139,6 +141,7 @@ class CategoryController extends Controller
             'position' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'exclude_from_bestsellers' => 'boolean',
+            'show_on_homepage' => 'boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_image' => 'nullable|boolean',
             'meta_title' => 'nullable|string|max:255',
@@ -153,6 +156,7 @@ class CategoryController extends Controller
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
         $validated['exclude_from_bestsellers'] = $request->boolean('exclude_from_bestsellers');
+        $validated['show_on_homepage'] = $request->boolean('show_on_homepage');
 
         if ($request->hasFile('image')) {
             if ($category->image_url) {
@@ -191,6 +195,7 @@ class CategoryController extends Controller
         return redirect()->route('admin.categories.index')
             ->with('success', 'Category deleted successfully.');
     }
+
 
     public function toggleStatus(Category $category): RedirectResponse
     {
