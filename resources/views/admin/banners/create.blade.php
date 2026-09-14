@@ -17,59 +17,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
-                <div class="card">
-                    <div class="p-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Banner Details</h2>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Name <span class="text-danger-500">*</span></label>
-                            <input type="text" name="name" value="{{ old('name') }}" required
-                                   class="form-input w-full" placeholder="e.g. Summer Sale Hero Banner">
-                            @error('name')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                @include('admin.banners._content-fields')
 
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Link URL</label>
-                            <input type="url" name="link" value="{{ old('link') }}"
-                                   class="form-input w-full" placeholder="https://example.com/page">
-                            @error('link')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="p-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Images</h2>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Banner Image <span class="text-danger-500">*</span></label>
-                            <input type="file" name="image" accept="image/*" required class="form-input w-full">
-                            <p class="mt-1 text-xs text-neutral-600">Max 5MB. Recommended: 1920x600px</p>
-                            @error('image')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Mobile Image</label>
-                            <input type="file" name="mobile_image" accept="image/*" class="form-input w-full">
-                            <p class="mt-1 text-xs text-neutral-600">Optional. Recommended: 768x400px</p>
-                            @error('mobile_image')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <div class="card">
+                                <div class="card">
                     <div class="p-4 border-b border-neutral-200">
                         <h2 class="font-semibold text-neutral-900">Placement</h2>
                     </div>
@@ -95,28 +45,6 @@
                                    class="form-input w-full">
                             <p class="mt-1 text-xs text-neutral-600">Lower number = higher priority</p>
                             @error('priority')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="p-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Schedule</h2>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Starts At</label>
-                            <input type="datetime-local" name="starts_at" value="{{ old('starts_at') }}" class="form-input w-full">
-                            @error('starts_at')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Ends At</label>
-                            <input type="datetime-local" name="ends_at" value="{{ old('ends_at') }}" class="form-input w-full">
-                            @error('ends_at')
                                 <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
                             @enderror
                         </div>

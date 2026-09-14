@@ -30,11 +30,16 @@
         position: absolute; top: 0; right: 0; height: 100%; width: 2.75rem;
         display: flex; align-items: center; justify-content: center;
         padding: 0; margin: 0; border: 0; background: none; cursor: pointer;
-        color: currentColor; opacity: .55; line-height: 0;
-        transition: opacity .15s ease;
+        line-height: 0;
+        /* A fixed mid grey rather than currentColor: the icon sits on the
+           input, but currentColor inherits from the wrapper, so a dark card
+           with a pale input (or Chrome's pale autofill background) washed it
+           out. This one clears 3:1 against both white and near-black. */
+        color: #6b7280;
+        transition: color .15s ease;
     }
-    .jbpw-toggle:hover { opacity: 1; }
-    .jbpw-toggle:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: -2px; border-radius: 6px; }
+    .jbpw-toggle:hover { color: #C8102E; }
+    .jbpw-toggle:focus-visible { color: #C8102E; outline: 2px solid currentColor; outline-offset: -2px; border-radius: 6px; }
     .jbpw-toggle svg { width: 1.15rem; height: 1.15rem; pointer-events: none; display: block; }
 </style>
 

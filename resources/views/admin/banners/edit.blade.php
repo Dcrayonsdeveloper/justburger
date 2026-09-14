@@ -18,71 +18,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
-                <div class="card">
-                    <div class="p-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Banner Details</h2>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Name <span class="text-danger-500">*</span></label>
-                            <input type="text" name="name" value="{{ old('name', $banner->name) }}" required
-                                   class="form-input w-full">
-                            @error('name')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                @include('admin.banners._content-fields')
 
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Link URL</label>
-                            <input type="url" name="link" value="{{ old('link', $banner->link) }}"
-                                   class="form-input w-full" placeholder="https://example.com/page">
-                            @error('link')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="p-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Images</h2>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Banner Image</label>
-                            @if($banner->image_url)
-                                <div class="mb-2">
-                                    <img src="{{ str_starts_with($banner->image_url, 'images/') ? asset($banner->image_url) : asset('storage/' . $banner->image_url) }}" alt="{{ $banner->name }}"
-                                         class="max-w-full h-32 object-cover rounded border border-neutral-200">
-                                </div>
-                            @endif
-                            <input type="file" name="image" accept="image/*" class="form-input w-full">
-                            <p class="mt-1 text-xs text-neutral-600">Leave empty to keep current image. Max 5MB.</p>
-                            @error('image')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Mobile Image</label>
-                            @if($banner->mobile_image_url)
-                                <div class="mb-2">
-                                    <img src="{{ str_starts_with($banner->mobile_image_url, 'images/') ? asset($banner->mobile_image_url) : asset('storage/' . $banner->mobile_image_url) }}" alt="{{ $banner->name }} (mobile)"
-                                         class="max-w-full h-24 object-cover rounded border border-neutral-200">
-                                </div>
-                            @endif
-                            <input type="file" name="mobile_image" accept="image/*" class="form-input w-full">
-                            <p class="mt-1 text-xs text-neutral-600">Optional. Leave empty to keep current.</p>
-                            @error('mobile_image')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <div class="card">
+                                <div class="card">
                     <div class="p-4 border-b border-neutral-200">
                         <h2 class="font-semibold text-neutral-900">Placement</h2>
                     </div>
@@ -108,30 +46,6 @@
                                    class="form-input w-full">
                             <p class="mt-1 text-xs text-neutral-600">Lower number = higher priority</p>
                             @error('priority')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="p-4 border-b border-neutral-200">
-                        <h2 class="font-semibold text-neutral-900">Schedule</h2>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Starts At</label>
-                            <input type="datetime-local" name="starts_at"
-                                   value="{{ old('starts_at', $banner->starts_at?->format('Y-m-d\TH:i')) }}" class="form-input w-full">
-                            @error('starts_at')
-                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-1">Ends At</label>
-                            <input type="datetime-local" name="ends_at"
-                                   value="{{ old('ends_at', $banner->ends_at?->format('Y-m-d\TH:i')) }}" class="form-input w-full">
-                            @error('ends_at')
                                 <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
                             @enderror
                         </div>

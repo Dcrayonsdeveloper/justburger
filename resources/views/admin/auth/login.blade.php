@@ -120,11 +120,11 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: rgba(255,255,255,.35);
+            color: #6b7280;
             padding: 4px;
             transition: color .2s;
         }
-        .pw-toggle:hover { color: rgba(255,255,255,.6); }
+        .pw-toggle:hover { color: #C8102E; }
 
         /* Remember */
         .remember {
@@ -184,7 +184,7 @@
             align-items: center;
             gap: .35rem;
             font-size: .85rem;
-            color: rgba(255,255,255,.35);
+            color: #6b7280;
             text-decoration: none;
             transition: color .2s;
         }
