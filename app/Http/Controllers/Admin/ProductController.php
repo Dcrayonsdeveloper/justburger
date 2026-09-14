@@ -579,8 +579,10 @@ class ProductController extends Controller
         return response()->streamDownload(function () use ($products) {
             $handle = fopen('php://output', 'w');
 
+            // These headers are also what import() reads back, so the two
+            // stay in step and an exported file can be re-imported as is.
             fputcsv($handle, [
-                'name', 'sku', 'slug', 'category', 'seller', 'price', 'sale_price',
+                'name', 'sku', 'slug', 'category', 'seller', 'price', 'mrp',
                 'cost_price', 'stock_quantity', 'short_description', 'description',
                 'is_active', 'is_featured', 'image_url', 'meta_title', 'meta_description',
             ]);
@@ -593,7 +595,7 @@ class ProductController extends Controller
                     $product->category->name ?? '',
                     $product->seller->store_name ?? '',
                     $product->price,
-                    $product->sale_price,
+                    $product->mrp,
                     $product->cost_price,
                     $product->stock_quantity,
                     $product->short_description,
@@ -601,8 +603,8 @@ class ProductController extends Controller
                     $product->is_active ? '1' : '0',
                     $product->is_featured ? '1' : '0',
                     $product->primary_image_url ?? '',
-                    $product->meta_title,
-                    $product->meta_description,
+                    $product->seo_data['meta_title'] ?? '',
+                    $product->seo_data['meta_description'] ?? '',
                 ]);
             }
 
@@ -699,7 +701,9 @@ class ProductController extends Controller
                 'sku' => $sku,
                 'slug' => !empty($record['slug']) ? trim($record['slug']) : Str::slug($name),
                 'price' => (float) $price,
-                'sale_price' => is_numeric($record['sale_price'] ?? null) ? (float) $record['sale_price'] : null,
+                // mrp is NOT NULL with no default — without it every insert fails.
+                // Fall back to the selling price, i.e. nothing is discounted.
+                'mrp' => is_numeric($record['mrp'] ?? null) ? (float) $record['mrp'] : (float) $price,
                 'cost_price' => is_numeric($record['cost_price'] ?? null) ? (float) $record['cost_price'] : null,
                 'stock_quantity' => (int) ($record['stock_quantity'] ?? 0),
                 'category_id' => $categoryId,
@@ -708,8 +712,15 @@ class ProductController extends Controller
                 'description' => $record['description'] ?? $name,
                 'is_active' => (bool) ($record['is_active'] ?? 1),
                 'is_featured' => (bool) ($record['is_featured'] ?? 0),
-                'meta_title' => $record['meta_title'] ?? null,
-                'meta_description' => $record['meta_description'] ?? null,
+                // status defaults to 'draft', which would park every imported
+                // row under the Draft tab. The rest of the catalogue is
+                // 'approved', so match it.
+                'status' => 'approved',
+                // SEO lives in the seo_data json column, not in columns of its own.
+                'seo_data' => array_filter([
+                    'meta_title' => trim($record['meta_title'] ?? '') ?: null,
+                    'meta_description' => trim($record['meta_description'] ?? '') ?: null,
+                ]) ?: null,
             ]);
 
             // Handle image URL
