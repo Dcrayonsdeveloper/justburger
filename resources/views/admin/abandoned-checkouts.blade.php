@@ -46,10 +46,6 @@
                         class="px-3 py-1 text-xs font-medium text-red-600 bg-white border border-gray-300 rounded-md hover:bg-red-50 transition">
                     Delete selected
                 </button>
-                <button type="submit" name="action" value="remind" onclick="return confirm('Send reminders to entries with contact info?')"
-                        class="px-3 py-1 text-xs font-medium text-blue-600 bg-white border border-gray-300 rounded-md hover:bg-blue-50 transition ml-1">
-                    Send reminder
-                </button>
             </form>
         </div>
 
