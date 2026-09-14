@@ -19,6 +19,31 @@
             <div class="lg:col-span-2 space-y-6">
                 @include('admin.banners._content-fields')
 
+                <div class="card">
+                    <div class="p-4 border-b border-neutral-200">
+                        <h2 class="font-semibold text-neutral-900">Images</h2>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-1">Banner Image <span class="text-danger-500">*</span></label>
+                            <input type="file" name="image" accept="image/*" required class="form-input w-full">
+                            <p class="mt-1 text-xs text-neutral-600">Max 5MB. Recommended: 1920x600px</p>
+                            @error('image')
+                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-1">Mobile Image</label>
+                            <input type="file" name="mobile_image" accept="image/*" class="form-input w-full">
+                            <p class="mt-1 text-xs text-neutral-600">Optional. Recommended: 768x400px</p>
+                            @error('mobile_image')
+                                <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                                 <div class="card">
                     <div class="p-4 border-b border-neutral-200">
                         <h2 class="font-semibold text-neutral-900">Placement</h2>
