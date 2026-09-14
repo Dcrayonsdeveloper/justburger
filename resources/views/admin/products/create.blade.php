@@ -487,66 +487,7 @@
                 </div>
             </div>
 
-            {{-- Customize (toppings) --}}
-            <div class="card overflow-hidden mt-5"
-                 x-data="{ on: {{ old('customize_enabled') ? 'true' : 'false' }}, setAll(v) { this.$root.querySelectorAll('.js-topping').forEach(c => c.checked = v) } }">
-                <div class="px-5 py-4 flex items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-base font-semibold text-neutral-900">Customize</h2>
-                        <p class="text-xs text-neutral-500 mt-0.5">
-                            Off by default. Turn it on, then tick which toppings appear in this item's popup.
-                            Manage the full topping list on the <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Customize</a> page.
-                            Leave it off and no popup appears &mdash; the item goes straight to the basket.
-                        </p>
-                    </div>
-                    <label class="relative inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
-                        <input type="hidden" name="customize_enabled" value="0">
-                        <input type="checkbox" name="customize_enabled" value="1" x-model="on" class="sr-only">
-                        <span class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors" :class="{ '!bg-primary-600': on }">
-                            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="{ 'translate-x-5': on }"></span>
-                        </span>
-                        <span class="text-sm font-medium" :class="on ? 'text-primary-700' : 'text-neutral-500'" x-text="on ? 'Enabled' : 'Disabled'"></span>
-                    </label>
-                </div>
-
-                {{-- Per-product topping picker --}}
-                <div x-show="on" x-cloak class="px-5 pb-5 border-t border-neutral-100 pt-4">
-                    @php
-                        $selectedToppingIds = collect(old('toppings', []))->map(fn ($id) => (int) $id)->all();
-                    @endphp
-                    @if($toppings->isEmpty())
-                        <p class="text-sm text-neutral-500">No toppings exist yet. <a href="{{ route('admin.customize.index') }}" class="text-primary-600 underline">Add toppings</a> first, then choose which apply to this item.</p>
-                    @else
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-xs text-neutral-500">Tick the toppings customers can add to this item.</p>
-                            <div class="flex items-center gap-2 text-xs shrink-0">
-                                <button type="button" class="text-primary-600 hover:underline" @click="setAll(true)">Select all</button>
-                                <span class="text-neutral-300">|</span>
-                                <button type="button" class="text-neutral-500 hover:underline" @click="setAll(false)">Clear</button>
-                            </div>
-                        </div>
-                        <div class="space-y-4">
-                            @foreach($toppings->groupBy('group') as $group => $items)
-                                <div>
-                                    <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">{{ $group ?: 'Other' }}</h4>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                        @foreach($items as $t)
-                                            <label class="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 cursor-pointer">
-                                                <input type="checkbox" name="toppings[]" value="{{ $t->id }}" class="form-checkbox js-topping"
-                                                       @checked(in_array((int) $t->id, $selectedToppingIds))>
-                                                <span class="flex-1 text-sm text-neutral-800">{{ $t->name }}</span>
-                                                <span class="text-xs {{ $t->is_preselected ? 'text-green-600' : 'text-neutral-400' }}">
-                                                    {{ $t->is_preselected ? 'Included' : ((float) $t->price > 0 ? '+£'.number_format($t->price, 2) : 'Included') }}
-                                                </span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
+            @include('admin.products._customize-panel')
 
 
             {{-- Sticky Save Bar --}}

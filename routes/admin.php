@@ -105,7 +105,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('/print-test', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'test'])->name('print-test');
                 Route::post('/{order}/printed', [App\Http\Controllers\Admin\ReceiptPrintController::class, 'markPrinted'])->name('printed');
 
-                Route::get('/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('show');
+    Route::get('/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('show');
                 Route::put('/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('status');
                 Route::post('/{order}/ship', [App\Http\Controllers\Admin\OrderController::class, 'ship'])->name('ship');
                 Route::get('/{order}/invoice', [App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('invoice');
@@ -147,13 +147,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Brands
             Route::resource('brands', App\Http\Controllers\Admin\BrandController::class);
 
-            // Customize (toppings) — single-screen manager
+            // Customize — single-screen manager for the popup's sections and options
             Route::get('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'index'])->name('customize.index');
+            Route::post('/customize/sections', [App\Http\Controllers\Admin\CustomizeController::class, 'storeGroup'])->name('customize.sections.store');
+            Route::put('/customize/sections/{group}', [App\Http\Controllers\Admin\CustomizeController::class, 'updateGroup'])->name('customize.sections.update');
+            Route::delete('/customize/sections/{group}', [App\Http\Controllers\Admin\CustomizeController::class, 'destroyGroup'])->name('customize.sections.destroy');
+            Route::put('/customize/sections/{group}/toggle-active', [App\Http\Controllers\Admin\CustomizeController::class, 'toggleGroupActive'])->name('customize.sections.toggle-active');
             Route::post('/customize', [App\Http\Controllers\Admin\CustomizeController::class, 'store'])->name('customize.store');
             Route::put('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'update'])->name('customize.update');
             Route::delete('/customize/{topping}', [App\Http\Controllers\Admin\CustomizeController::class, 'destroy'])->name('customize.destroy');
             Route::put('/customize/{topping}/toggle-active', [App\Http\Controllers\Admin\CustomizeController::class, 'toggleActive'])->name('customize.toggle-active');
-            Route::put('/customize/{topping}/toggle-preselected', [App\Http\Controllers\Admin\CustomizeController::class, 'togglePreselected'])->name('customize.toggle-preselected');
 
             // Attributes
             Route::resource('attributes', App\Http\Controllers\Admin\AttributeController::class);

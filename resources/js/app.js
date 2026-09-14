@@ -298,6 +298,7 @@ Alpine.store('toppingsModal', {
     isLoading: false,
     productId: null,
     productName: '',
+    sections: [],   // [{ id, name, options: [...] }] — the popup's headings
     defaults: [],
     optionals: [],
     selected: {},   // { toppingId: true/false }
@@ -311,12 +312,14 @@ Alpine.store('toppingsModal', {
         this.isLoading = true;
         this.isOpen = true;
         this.selected = {};
+        this.sections = [];
         document.body.style.overflow = 'hidden';
 
         try {
             const response = await axios.get(`/api/product/${productId}/toppings`);
             const data = response.data;
             this.productName = data.product_name;
+            this.sections = data.sections || [];
             this.defaults = data.defaults;
             this.optionals = data.optionals;
 
@@ -327,9 +330,9 @@ Alpine.store('toppingsModal', {
                 return;
             }
 
-            // Pre-select all defaults
+            // Pre-selected options arrive ticked, the rest unticked. Which is
+            // which is decided per product by the admin.
             data.defaults.forEach(t => { this.selected[t.id] = true; });
-            // Optionals start unchecked
             data.optionals.forEach(t => { this.selected[t.id] = false; });
         } catch (error) {
             console.error('Failed to fetch toppings:', error);
@@ -350,8 +353,8 @@ Alpine.store('toppingsModal', {
     },
 
     get allToppings() {
-        // One flat list for the popup — pre-selected ones simply start ticked.
-        return [...this.defaults, ...this.optionals];
+        // Flat view over the sections, for pricing and the basket payload.
+        return this.sections.flatMap(s => s.options);
     },
 
     get addedToppings() {
@@ -362,13 +365,13 @@ Alpine.store('toppingsModal', {
     },
 
     get keptDefaults() {
-        // Pre-selected toppings the customer left ticked
-        return this.defaults.filter(t => this.selected[t.id]);
+        // Pre-selected options the customer left ticked
+        return this.allToppings.filter(t => t.preselected && this.selected[t.id]);
     },
 
     get removedToppings() {
-        // Pre-selected toppings the customer unticked — not charged
-        return this.defaults.filter(t => !this.selected[t.id]);
+        // Pre-selected options the customer unticked — not charged
+        return this.allToppings.filter(t => t.preselected && !this.selected[t.id]);
     },
 
     get toppingsExtra() {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
@@ -15,6 +16,7 @@ class Topping extends Model
         'name',
         'slug',
         'price',
+        'topping_group_id',
         'group',
         'is_preselected',
         'is_active',
@@ -31,12 +33,13 @@ class Topping extends Model
     }
 
     /**
-     * Pre-selected toppings are included with the product at no charge, so a
-     * price on one would never be collected. Keep the data honest.
+     * A topping with no price is shown as "Included" rather than "+£0.00".
+     * Pre-select is now a per-product decision (product_topping.is_default),
+     * so it no longer has any bearing on what a topping costs.
      */
     public function isFree(): bool
     {
-        return $this->is_preselected || (float) $this->price <= 0;
+        return (float) $this->price <= 0;
     }
 
     public function getSlugOptions(): SlugOptions
@@ -45,6 +48,15 @@ class Topping extends Model
             ->generateSlugsFrom('name')
             ->saveSlugsTo('slug')
             ->doNotGenerateSlugsOnUpdate();
+    }
+
+    /**
+     * Deliberately not named group() — the legacy `group` string column is
+     * still on the table, so that name would resolve to the column, not here.
+     */
+    public function toppingGroup(): BelongsTo
+    {
+        return $this->belongsTo(ToppingGroup::class, 'topping_group_id');
     }
 
     public function products(): BelongsToMany

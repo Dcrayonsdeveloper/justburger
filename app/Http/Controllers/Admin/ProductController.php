@@ -11,6 +11,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Seller;
 use App\Models\Topping;
+use App\Models\ToppingGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -113,9 +114,11 @@ class ProductController extends Controller
         $sellers = Seller::with('user')->orderBy('store_name')->get();
         $brands = Brand::where('is_active', true)->orderBy('name')->get();
         $attributes = Attribute::with('values')->orderBy('name')->get();
-        $toppings = Topping::active()->ordered()->get();
+        $toppingGroups = ToppingGroup::active()->ordered()
+            ->with(['toppings' => fn ($q) => $q->where('is_active', true)])
+            ->get();
 
-        return view('admin.products.create', compact('categories', 'sellers', 'brands', 'attributes', 'toppings'));
+        return view('admin.products.create', compact('categories', 'sellers', 'brands', 'attributes', 'toppingGroups'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -133,6 +136,10 @@ class ProductController extends Controller
             'variants.*.price' => 'nullable|numeric|min:0',
             'toppings' => 'nullable|array',
             'toppings.*' => 'integer|exists:toppings,id',
+            'topping_preselect' => 'nullable|array',
+            'topping_preselect.*' => 'integer|exists:toppings,id',
+            'topping_sections' => 'nullable|array',
+            'topping_sections.*' => 'integer|exists:topping_groups,id',
             'mrp' => 'nullable|numeric|min:0|gte:price',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -180,7 +187,8 @@ class ProductController extends Controller
             ->toArray();
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
-        unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['variants'], $validated['toppings']);
+        unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['variants'], $validated['toppings'],
+            $validated['topping_preselect'], $validated['topping_sections']);
 
         $product = Product::create($validated);
 
@@ -212,7 +220,7 @@ class ProductController extends Controller
         // Sync the admin-defined size variants (name + price rows) and the
         // per-product topping selection shown in the storefront Customize popup.
         $this->syncVariants($product, $request->input('variants', []));
-        $product->toppings()->sync($request->input('toppings', []));
+        $this->syncCustomize($product, $request);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product created successfully.');
@@ -229,10 +237,12 @@ class ProductController extends Controller
         $sellers = Seller::with('user')->orderBy('store_name')->get();
         $brands = Brand::where('is_active', true)->orderBy('name')->get();
         $attributes = Attribute::with('values')->orderBy('name')->get();
-        $toppings = Topping::active()->ordered()->get();
-        $product->load(['images', 'variants', 'toppings']);
+        $toppingGroups = ToppingGroup::active()->ordered()
+            ->with(['toppings' => fn ($q) => $q->where('is_active', true)])
+            ->get();
+        $product->load(['images', 'variants', 'toppings', 'toppingGroups']);
 
-        return view('admin.products.edit', compact('product', 'categories', 'sellers', 'brands', 'attributes', 'toppings'));
+        return view('admin.products.edit', compact('product', 'categories', 'sellers', 'brands', 'attributes', 'toppingGroups'));
     }
 
     public function update(Request $request, Product $product): RedirectResponse
@@ -250,6 +260,10 @@ class ProductController extends Controller
             'variants.*.price' => 'nullable|numeric|min:0',
             'toppings' => 'nullable|array',
             'toppings.*' => 'integer|exists:toppings,id',
+            'topping_preselect' => 'nullable|array',
+            'topping_preselect.*' => 'integer|exists:toppings,id',
+            'topping_sections' => 'nullable|array',
+            'topping_sections.*' => 'integer|exists:topping_groups,id',
             'mrp' => 'nullable|numeric|min:0|gte:price',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -299,7 +313,8 @@ class ProductController extends Controller
             ->toArray();
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
-        unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['variants'], $validated['toppings']);
+        unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['variants'], $validated['toppings'],
+            $validated['topping_preselect'], $validated['topping_sections']);
 
         $product->update($validated);
 
@@ -352,10 +367,40 @@ class ProductController extends Controller
         // Sync the admin-defined size variants (name + price rows) and the
         // per-product topping selection shown in the storefront Customize popup.
         $this->syncVariants($product, $request->input('variants', []));
-        $product->toppings()->sync($request->input('toppings', []));
+        $this->syncCustomize($product, $request);
 
         return redirect()->route('admin.products.edit', $product)
             ->with('success', 'Product updated successfully.');
+    }
+
+    /**
+     * Sync which customize sections and options this product offers, and which
+     * of those options arrive already ticked.
+     *
+     * Pre-select is per product (product_topping.is_default), so the same
+     * option can be included on a burger and optional on a portion of chips.
+     * A section switched off keeps its ticked options on the pivot — switching
+     * it back on restores exactly what was there before.
+     */
+    private function syncCustomize(Product $product, Request $request): void
+    {
+        $selected = array_map('intval', $request->input('toppings', []));
+        $preselected = array_flip(array_map('intval', $request->input('topping_preselect', [])));
+
+        $product->toppings()->sync(
+            collect($selected)
+                ->mapWithKeys(fn ($id) => [$id => ['is_default' => isset($preselected[$id])]])
+                ->all()
+        );
+
+        // Every section the form rendered is written back, so a section the
+        // admin switched off is stored as off rather than simply going missing.
+        $rendered = ToppingGroup::pluck('id');
+        $enabled = array_flip(array_map('intval', $request->input('topping_sections', [])));
+
+        $product->toppingGroups()->sync(
+            $rendered->mapWithKeys(fn ($id) => [$id => ['is_enabled' => isset($enabled[$id])]])->all()
+        );
     }
 
     /**
