@@ -25,6 +25,7 @@ class Category extends Model
         'is_active',
         'is_featured',
         'exclude_from_bestsellers',
+        'show_on_homepage',
         'seo_data',
         'attributes_schema',
     ];
@@ -35,6 +36,7 @@ class Category extends Model
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'exclude_from_bestsellers' => 'boolean',
+            'show_on_homepage' => 'boolean',
             'seo_data' => 'array',
             'attributes_schema' => 'array',
         ];
