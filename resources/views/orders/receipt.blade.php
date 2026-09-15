@@ -78,7 +78,7 @@
            burger they belong to, and marked with +/- rather than colour: the
            print head is monochrome, so green and red would both come out black. */
         .rc-opt { font-size:11pt; padding-left:4mm; overflow-wrap:anywhere; page-break-inside:avoid; }
-        .rc-opt .lead { font-weight:700; }
+        .rc-opt .lead, .rc-item-variant .lead { font-weight:700; }
 
         /* Order note. The one thing on the slip the kitchen must not skim past,
            so it gets a box of its own — the only boxed element on the receipt. */
@@ -167,7 +167,6 @@
             @if($address)<div class="rc-sub">{{ $address }}</div>@endif
             @if($phone)<div class="rc-sub">Tel: {{ $phone }}</div>@endif
             <div class="rc-type">{{ $orderType }}</div>
-            <div class="rc-note">Don't cook hot food until we notify you.</div>
         </div>
 
         <hr class="hr">
@@ -188,8 +187,10 @@
                 <span class="nm">{{ $item->product_name }}</span>
                 <span class="amt">{{ format_price($item->total) }}</span>
             </div>
+            {{-- The size the customer picked. Labelled, because on its own a
+                 bare "Large" under the item name reads like part of the name. --}}
             @if($item->variant_name)
-                <div class="rc-item-variant">{{ $item->variant_name }}</div>
+                <div class="rc-item-variant"><span class="lead">Size:</span> {{ $item->variant_name }}</div>
             @endif
 
             {{-- What the customer chose. Priced extras carry their price so the
