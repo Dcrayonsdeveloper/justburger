@@ -71,12 +71,14 @@ class CartController extends Controller
             'toppings_added.*.id' => ['required_with:toppings_added', 'integer'],
             'toppings_added.*.name' => ['required_with:toppings_added', 'string'],
             'toppings_added.*.price' => ['required_with:toppings_added', 'numeric', 'min:0'],
+            'toppings_added.*.section' => ['nullable', 'string', 'max:100'],
             'toppings_removed' => ['nullable', 'array'],
             'toppings_removed.*.id' => ['required_with:toppings_removed', 'integer'],
             'toppings_removed.*.name' => ['required_with:toppings_removed', 'string'],
             'toppings_kept' => ['nullable', 'array'],
             'toppings_kept.*.id' => ['required_with:toppings_kept', 'integer'],
             'toppings_kept.*.name' => ['required_with:toppings_kept', 'string'],
+            'toppings_kept.*.section' => ['nullable', 'string', 'max:100'],
         ]);
 
         $product = Product::with(['category', 'brand'])->findOrFail($validated['product_id']);
@@ -109,6 +111,7 @@ class CartController extends Controller
                         'id' => (int) $t['id'],
                         'name' => $t['name'],
                         'price' => (float) $t['price'],
+                        'section' => $t['section'] ?? null,
                     ], $toppingsAdded),
                     'removed' => array_map(fn ($t) => [
                         'id' => (int) $t['id'],
@@ -117,6 +120,7 @@ class CartController extends Controller
                     'kept' => array_map(fn ($t) => [
                         'id' => (int) $t['id'],
                         'name' => $t['name'],
+                        'section' => $t['section'] ?? null,
                     ], $toppingsKept),
                 ],
             ];

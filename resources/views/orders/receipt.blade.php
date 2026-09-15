@@ -30,9 +30,12 @@
          |
          | The left gutter is therefore 6mm: about 1.2 characters clear of where
          | the clipping stopped, without giving away more width than that costs.
-         | The right stays at 2mm, where nothing has ever been clipped. That
-         | leaves 64mm of text, 25 characters at 12pt Courier, one fewer than
-         | before.
+         |
+         | The right is 3mm, not 2mm, so the slip looks centred on PAPER. The
+         | left 3mm of the page never prints, so a 6mm left gutter and a 3mm
+         | right one come out as an even 3mm of white down each side. On screen
+         | the preview looks left-heavy for exactly that reason - it shows the
+         | dead strip the printer cannot.
          |
          | Screen and print use identical metrics, so the preview is true size
          | and the printed height can be measured from the on-screen layout.
@@ -48,9 +51,9 @@
         .btn-light { background:#fff; color:#111; border:1px solid #d0d0d0; }
         .print-hint { width:72mm; margin:0 auto 14px; font-size:10.5px; line-height:1.6; color:#555; text-align:center; }
 
-        /* Receipt paper — 72mm of printable width, 6mm/2mm gutters, 64mm of text */
+        /* Receipt paper — 72mm of printable width, 6mm/3mm gutters, 63mm of text */
         .receipt {
-            width:72mm; margin:0 auto; background:#fff; padding:3mm 2mm 3mm 6mm;
+            width:72mm; margin:0 auto; background:#fff; padding:3mm 3mm 3mm 6mm;
             font-family:'Courier New', ui-monospace, monospace; font-size:12pt; line-height:1.35; color:#000;
             /* Thermal heads print thin strokes faintly. Courier New is monospace,
                so bold has identical advance widths - nothing reflows, it just
@@ -78,6 +81,7 @@
            burger they belong to, and marked with +/- rather than colour: the
            print head is monochrome, so green and red would both come out black. */
         .rc-opt { font-size:11pt; padding-left:4mm; overflow-wrap:anywhere; page-break-inside:avoid; }
+        .rc-opt-item { font-size:11pt; padding-left:8mm; overflow-wrap:anywhere; page-break-inside:avoid; }
         .rc-opt .lead, .rc-item-variant .lead { font-weight:700; }
 
         /* Order note. The one thing on the slip the kitchen must not skim past,
@@ -106,6 +110,12 @@
         $siteName = \App\Models\Setting::get('site_name', config('app.name', 'Just Burgers Plus'));
         $address  = \App\Models\Setting::get('site_address', \App\Models\Setting::get('company_address', ''));
         $phone    = \App\Models\Setting::get('site_phone', '');
+
+        // Shown under COLLECTION / DELIVERY. Blank the setting to print nothing.
+        $collectionNote = \App\Models\Setting::get(
+            'receipt_collection_note',
+            'Collect your food from the shop in 15 minutes.'
+        );
 
         // Fulfilment type — the store is collection-only, but honour a delivery order if one exists.
         $isDelivery = ($order->metadata['delivery_method'] ?? null) === 'delivery' || (float) $order->shipping_cost > 0;
@@ -136,7 +146,6 @@
         };
 
         $customerName  = $order->shipping_address_snapshot['name'] ?? $order->guest_name ?? ($order->user->full_name ?? null);
-        $customerPhone = $order->shipping_address_snapshot['phone'] ?? $order->guest_phone ?? ($order->user->phone ?? null);
     @endphp
 
     <div class="toolbar">
@@ -167,6 +176,12 @@
             @if($address)<div class="rc-sub">{{ $address }}</div>@endif
             @if($phone)<div class="rc-sub">Tel: {{ $phone }}</div>@endif
             <div class="rc-type">{{ $orderType }}</div>
+            {{-- How long the food will be. A setting rather than a fixed string:
+                 the wait changes with how busy the shop is, and the counter
+                 should be able to reword it without a deploy. --}}
+            @if(filled($collectionNote))
+                <div class="rc-note">{{ $collectionNote }}</div>
+            @endif
         </div>
 
         <hr class="hr">
@@ -174,8 +189,10 @@
         {{-- Meta --}}
         <div class="rc-meta">
             <div><strong>Order number:</strong> {{ $order->order_number }}</div>
+            @if($customerName)
+                <div><strong>Name:</strong> {{ $customerName }}</div>
+            @endif
             <div>{{ $order->created_at->format('d M Y, g:i A') }}</div>
-            @if($customerName)<div>{{ $customerName }}@if($customerPhone) · {{ $customerPhone }}@endif</div>@endif
         </div>
 
         <hr class="hr">
@@ -193,22 +210,29 @@
                 <div class="rc-item-variant"><span class="lead">Size:</span> {{ $item->variant_name }}</div>
             @endif
 
-            {{-- What the customer chose. Priced extras carry their price so the
-                 line can be checked against the total; kept and removed do not,
-                 because they cost nothing. --}}
-            @php $opts = $item->toppings_list; @endphp
-            @if(!empty($opts['kept']))
-                <div class="rc-opt"><span class="lead">With:</span>
-                    {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</div>
-            @endif
-            @if(!empty($opts['added']))
-                <div class="rc-opt"><span class="lead">+</span>
-                    {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</div>
-            @endif
-            @if(!empty($opts['removed']))
-                <div class="rc-opt"><span class="lead">NO:</span>
-                    {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</div>
-            @endif
+            {{-- What the customer chose, under the section it came from, so the
+                 kitchen reads "Sauce: ..." rather than one undifferentiated "+"
+                 run. Options carry their section from the basket; anything
+                 older, or from before sections existed, falls back to "Extras"
+                 rather than being dropped. Prices are shown where there is one,
+                 so the line can still be checked against the total.
+
+                 What the customer took OFF is deliberately not printed: the
+                 shop asked for it out, and the kitchen works from what is on
+                 the slip rather than what is absent from it. It is still on the
+                 order, so the admin can see it. --}}
+            @php
+                $opts = $item->toppings_list;
+                $chosen = collect($opts['kept'] ?? [])->concat($opts['added'] ?? [])
+                    ->filter(fn ($t) => filled($t['name'] ?? null))
+                    ->groupBy(fn ($t) => trim($t['section'] ?? '') ?: 'Extras');
+            @endphp
+            @foreach($chosen as $section => $picked)
+                <div class="rc-opt"><span class="lead">{{ $section }}:</span></div>
+                @foreach($picked as $t)
+                    <div class="rc-opt-item">{{ $t['name'] }}@if(($t['price'] ?? 0) > 0) ({{ format_price($t['price']) }})@endif@unless($loop->last),@endunless</div>
+                @endforeach
+            @endforeach
         @endforeach
 
         {{-- Order note. Optional — most orders carry none, and the box only

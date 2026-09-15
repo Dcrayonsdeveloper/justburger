@@ -364,8 +364,10 @@ Alpine.store('toppingsModal', {
     },
 
     get allToppings() {
-        // Flat view over the sections, for pricing and the basket payload.
-        return this.sections.flatMap(s => s.options);
+        // Flat view over the sections, for pricing and the basket payload. The
+        // section name rides along so the kitchen receipt can group by it
+        // instead of printing one undifferentiated list of extras.
+        return this.sections.flatMap(s => s.options.map(o => ({ ...o, section: s.name })));
     },
 
     get addedToppings() {
@@ -412,9 +414,9 @@ Alpine.store('toppingsModal', {
     },
 
     async confirm() {
-        const added = this.addedToppings.map(t => ({ id: t.id, name: t.name, price: t.price }));
+        const added = this.addedToppings.map(t => ({ id: t.id, name: t.name, price: t.price, section: t.section }));
         const removed = this.removedToppings.map(t => ({ id: t.id, name: t.name }));
-        const kept = this.keptDefaults.map(t => ({ id: t.id, name: t.name }));
+        const kept = this.keptDefaults.map(t => ({ id: t.id, name: t.name, section: t.section }));
 
         this.close();
         await Alpine.store('cart').addWithToppings(this.productId, this.quantity, this.variantId, added, removed, kept);
