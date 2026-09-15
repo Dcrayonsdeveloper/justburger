@@ -43,5 +43,6 @@
     </div>
 
     {{ $scripts ?? '' }}
+    @include('partials.password-toggle')
 </body>
 </html>

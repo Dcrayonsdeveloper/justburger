@@ -304,6 +304,8 @@ Alpine.store('toppingsModal', {
     selected: {},   // { toppingId: true/false }
     quantity: 1,
     variantId: null,
+    variants: [],   // [{ id, name, price }] — the sizes, cheapest first
+    basePrice: 0,
 
     async open(productId, quantity = 1, variantId = null) {
         this.productId = productId;
@@ -313,6 +315,7 @@ Alpine.store('toppingsModal', {
         this.isOpen = true;
         this.selected = {};
         this.sections = [];
+        this.variants = [];
         document.body.style.overflow = 'hidden';
 
         try {
@@ -320,6 +323,14 @@ Alpine.store('toppingsModal', {
             const data = response.data;
             this.productName = data.product_name;
             this.sections = data.sections || [];
+            this.variants = data.variants || [];
+            this.basePrice = Number(data.base_price || 0);
+
+            // Keep the size the customer already chose on the product page;
+            // otherwise start on the cheapest, which is what the card priced.
+            if (this.variants.length && !this.variants.some(v => v.id === this.variantId)) {
+                this.variantId = this.variants[0].id;
+            }
             this.defaults = data.defaults;
             this.optionals = data.optionals;
 
@@ -353,8 +364,10 @@ Alpine.store('toppingsModal', {
     },
 
     get allToppings() {
-        // Flat view over the sections, for pricing and the basket payload.
-        return this.sections.flatMap(s => s.options);
+        // Flat view over the sections, for pricing and the basket payload. The
+        // section name rides along so the kitchen receipt can group by it
+        // instead of printing one undifferentiated list of extras.
+        return this.sections.flatMap(s => s.options.map(o => ({ ...o, section: s.name })));
     },
 
     get addedToppings() {
@@ -378,10 +391,32 @@ Alpine.store('toppingsModal', {
         return this.addedToppings.reduce((sum, t) => sum + Number(t.price || 0), 0);
     },
 
+    chooseVariant(id) {
+        this.variantId = id;
+    },
+
+    isVariant(id) {
+        return this.variantId === id;
+    },
+
+    get selectedVariant() {
+        return this.variants.find(v => v.id === this.variantId) || null;
+    },
+
+    // What the line will actually cost: the chosen size (or the base price when
+    // the item has no sizes) plus whatever is ticked.
+    get itemPrice() {
+        return Number(this.selectedVariant ? this.selectedVariant.price : this.basePrice);
+    },
+
+    get totalPrice() {
+        return (this.itemPrice + this.toppingsExtra) * Number(this.quantity || 1);
+    },
+
     async confirm() {
-        const added = this.addedToppings.map(t => ({ id: t.id, name: t.name, price: t.price }));
+        const added = this.addedToppings.map(t => ({ id: t.id, name: t.name, price: t.price, section: t.section }));
         const removed = this.removedToppings.map(t => ({ id: t.id, name: t.name }));
-        const kept = this.keptDefaults.map(t => ({ id: t.id, name: t.name }));
+        const kept = this.keptDefaults.map(t => ({ id: t.id, name: t.name, section: t.section }));
 
         this.close();
         await Alpine.store('cart').addWithToppings(this.productId, this.quantity, this.variantId, added, removed, kept);

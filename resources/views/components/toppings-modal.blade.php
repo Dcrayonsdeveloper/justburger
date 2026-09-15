@@ -48,6 +48,30 @@
             {{-- Toppings List --}}
             <div x-show="!$store.toppingsModal.isLoading" class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
+                {{-- Sizes first. Only the product page used to offer these, so
+                     anyone adding from a card or listing could never ask for
+                     the large. Single choice, unlike the toppings below. --}}
+                <template x-if="$store.toppingsModal.variants.length > 1">
+                    <div>
+                        <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2.5">Choose your size</h4>
+                        <div class="space-y-1">
+                            <template x-for="variant in $store.toppingsModal.variants" :key="variant.id">
+                                <label class="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer transition-colors"
+                                       :class="$store.toppingsModal.isVariant(variant.id) ? 'bg-amber-50' : 'bg-neutral-50 hover:bg-neutral-100'"
+                                       @click.prevent="$store.toppingsModal.chooseVariant(variant.id)">
+                                    <input type="radio" class="sr-only" :checked="$store.toppingsModal.isVariant(variant.id)">
+                                    <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
+                                          :class="$store.toppingsModal.isVariant(variant.id) ? 'border-[#C8102E]' : 'border-neutral-300 bg-white'">
+                                        <span x-show="$store.toppingsModal.isVariant(variant.id)" class="w-2.5 h-2.5 rounded-full bg-[#C8102E]"></span>
+                                    </span>
+                                    <span class="flex-1 text-sm font-medium text-neutral-800" x-text="variant.name"></span>
+                                    <span class="text-xs font-semibold text-neutral-600" x-text="formatCurrency(variant.price)"></span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
                 {{-- One block per section, in the order set on the Customize
                      page. Pre-selected options simply arrive ticked. --}}
                 <template x-for="section in $store.toppingsModal.sections" :key="section.id">
@@ -76,9 +100,17 @@
 
             {{-- Footer --}}
             <div x-show="!$store.toppingsModal.isLoading" class="px-5 py-4 border-t border-neutral-100 bg-neutral-50">
-                <div x-show="$store.toppingsModal.toppingsExtra > 0" class="flex justify-between text-sm mb-3">
+                <div x-show="$store.toppingsModal.selectedVariant" class="flex justify-between text-sm mb-1.5">
+                    <span class="text-neutral-500" x-text="$store.toppingsModal.selectedVariant?.name"></span>
+                    <span class="font-semibold text-neutral-800" x-text="formatCurrency($store.toppingsModal.itemPrice)"></span>
+                </div>
+                <div x-show="$store.toppingsModal.toppingsExtra > 0" class="flex justify-between text-sm mb-1.5">
                     <span class="text-neutral-500">Extra toppings</span>
-                    <span class="font-bold text-neutral-800" x-text="'+' + formatCurrency($store.toppingsModal.toppingsExtra)"></span>
+                    <span class="font-semibold text-neutral-800" x-text="'+' + formatCurrency($store.toppingsModal.toppingsExtra)"></span>
+                </div>
+                <div class="flex justify-between text-sm mb-3 pt-1.5 border-t border-neutral-200">
+                    <span class="text-neutral-500">Total</span>
+                    <span class="font-bold text-neutral-900" x-text="formatCurrency($store.toppingsModal.totalPrice)"></span>
                 </div>
                 <button @click="$store.toppingsModal.confirm()"
                         class="btn-add-order w-full" style="font-size:.85rem;padding:.7rem 1.2rem;">

@@ -140,8 +140,6 @@ class ProductController extends Controller
             'topping_preselect.*' => 'integer|exists:toppings,id',
             'topping_sections' => 'nullable|array',
             'topping_sections.*' => 'integer|exists:topping_groups,id',
-            'ingredients' => 'nullable|array',
-            'ingredients.*.name' => 'nullable|string|max:255',
             'mrp' => 'nullable|numeric|min:0|gte:price',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -190,7 +188,7 @@ class ProductController extends Controller
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
         unset($validated['images'], $validated['main_image'], $validated['product_attributes'], $validated['variants'], $validated['toppings'],
-            $validated['topping_preselect'], $validated['topping_sections'], $validated['ingredients']);
+            $validated['topping_preselect'], $validated['topping_sections']);
 
         $product = Product::create($validated);
 
@@ -222,7 +220,6 @@ class ProductController extends Controller
         // Sync the admin-defined size variants (name + price rows) and the
         // per-product topping selection shown in the storefront Customize popup.
         $this->syncVariants($product, $request->input('variants', []));
-        $this->syncIngredients($product, $request->input('ingredients', []));
         $this->syncCustomize($product, $request);
 
         return redirect()->route('admin.products.index')
@@ -243,7 +240,7 @@ class ProductController extends Controller
         $toppingGroups = ToppingGroup::active()->ordered()
             ->with(['toppings' => fn ($q) => $q->where('is_active', true)])
             ->get();
-        $product->load(['images', 'variants', 'toppings', 'toppingGroups', 'ingredients']);
+        $product->load(['images', 'variants', 'toppings', 'toppingGroups']);
 
         return view('admin.products.edit', compact('product', 'categories', 'sellers', 'brands', 'attributes', 'toppingGroups'));
     }
@@ -267,8 +264,6 @@ class ProductController extends Controller
             'topping_preselect.*' => 'integer|exists:toppings,id',
             'topping_sections' => 'nullable|array',
             'topping_sections.*' => 'integer|exists:topping_groups,id',
-            'ingredients' => 'nullable|array',
-            'ingredients.*.name' => 'nullable|string|max:255',
             'mrp' => 'nullable|numeric|min:0|gte:price',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
@@ -319,7 +314,7 @@ class ProductController extends Controller
         $validated['attributes'] = !empty($productAttributes) ? $productAttributes : null;
 
         unset($validated['images'], $validated['main_image'], $validated['delete_images'], $validated['product_attributes'], $validated['variants'], $validated['toppings'],
-            $validated['topping_preselect'], $validated['topping_sections'], $validated['ingredients']);
+            $validated['topping_preselect'], $validated['topping_sections']);
 
         $product->update($validated);
 
@@ -372,33 +367,10 @@ class ProductController extends Controller
         // Sync the admin-defined size variants (name + price rows) and the
         // per-product topping selection shown in the storefront Customize popup.
         $this->syncVariants($product, $request->input('variants', []));
-        $this->syncIngredients($product, $request->input('ingredients', []));
         $this->syncCustomize($product, $request);
 
         return redirect()->route('admin.products.edit', $product)
             ->with('success', 'Product updated successfully.');
-    }
-
-    /**
-     * Replace this product's ingredient list from the repeater rows.
-     *
-     * Ingredients are free text owned by the product, so there is nothing to
-     * match against an existing row — the list is simply rewritten in the
-     * order it was typed. Blank rows are dropped, which is how a row that was
-     * cleared rather than removed disappears.
-     */
-    private function syncIngredients(Product $product, array $ingredients): void
-    {
-        $names = collect($ingredients)
-            ->map(fn ($row) => trim((string) ($row['name'] ?? '')))
-            ->filter()
-            ->values();
-
-        $product->ingredients()->delete();
-
-        $product->ingredients()->createMany(
-            $names->map(fn ($name, $i) => ['name' => $name, 'position' => $i])->all()
-        );
     }
 
     /**

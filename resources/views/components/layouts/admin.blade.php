@@ -78,5 +78,6 @@
             toastr.info(@json(session('info')));
         @endif
     </script>
+    @include('partials.password-toggle')
 </body>
 </html>

@@ -266,10 +266,7 @@
                     @csrf
                     <input type="hidden" name="email" :value="identifier">
                     <div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
-                            <label class="auth-label" style="margin:0;">Password</label>
-                            <a href="{{ route('password.request') }}" class="auth-link">Forgot?</a>
-                        </div>
+                        <label class="auth-label" style="display:block;margin:0 0 .4rem;">Password</label>
                         <input type="password" name="password" required autocomplete="current-password"
                                class="auth-input" :class="{ 'auth-input-error': error }">
                     </div>
@@ -311,6 +308,21 @@
                 @csrf
                 <input type="hidden" name="_register" value="1">
 
+                {{-- The name the shop reads on the receipt. Free to repeat: two
+                     customers called John Smith are both John Smith. The
+                     username below is the unique thing, and only for signing in. --}}
+                <div>
+                    <label for="reg_name" class="auth-label">Your name</label>
+                    <input type="text" name="name" id="reg_name" value="{{ old('name') }}" required
+                           autocomplete="name" maxlength="255"
+                           class="auth-input @error('name') auth-input-error @enderror"
+                           placeholder="e.g. John Smith">
+                    <p class="auth-hint">This is the name we put on your order.</p>
+                    @error('name')
+                        <p class="auth-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div x-data="usernameField()" x-init="value && check()">
                     <label for="username" class="auth-label">Username</label>
                     <input type="text" name="username" id="username" x-model="value" required
@@ -327,7 +339,7 @@
                         <span x-text="message"></span>
                     </p>
 
-                    <p x-show="!state" x-cloak class="auth-hint">Lowercase letters, numbers and underscores.</p>
+                    <p x-show="!state" x-cloak class="auth-hint">You'll sign in with this. Lowercase letters, numbers and underscores.</p>
 
                     @error('username')
                         <p class="auth-error" x-show="!state" x-cloak>{{ $message }}</p>
@@ -502,5 +514,6 @@ function otpReset() {
     };
 }
 </script>
+    @include('partials.password-toggle')
 </body>
 </html>
