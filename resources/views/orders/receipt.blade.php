@@ -19,6 +19,21 @@
          | came out as "£47.". So the PAGE is 72mm — the printable width, not the
          | paper width — and the content sits inside that with its own gutters.
          |
+         | The head also cannot reach the first few millimetres of that width.
+         | At a 2mm left gutter the printed slip shaved the left side off the
+         | first character of every full-width line: "Order number" came out as
+         | "Drder number", "Total Due" as "Fotal Due", "1 x" as "l x", "Subtotal"
+         | and "Paid by" missing their first stroke. Centred lines were fine,
+         | and so were the option lines, because .rc-opt and .rc-item-variant
+         | add another 4mm of their own - which is what pins the dead zone at
+         | roughly 3mm from the page edge.
+         |
+         | The left gutter is therefore 6mm: about 1.2 characters clear of where
+         | the clipping stopped, without giving away more width than that costs.
+         | The right stays at 2mm, where nothing has ever been clipped. That
+         | leaves 64mm of text, 25 characters at 12pt Courier, one fewer than
+         | before.
+         |
          | Screen and print use identical metrics, so the preview is true size
          | and the printed height can be measured from the on-screen layout.
          */
@@ -33,9 +48,9 @@
         .btn-light { background:#fff; color:#111; border:1px solid #d0d0d0; }
         .print-hint { width:72mm; margin:0 auto 14px; font-size:10.5px; line-height:1.6; color:#555; text-align:center; }
 
-        /* Receipt paper — 72mm of printable width, 2mm gutters, 68mm of text */
+        /* Receipt paper — 72mm of printable width, 6mm/2mm gutters, 64mm of text */
         .receipt {
-            width:72mm; margin:0 auto; background:#fff; padding:3mm 2mm;
+            width:72mm; margin:0 auto; background:#fff; padding:3mm 2mm 3mm 6mm;
             font-family:'Courier New', ui-monospace, monospace; font-size:12pt; line-height:1.35; color:#000;
             /* Thermal heads print thin strokes faintly. Courier New is monospace,
                so bold has identical advance widths - nothing reflows, it just
