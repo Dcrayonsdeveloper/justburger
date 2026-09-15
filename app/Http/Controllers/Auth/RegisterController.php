@@ -23,8 +23,13 @@ class RegisterController extends Controller
     }
 
     /**
-     * Sign-up asks for a username and a password and nothing else — no email,
-     * no phone. Nothing here can identify a person, which is the point.
+     * Sign-up asks for a name, a username and a password — no email, no phone.
+     * Nothing here can identify a person, which is the point.
+     *
+     * The name and the username do different jobs. The name is what the shop
+     * reads on a receipt and what the customer sees in their account, and two
+     * customers called John Smith are free to both use it. The username is only
+     * the thing typed to sign in, so it has to stay unique.
      *
      * The trade-off is that a forgotten password cannot be reset: there is no
      * channel to reach the account holder. That is a deliberate choice.
@@ -32,20 +37,23 @@ class RegisterController extends Controller
     public function register(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
             'username' => Username::rules(),
             'password' => ['required', 'confirmed', Password::defaults()],
         ], Username::messages());
 
         $username = strtolower($validated['username']);
 
+        // Split on the first space so "John Smith" fills both columns, and a
+        // single word simply leaves the surname empty.
+        $name = trim(preg_replace('/\s+/', ' ', $validated['name']));
+        [$firstName, $lastName] = array_pad(explode(' ', $name, 2), 2, '');
+
         $user = User::create([
             'uuid' => Str::uuid(),
             'username' => $username,
-            // first_name is NOT NULL and shown around the account area. With no
-            // real name collected, the username stands in for it; checkout asks
-            // separately for the name to put on the order.
-            'first_name' => $username,
-            'last_name' => '',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'email' => null,
             'phone' => null,
             'password' => Hash::make($validated['password']),
