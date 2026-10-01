@@ -14,23 +14,15 @@ class WishlistController extends Controller
 {
     public function index(Request $request): View|JsonResponse|RedirectResponse
     {
-        if (!auth()->check()) {
-            if ($request->wantsJson()) {
-                return response()->json(['items' => []], 401);
-            }
-            return redirect()->route('login');
-        }
-
         if ($request->wantsJson()) {
-            $items = Wishlist::where('user_id', auth()->id())
+            $items = $this->ownedBy(Wishlist::query())
                 ->select('id', 'product_id')
                 ->get();
 
             return response()->json(['items' => $items]);
         }
 
-        $wishlistItems = Wishlist::query()
-            ->where('user_id', auth()->id())
+        $wishlistItems = $this->ownedBy(Wishlist::query())
             ->with(['product.category', 'product.primaryImage'])
             ->latest()
             ->paginate(24);
@@ -40,13 +32,12 @@ class WishlistController extends Controller
 
     public function store(Request $request, Product $product): JsonResponse|RedirectResponse
     {
-        $exists = Wishlist::where('user_id', auth()->id())
+        $exists = $this->ownedBy(Wishlist::query())
             ->where('product_id', $product->id)
             ->exists();
 
         if (!$exists) {
-            Wishlist::create([
-                'user_id' => auth()->id(),
+            Wishlist::create($this->ownerAttributes() + [
                 'product_id' => $product->id,
             ]);
 
@@ -59,7 +50,7 @@ class WishlistController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Product added to wishlist',
-                'count' => Wishlist::where('user_id', auth()->id())->count(),
+                'count' => $this->ownedBy(Wishlist::query())->count(),
                 'fb_event' => !$exists ? [
                     'event_id' => $eventId ?? null,
                     'content_ids' => [(string) $product->id],
@@ -76,7 +67,7 @@ class WishlistController extends Controller
 
     public function destroy(Request $request, Product $product): JsonResponse|RedirectResponse
     {
-        Wishlist::where('user_id', auth()->id())
+        $this->ownedBy(Wishlist::query())
             ->where('product_id', $product->id)
             ->delete();
 
@@ -84,10 +75,30 @@ class WishlistController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Product removed from wishlist',
-                'count' => Wishlist::where('user_id', auth()->id())->count(),
+                'count' => $this->ownedBy(Wishlist::query())->count(),
             ]);
         }
 
         return back()->with('success', 'Product removed from wishlist.');
+    }
+
+    /**
+     * A wishlist belongs to a signed-in user, or to a guest's session - the
+     * same split `carts` has always used. Both reads and writes go through
+     * here so the two cannot drift apart.
+     */
+    private function ownedBy($query)
+    {
+        return auth()->check()
+            ? $query->where('user_id', auth()->id())
+            : $query->whereNull('user_id')->where('session_id', session()->getId());
+    }
+
+    /** The owner columns to stamp on a new row. */
+    private function ownerAttributes(): array
+    {
+        return auth()->check()
+            ? ['user_id' => auth()->id(), 'session_id' => null]
+            : ['user_id' => null, 'session_id' => session()->getId()];
     }
 }

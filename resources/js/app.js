@@ -471,12 +471,8 @@ Alpine.store('wishlist', {
     },
 
     async toggle(productId) {
-        // Show login modal if not authenticated
-        if (document.body.dataset.authenticated !== 'true') {
-            Alpine.store('authModal').open();
-            return;
-        }
-
+        // No sign-in gate: a guest's wishlist is kept against their session and
+        // merged into the account when they do sign in.
         this.isLoading = true;
         try {
             if (this.has(productId)) {
@@ -807,10 +803,8 @@ function initStores() {
     // Always fetch cart (works for both guests and authenticated users)
     Alpine.store('cart').fetch();
 
-    // Wishlist only for authenticated users
-    if (document.body.dataset.authenticated === 'true') {
-        Alpine.store('wishlist').fetch();
-    }
+    // Wishlist works for guests too, same as the cart above.
+    Alpine.store('wishlist').fetch();
 }
 
 // Handle timing: if DOM already loaded (module scripts can run late), init immediately

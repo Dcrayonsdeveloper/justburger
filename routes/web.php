@@ -117,11 +117,12 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::delete('/', [App\Http\Controllers\CartController::class, 'clear'])->name('clear');
 });
 
-// Wishlist page (handles auth check in controller)
+// Wishlist page. Works for guests too.
 Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist');
 
-// Wishlist actions (require auth)
-Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function () {
+// Wishlist actions. No auth: a guest's wishlist is keyed to their session,
+// exactly as their basket is, and is merged into the account on sign-in.
+Route::prefix('wishlist')->name('wishlist.')->group(function () {
     Route::post('/{product:id}', [App\Http\Controllers\WishlistController::class, 'store'])->name('store');
     Route::delete('/{product:id}', [App\Http\Controllers\WishlistController::class, 'destroy'])->name('destroy');
 });
