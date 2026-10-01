@@ -300,14 +300,55 @@
                             View Customer
                         </a>
                     @else
+                        {{-- Checkout requires a name, so a guest order has one even
+                             without an account. Showing only "Guest checkout" meant
+                             whoever was handing the bag over had to open the receipt
+                             to find out who to call for. --}}
+                        @php
+                            $guestName = $order->guest_name
+                                ?: ($order->shipping_address_snapshot['name'] ?? '');
+                        @endphp
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
+                            <div class="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center ring-1 ring-neutral-200 shrink-0">
+                                @if($guestName)
+                                    <span class="text-sm font-bold text-neutral-600">{{ strtoupper(substr($guestName, 0, 1)) }}</span>
+                                @else
+                                    <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                @endif
                             </div>
-                            <span class="text-sm text-neutral-600">Guest checkout</span>
+                            <div class="min-w-0">
+                                @if($guestName)
+                                    <p class="font-medium text-neutral-900 truncate">{{ $guestName }}</p>
+                                @endif
+                                <p class="text-sm text-neutral-600">Guest checkout</p>
+                            </div>
                         </div>
+
+                        @if($order->guest_phone || $order->guest_email)
+                            <div class="mt-4 pt-4 border-t border-neutral-100 space-y-2 text-sm">
+                                @if($order->guest_phone)
+                                    {{-- Tappable: collection orders get chased by phone. --}}
+                                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $order->guest_phone) }}"
+                                       class="flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors">
+                                        <svg class="w-4 h-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                        </svg>
+                                        {{ $order->guest_phone }}
+                                    </a>
+                                @endif
+                                @if($order->guest_email)
+                                    <a href="mailto:{{ $order->guest_email }}"
+                                       class="flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors">
+                                        <svg class="w-4 h-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span class="truncate">{{ $order->guest_email }}</span>
+                                    </a>
+                                @endif
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
