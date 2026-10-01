@@ -32,30 +32,23 @@
                     </div>
                 </div>
 
-                <!-- Loyalty Points + Order Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 text-center md:col-span-1">
-                        <div class="text-2xl font-bold text-amber-600">{{ number_format($user->loyalty_points_balance ?? 0) }}</div>
-                        <div class="text-xs text-amber-700 mt-0.5 font-medium">Reward Points</div>
-                        @if(($user->loyalty_points_balance ?? 0) > 0)
-                            <div class="text-[10px] text-amber-600 mt-1">Worth @price(($user->loyalty_points_balance ?? 0) * 0.25)</div>
-                        @endif
-                    </div>
+                <!-- Order Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
                     <div class="bg-white border border-neutral-100 rounded-xl p-4 text-center">
                         <div class="text-2xl font-bold text-neutral-900">{{ $orderStats['total'] }}</div>
                         <div class="text-xs text-neutral-600 mt-0.5">Total Orders</div>
                     </div>
                     <div class="bg-white border border-neutral-100 rounded-xl p-4 text-center">
-                        <div class="text-2xl font-bold text-warning-600">{{ $orderStats['confirmed'] }}</div>
-                        <div class="text-xs text-neutral-600 mt-0.5">Confirmed</div>
+                        <div class="text-2xl font-bold text-warning-600">{{ $orderStats['preparing'] }}</div>
+                        <div class="text-xs text-neutral-600 mt-0.5">Preparing</div>
                     </div>
                     <div class="bg-white border border-neutral-100 rounded-xl p-4 text-center">
-                        <div class="text-2xl font-bold text-info-600">{{ $orderStats['processing'] }}</div>
-                        <div class="text-xs text-neutral-600 mt-0.5">Processing</div>
+                        <div class="text-2xl font-bold text-success-600">{{ $orderStats['ready'] }}</div>
+                        <div class="text-xs text-neutral-600 mt-0.5">Ready to collect</div>
                     </div>
                     <div class="bg-white border border-neutral-100 rounded-xl p-4 text-center">
-                        <div class="text-2xl font-bold text-success-600">{{ $orderStats['completed'] }}</div>
-                        <div class="text-xs text-neutral-600 mt-0.5">Completed</div>
+                        <div class="text-2xl font-bold text-neutral-400">{{ $orderStats['cancelled'] }}</div>
+                        <div class="text-xs text-neutral-600 mt-0.5">Cancelled</div>
                     </div>
                 </div>
 
