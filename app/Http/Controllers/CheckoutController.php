@@ -320,7 +320,7 @@ class CheckoutController extends Controller
                     // The customer's choices, frozen at the moment of ordering.
                     // Without this the kitchen is handed a bare product name and
                     // has no idea the burger was meant to come without onions.
-                    'product_snapshot' => ['toppings' => $item->toppings_list],
+                    'product_snapshot' => ['toppings' => $item->toppings_list, 'item_note' => $item->item_note],
                     'quantity' => $item->quantity,
                     'mrp' => $item->product->mrp ?? $item->price,
                     'price' => $item->price,
@@ -622,7 +622,7 @@ class CheckoutController extends Controller
                     // The customer's choices, frozen at the moment of ordering.
                     // Without this the kitchen is handed a bare product name and
                     // has no idea the burger was meant to come without onions.
-                    'product_snapshot' => ['toppings' => $item->toppings_list],
+                    'product_snapshot' => ['toppings' => $item->toppings_list, 'item_note' => $item->item_note],
                     'quantity' => $item->quantity,
                     'mrp' => $item->product->mrp ?? $item->price,
                     'price' => $item->price,

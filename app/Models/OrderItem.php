@@ -48,6 +48,12 @@ class OrderItem extends Model
      * was recorded simply have none, so every caller must cope with an empty
      * array rather than assume the keys exist.
      */
+    /** The note frozen onto this line at checkout. */
+    public function getItemNoteAttribute(): string
+    {
+        return trim((string) ($this->product_snapshot['item_note'] ?? ''));
+    }
+
     public function getToppingsListAttribute(): array
     {
         $toppings = $this->product_snapshot['toppings'] ?? [];

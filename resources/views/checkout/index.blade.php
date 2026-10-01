@@ -186,6 +186,7 @@
         .ck-item-opt { font-size:.68rem; line-height:1.3; margin:.1rem 0 0; color:#666666; }
         .ck-item-opt--add { color:#16a34a; }
         .ck-item-opt--del { color:#dc2626; }
+        .ck-item-opt--note { color:#8a6d1f; overflow-wrap:anywhere; }
         .ck-item-qty {
             display:inline-flex; align-items:center; gap:.35rem;
             margin-top:.25rem;
@@ -739,6 +740,14 @@
                                             @if(!empty($opts['added']))
                                                 <p class="ck-item-opt ck-item-opt--add">+
                                                     {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</p>
+                                            @endif
+                                            @if($item->item_note)
+                                                {{-- A marker, not the whole note: this column is narrow and
+                                                     the kitchen reads the note off the receipt, not here. --}}
+                                                <p class="ck-item-opt ck-item-opt--note" title="{{ $item->item_note }}">
+                                                    <svg style="width:11px;height:11px;vertical-align:-1px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                    Note: {{ \Illuminate\Support\Str::limit($item->item_note, 40) }}
+                                                </p>
                                             @endif
                                             @if(!empty($opts['removed']))
                                                 <p class="ck-item-opt ck-item-opt--del">No

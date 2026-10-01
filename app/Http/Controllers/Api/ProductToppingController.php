@@ -69,6 +69,9 @@ class ProductToppingController extends Controller
             'defaults' => $flat->where('preselected', true)->values(),
             'optionals' => $flat->where('preselected', false)->values(),
             'has_toppings' => $flat->isNotEmpty(),
+            // The popup opens for toppings OR for a note, so the client needs
+            // to know about both before deciding whether to show itself.
+            'allow_item_note' => (bool) $product->allow_item_note,
         ]);
     }
 
@@ -105,6 +108,7 @@ class ProductToppingController extends Controller
             'defaults' => [],
             'optionals' => [],
             'has_toppings' => false,
+            'allow_item_note' => (bool) $product->allow_item_note,
         ]);
     }
 }

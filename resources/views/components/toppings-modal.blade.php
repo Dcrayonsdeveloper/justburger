@@ -96,6 +96,22 @@
                     </div>
                 </template>
 
+                {{-- Kitchen note, last so it sits under the options it qualifies.
+                     Only for items the admin has enabled it on - bottled drinks
+                     and sealed tubs are handed over as they are. --}}
+                <div x-show="$store.toppingsModal.allowItemNote" x-cloak>
+                    <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2.5">Note</h4>
+                    <textarea x-model="$store.toppingsModal.itemNote"
+                              maxlength="200"
+                              rows="2"
+                              placeholder="Anything the kitchen should know? e.g. no onions, well done"
+                              class="w-full text-sm rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2
+                                     focus:bg-white focus:border-neutral-400 focus:outline-none resize-none"></textarea>
+                    <p class="text-[11px] text-neutral-400 mt-1 text-right">
+                        <span x-text="$store.toppingsModal.itemNote.length"></span>/200
+                    </p>
+                </div>
+
             </div>
 
             {{-- Footer --}}
