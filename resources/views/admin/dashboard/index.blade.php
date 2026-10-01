@@ -13,27 +13,51 @@
         <form method="GET" action="{{ route('admin.dashboard') }}" x-ref="filterForm" class="flex items-center gap-2">
             <input type="hidden" name="start_date" x-ref="startDate" value="{{ request('start_date') }}">
             <input type="hidden" name="end_date" x-ref="endDate" value="{{ request('end_date') }}">
+            <input type="hidden" name="range" x-ref="range" value="{{ request('range') }}">
             @php
-                $isToday = request('start_date') == today()->format('Y-m-d') && request('end_date') == today()->format('Y-m-d');
-                $is7d = request('start_date') == now()->subDays(6)->format('Y-m-d') && request('end_date') == today()->format('Y-m-d');
-                $is30d = request('start_date') == now()->subDays(29)->format('Y-m-d') && request('end_date') == today()->format('Y-m-d');
-                $isMonth = request('start_date') == now()->startOfMonth()->format('Y-m-d') && request('end_date') == today()->format('Y-m-d');
-                $isYear = request('start_date') == now()->startOfYear()->format('Y-m-d') && request('end_date') == today()->format('Y-m-d');
-                $noFilter = !$hasDateFilter;
+                // Which pill is lit comes from an explicit `range`, never from
+                // comparing dates. Every range here ends at today, so on certain
+                // days two of them collapse to the same start/end pair: on the 1st
+                // of a month "Today" and "This Month" both start today, on 1
+                // January "This Year" joins them, and on the 7th "7 Days" equals
+                // the start of the month. Date-matching lit all of them at once.
+                $ranges = [
+                    'today' => ['label' => 'Today',      'start' => today()],
+                    '7d'    => ['label' => '7 Days',     'start' => now()->subDays(6)],
+                    '30d'   => ['label' => '30 Days',    'start' => now()->subDays(29)],
+                    'month' => ['label' => 'This Month', 'start' => now()->startOfMonth()],
+                    'year'  => ['label' => 'This Year',  'start' => now()->startOfYear()],
+                ];
+
+                $requested = request('range');
+                $active = is_string($requested) && isset($ranges[$requested]) ? $requested : null;
+
+                if ($active === null) {
+                    // Links made before `range` existed carry only dates. Fall back
+                    // to matching them, but stop at the first hit so exactly one
+                    // pill can ever be lit.
+                    foreach ($ranges as $key => $r) {
+                        if (request('start_date') === $r['start']->format('Y-m-d')
+                            && request('end_date') === today()->format('Y-m-d')) {
+                            $active = $key;
+                            break;
+                        }
+                    }
+                    // Nothing filtered at all: the dashboard shows 30 days.
+                    $active ??= ($hasDateFilter ? null : '30d');
+                }
+
                 $pill = 'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer';
-                $pillActive = 'color:#fff';
+                $pillActive = 'background:#1a1a1a;color:#fff';
                 $pillNormal = 'border:1px solid #c9cccf;color:#303030;background:#fff';
             @endphp
-            <button type="button" @click="$refs.startDate.value='{{ today()->format('Y-m-d') }}';$refs.endDate.value='{{ today()->format('Y-m-d') }}';$refs.filterForm.submit()"
-                    class="{{ $pill }}" style="{{ $isToday ? 'background:#1a1a1a;'.$pillActive : $pillNormal }}">Today</button>
-            <button type="button" @click="$refs.startDate.value='{{ now()->subDays(6)->format('Y-m-d') }}';$refs.endDate.value='{{ today()->format('Y-m-d') }}';$refs.filterForm.submit()"
-                    class="{{ $pill }}" style="{{ $is7d ? 'background:#1a1a1a;'.$pillActive : $pillNormal }}">7 Days</button>
-            <button type="button" @click="$refs.startDate.value='{{ now()->subDays(29)->format('Y-m-d') }}';$refs.endDate.value='{{ today()->format('Y-m-d') }}';$refs.filterForm.submit()"
-                    class="{{ $pill }}" style="{{ $is30d || $noFilter ? 'background:#1a1a1a;'.$pillActive : $pillNormal }}">30 Days</button>
-            <button type="button" @click="$refs.startDate.value='{{ now()->startOfMonth()->format('Y-m-d') }}';$refs.endDate.value='{{ today()->format('Y-m-d') }}';$refs.filterForm.submit()"
-                    class="{{ $pill }}" style="{{ $isMonth ? 'background:#1a1a1a;'.$pillActive : $pillNormal }}">This Month</button>
-            <button type="button" @click="$refs.startDate.value='{{ now()->startOfYear()->format('Y-m-d') }}';$refs.endDate.value='{{ today()->format('Y-m-d') }}';$refs.filterForm.submit()"
-                    class="{{ $pill }}" style="{{ $isYear ? 'background:#1a1a1a;'.$pillActive : $pillNormal }}">This Year</button>
+            @foreach($ranges as $key => $r)
+                <button type="button"
+                        @click="$refs.startDate.value='{{ $r['start']->format('Y-m-d') }}';$refs.endDate.value='{{ today()->format('Y-m-d') }}';$refs.range.value='{{ $key }}';$refs.filterForm.submit()"
+                        class="{{ $pill }}"
+                        style="{{ $active === $key ? $pillActive : $pillNormal }}"
+                        @if($active === $key) aria-current="true" @endif>{{ $r['label'] }}</button>
+            @endforeach
         </form>
     </div>
 

@@ -25,9 +25,11 @@ class ReportController extends Controller
         $startDate = now()->subDays($period);
         $excludedStatuses = ['cancelled', 'returned'];
 
-        // Sales overview (paid orders, exclude cancelled/returned)
+        // Sales overview. Confirmed orders, not paid-only: this is a collection
+        // shop and cash orders stay at payment_status 'pending' forever, so a
+        // paid-only filter reported almost no trade. See Order::scopeConfirmed().
         $salesData = Order::where('created_at', '>=', $startDate)
-            ->where('payment_status', 'paid')
+            ->confirmed()
             ->whereNotIn('status', $excludedStatuses)
             ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(total) as revenue')
             ->groupBy('date')
@@ -36,7 +38,7 @@ class ReportController extends Controller
 
         // Summary stats
         $paidOrdersQuery = Order::where('created_at', '>=', $startDate)
-            ->where('payment_status', 'paid')
+            ->confirmed()
             ->whereNotIn('status', $excludedStatuses);
 
         $stats = [
@@ -46,7 +48,12 @@ class ReportController extends Controller
             'items_sold' => DB::table('order_items')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->where('orders.created_at', '>=', $startDate)
-                ->where('orders.payment_status', 'paid')
+                ->where(function ($q) {
+                    // Query-builder twin of Order::scopeConfirmed(), grouped so the
+                    // OR cannot swallow the filters beside it.
+                    $q->where('orders.payment_status', 'paid')
+                      ->orWhereIn('orders.metadata->payment_method', Order::PAY_AT_COUNTER);
+                })
                 ->whereNotIn('orders.status', $excludedStatuses)
                 ->sum('order_items.quantity'),
         ];
@@ -55,7 +62,7 @@ class ReportController extends Controller
         $prevStartDate = now()->subDays($period * 2);
         $prevEndDate = now()->subDays($period);
         $prevRevenue = Order::whereBetween('created_at', [$prevStartDate, $prevEndDate])
-            ->where('payment_status', 'paid')
+            ->confirmed()
             ->whereNotIn('status', $excludedStatuses)
             ->sum('total');
 
@@ -66,7 +73,7 @@ class ReportController extends Controller
         // Top selling products (by quantity sold)
         $topProducts = Product::withCount(['orderItems as sold' => function ($query) use ($startDate, $excludedStatuses) {
             $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                ->where('payment_status', 'paid')
+                ->confirmed()
                 ->whereNotIn('status', $excludedStatuses));
         }])
             ->having('sold', '>', 0)
@@ -80,7 +87,12 @@ class ReportController extends Controller
             ->join('categories', 'products.category_id', '=', 'categories.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where('orders.created_at', '>=', $startDate)
-            ->where('orders.payment_status', 'paid')
+            ->where(function ($q) {
+                // Query-builder twin of Order::scopeConfirmed(), grouped so the
+                // OR cannot swallow the filters beside it.
+                $q->where('orders.payment_status', 'paid')
+                  ->orWhereIn('orders.metadata->payment_method', Order::PAY_AT_COUNTER);
+            })
             ->whereNotIn('orders.status', $excludedStatuses)
             ->select('categories.name', DB::raw('SUM(order_items.total) as revenue'))
             ->groupBy('categories.id', 'categories.name')
@@ -132,7 +144,7 @@ class ReportController extends Controller
         $checkoutOrders = Order::where('created_at', '>=', $startDate)->count();
 
         $completedOrders = Order::where('created_at', '>=', $startDate)
-            ->where('payment_status', 'paid')
+            ->confirmed()
             ->whereNotIn('status', $excludedStatuses)
             ->count();
 
@@ -217,12 +229,12 @@ class ReportController extends Controller
         // Product performance
         $products = Product::withCount(['orderItems as sold' => function ($query) use ($startDate, $excludedStatuses) {
             $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                ->where('payment_status', 'paid')
+                ->confirmed()
                 ->whereNotIn('status', $excludedStatuses));
         }])
             ->withSum(['orderItems as revenue' => function ($query) use ($startDate, $excludedStatuses) {
                 $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                    ->where('payment_status', 'paid')
+                    ->confirmed()
                     ->whereNotIn('status', $excludedStatuses));
             }], 'total')
             ->orderByDesc('sold')
@@ -258,7 +270,7 @@ class ReportController extends Controller
         // New vs returning
         $newCustomers = Customer::where('created_at', '>=', $startDate)->count();
         $returningCustomers = Order::where('created_at', '>=', $startDate)
-            ->where('payment_status', 'paid')
+            ->confirmed()
             ->whereNotIn('status', $excludedStatuses)
             ->select('user_id')
             ->distinct()
@@ -268,12 +280,12 @@ class ReportController extends Controller
         // Top customers
         $topCustomers = Customer::withCount(['orders as order_count' => function ($query) use ($startDate, $excludedStatuses) {
             $query->where('created_at', '>=', $startDate)
-                ->where('payment_status', 'paid')
+                ->confirmed()
                 ->whereNotIn('status', $excludedStatuses);
         }])
             ->withSum(['orders as total_spent' => function ($query) use ($startDate, $excludedStatuses) {
                 $query->where('created_at', '>=', $startDate)
-                    ->where('payment_status', 'paid')
+                    ->confirmed()
                     ->whereNotIn('status', $excludedStatuses);
             }], 'total')
             ->orderByDesc('total_spent')
@@ -285,7 +297,7 @@ class ReportController extends Controller
             'total_customers' => Customer::count(),
             'new_customers' => $newCustomers,
             'returning_customers' => $returningCustomers,
-            'average_lifetime_value' => Customer::withSum(['orders' => fn ($q) => $q->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses)], 'total')
+            'average_lifetime_value' => Customer::withSum(['orders' => fn ($q) => $q->confirmed()->whereNotIn('status', $excludedStatuses)], 'total')
                 ->get()
                 ->avg('orders_sum_total') ?? 0,
         ];
@@ -310,7 +322,12 @@ class ReportController extends Controller
         $topSellersData = DB::table('orders')
             ->join('sellers', 'orders.seller_id', '=', 'sellers.id')
             ->where('orders.created_at', '>=', $startDate)
-            ->where('orders.payment_status', 'paid')
+            ->where(function ($q) {
+                // Query-builder twin of Order::scopeConfirmed(), grouped so the
+                // OR cannot swallow the filters beside it.
+                $q->where('orders.payment_status', 'paid')
+                  ->orWhereIn('orders.metadata->payment_method', Order::PAY_AT_COUNTER);
+            })
             ->whereNotIn('orders.status', $excludedStatuses)
             ->where('sellers.status', 'active')
             ->select('sellers.id', DB::raw('SUM(orders.total) as total_sales'))
@@ -367,7 +384,7 @@ class ReportController extends Controller
                 case 'sales':
                     fputcsv($handle, ['Date', 'Orders', 'Revenue']);
                     Order::where('created_at', '>=', $startDate)
-                        ->where('payment_status', 'paid')
+                        ->confirmed()
                         ->whereNotIn('status', $excludedStatuses)
                         ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(total) as revenue')
                         ->groupBy('date')
@@ -381,12 +398,12 @@ class ReportController extends Controller
                     fputcsv($handle, ['Product', 'SKU', 'Stock', 'Price', 'Sales', 'Revenue']);
                     Product::withCount(['orderItems as sold' => function ($query) use ($startDate, $excludedStatuses) {
                         $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                            ->where('payment_status', 'paid')
+                            ->confirmed()
                             ->whereNotIn('status', $excludedStatuses));
                     }])
                         ->withSum(['orderItems as revenue' => function ($query) use ($startDate, $excludedStatuses) {
                             $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                                ->where('payment_status', 'paid')
+                                ->confirmed()
                                 ->whereNotIn('status', $excludedStatuses));
                         }], 'total')
                         ->each(function ($product) use ($handle) {
@@ -403,8 +420,8 @@ class ReportController extends Controller
 
                 case 'customers':
                     fputcsv($handle, ['Name', 'Email', 'Orders', 'Total Spent', 'Joined']);
-                    Customer::withCount(['orders' => fn ($q) => $q->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses)])
-                        ->withSum(['orders' => fn ($q) => $q->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses)], 'total')
+                    Customer::withCount(['orders' => fn ($q) => $q->confirmed()->whereNotIn('status', $excludedStatuses)])
+                        ->withSum(['orders' => fn ($q) => $q->confirmed()->whereNotIn('status', $excludedStatuses)], 'total')
                         ->each(function ($customer) use ($handle) {
                             fputcsv($handle, [
                                 $customer->name,
@@ -432,7 +449,7 @@ class ReportController extends Controller
             case 'sales':
                 $headers = ['Date', 'Orders', 'Revenue'];
                 $rows = Order::where('created_at', '>=', $startDate)
-                    ->where('payment_status', 'paid')
+                    ->confirmed()
                     ->whereNotIn('status', $excludedStatuses)
                     ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(total) as revenue')
                     ->groupBy('date')
@@ -445,12 +462,12 @@ class ReportController extends Controller
                 $headers = ['Product', 'SKU', 'Stock', 'Price', 'Sales', 'Revenue'];
                 $rows = Product::withCount(['orderItems as sold' => function ($query) use ($startDate, $excludedStatuses) {
                     $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                        ->where('payment_status', 'paid')
+                        ->confirmed()
                         ->whereNotIn('status', $excludedStatuses));
                 }])
                     ->withSum(['orderItems as revenue' => function ($query) use ($startDate, $excludedStatuses) {
                         $query->whereHas('order', fn ($q) => $q->where('created_at', '>=', $startDate)
-                            ->where('payment_status', 'paid')
+                            ->confirmed()
                             ->whereNotIn('status', $excludedStatuses));
                     }], 'total')
                     ->get()
@@ -459,8 +476,8 @@ class ReportController extends Controller
 
             case 'customers':
                 $headers = ['Name', 'Email', 'Orders', 'Total Spent', 'Joined'];
-                $rows = Customer::withCount(['orders' => fn ($q) => $q->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses)])
-                    ->withSum(['orders' => fn ($q) => $q->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses)], 'total')
+                $rows = Customer::withCount(['orders' => fn ($q) => $q->confirmed()->whereNotIn('status', $excludedStatuses)])
+                    ->withSum(['orders' => fn ($q) => $q->confirmed()->whereNotIn('status', $excludedStatuses)], 'total')
                     ->get()
                     ->map(fn ($c) => [$c->name, $c->email, $c->orders_count, $c->orders_sum_total ?? 0, $c->created_at->format('Y-m-d')]);
                 break;

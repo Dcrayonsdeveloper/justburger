@@ -542,6 +542,10 @@
             'id'            => $item->id,
             'product_id'    => $item->product_id,
             'name'          => $item->product->name,
+            // The chosen size. This page seeds Alpine from $cartItems rather
+            // than /cart/data, so adding variant_name to the API alone left the
+            // size invisible here.
+            'variant_name'  => $item->variant?->name,
             'brand'         => $item->product->brand?->name,
             'image'         => (($img = $item->product->primary_image_url) && !str_ends_with(strtolower($img), '.svg')) ? $img : asset('images/products/product-' . (($item->product->id % 27) + 1) . '.jpg'),
             'product_url'   => route('product.show', $item->product),
