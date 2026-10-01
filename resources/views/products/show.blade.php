@@ -522,6 +522,23 @@
                     </div>
                     @endif
 
+                    {{-- Save to favourites. No sign-in needed: a guest's list is kept
+                         against their session and merged into the account when they
+                         sign in, the same way the basket is. --}}
+                    <button type="button"
+                            @click="$store.wishlist.toggle({{ $product->id }})"
+                            class="btn-outline"
+                            :aria-pressed="$store.wishlist.has({{ $product->id }})"
+                            :title="$store.wishlist.has({{ $product->id }}) ? 'Remove from favourites' : 'Save to favourites'">
+                        <svg style="width:17px;height:17px;flex-shrink:0;" stroke="currentColor" stroke-width="2"
+                             viewBox="0 0 24 24"
+                             :fill="$store.wishlist.has({{ $product->id }}) ? '#C8102E' : 'none'"
+                             :style="$store.wishlist.has({{ $product->id }}) ? 'width:17px;height:17px;flex-shrink:0;color:#C8102E' : 'width:17px;height:17px;flex-shrink:0;'">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <span x-text="$store.wishlist.has({{ $product->id }}) ? 'Saved to Favourites' : 'Save to Favourites'">Save to Favourites</span>
+                    </button>
+
                     {{-- Call --}}
                     @if($phone)
                     <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="btn-outline">
