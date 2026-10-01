@@ -33,8 +33,15 @@ class DashboardController extends Controller
         // Excluded statuses for revenue
         $excludedStatuses = ['cancelled', 'returned'];
 
-        // Revenue filter: paid + not cancelled/returned
-        $revenueFilter = fn ($query) => $query->where('payment_status', 'paid')->whereNotIn('status', $excludedStatuses);
+        // Revenue has to count the same orders the dashboard counts as orders.
+        // Order::confirmed() is this app's definition of an order that really
+        // exists - paid, or placed to be paid at the counter - and the top row
+        // already uses it for the order count. Revenue used payment_status='paid'
+        // alone, so a collection shop taking cash reported nothing: 11 of 12
+        // orders sit at 'pending' and the panel showed GBP 0.00 against GBP
+        // 273.88 of real orders. An abandoned card checkout stays excluded,
+        // because its payment_method is 'stripe' and it was never paid.
+        $revenueFilter = fn ($query) => $query->confirmed()->whereNotIn('status', $excludedStatuses);
 
         // Order counts are paid-only, matching the orders list — otherwise the
         // dashboard reports more orders than the panel will ever show.
@@ -69,11 +76,16 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        // Top selling products (from actual paid order data)
+        // Top selling products, from confirmed orders - paid or pay-at-counter.
         $topProductsQuery = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->where('orders.payment_status', 'paid')
+            ->where(function ($q) {
+                // The query-builder twin of Order::scopeConfirmed(); grouped so
+                // the OR cannot swallow the status filter beside it.
+                $q->where('orders.payment_status', 'paid')
+                  ->orWhereIn('orders.metadata->payment_method', Order::PAY_AT_COUNTER);
+            })
             ->whereNotIn('orders.status', $excludedStatuses)
             ->select('products.id', 'products.name', 'products.price', DB::raw('SUM(order_items.quantity) as total_sold'));
 
@@ -104,7 +116,7 @@ class DashboardController extends Controller
             $daysDiff = $startDate->diffInDays($endDate);
             $salesData = Order::selectRaw('DATE(created_at) as date, SUM(total) as total, COUNT(*) as count')
                 ->whereBetween('created_at', [$startDate, $endDate])
-                ->where('payment_status', 'paid')
+                ->confirmed()
                 ->whereNotIn('status', $excludedStatuses)
                 ->groupBy('date')
                 ->orderBy('date')
@@ -127,7 +139,7 @@ class DashboardController extends Controller
                 // Show weekly for longer ranges
                 $weeklyData = Order::selectRaw('YEARWEEK(created_at, 1) as yw, MIN(DATE(created_at)) as week_start, SUM(total) as total, COUNT(*) as count')
                     ->whereBetween('created_at', [$startDate, $endDate])
-                    ->where('payment_status', 'paid')
+                    ->confirmed()
                     ->whereNotIn('status', $excludedStatuses)
                     ->groupBy('yw')
                     ->orderBy('yw')
@@ -142,7 +154,7 @@ class DashboardController extends Controller
             // Default: last 7 days
             $salesData = Order::selectRaw('DATE(created_at) as date, SUM(total) as total, COUNT(*) as count')
                 ->whereDate('created_at', '>=', now()->subDays(6))
-                ->where('payment_status', 'paid')
+                ->confirmed()
                 ->whereNotIn('status', $excludedStatuses)
                 ->groupBy('date')
                 ->orderBy('date')
@@ -179,9 +191,9 @@ class DashboardController extends Controller
 
         $orderStatusCounts = $orderStatusCounts->filter()->toArray();
 
-        // Monthly revenue (last 6 months or within filter range, paid only)
+        // Monthly revenue (last 6 months or within the filter range), confirmed orders.
         $monthQuery = Order::selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(total) as total')
-            ->where('payment_status', 'paid')
+            ->confirmed()
             ->whereNotIn('status', $excludedStatuses);
         if ($hasDateFilter) {
             $monthQuery->whereBetween('created_at', [$startDate, $endDate]);
