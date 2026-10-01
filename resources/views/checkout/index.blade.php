@@ -1185,6 +1185,24 @@
                     processing: false,
                     error: '',
 
+                    init() {
+                        // Leaving for Stripe sets processing = true and never unsets
+                        // it, because the page is on its way out. Coming back - the
+                        // browser's back button, or Stripe's own cancel link -
+                        // restores this page from the back/forward cache with its
+                        // JavaScript state frozen as it was, so the button stayed on
+                        // "Processing..." and could not be pressed again. The order
+                        // was never placed and the customer was stuck.
+                        //
+                        // persisted is the precise signal for a bfcache restore. A
+                        // normal reload builds a fresh component and needs nothing.
+                        window.addEventListener('pageshow', (event) => {
+                            if (event.persisted) {
+                                this.processing = false;
+                            }
+                        });
+                    },
+
                     handleSubmit(e) {
                         this.error = '';
                         if (this.paymentMethod === 'stripe') {

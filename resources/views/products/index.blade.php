@@ -583,6 +583,9 @@
                             <div class="cs-row">
                                 <div class="cs-row-body">
                                     <div class="cs-row-name" x-text="item.product_name || item.name"></div>
+                                    <template x-if="item.variant_name">
+                                        <div style="font-size:.62rem;color:#666;line-height:1.2;margin-top:.1rem;"><span style="font-weight:700;">Size:</span> <span x-text="item.variant_name"></span></div>
+                                    </template>
                                     <template x-if="item.toppings && item.toppings.added?.length">
                                         <div style="font-size:.62rem;color:#16a34a;line-height:1.2;margin-top:.1rem;">
                                             <span>+ </span>
@@ -598,6 +601,9 @@
                                                 <span x-text="t.name + (i < item.toppings.removed.length - 1 ? ', ' : '')"></span>
                                             </template>
                                         </div>
+                                    </template>
+                                    <template x-if="item.item_note">
+                                        <div style="font-size:.62rem;color:#8a6d1f;line-height:1.2;overflow-wrap:anywhere;"><span style="font-weight:700;">Note:</span> <span x-text="item.item_note"></span></div>
                                     </template>
                                     <div class="cs-row-line" x-text="'£' + parseFloat(item.line_price || item.price).toFixed(2) + ' each'"></div>
                                     <div class="cs-qty-wrap">
