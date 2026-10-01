@@ -22,12 +22,17 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Order statistics
+        // Order statistics. This is a collection shop: an order is being
+        // prepared, is ready to collect, or was cancelled. The counts used to
+        // look for 'confirmed', 'processing' and 'completed' - none of which
+        // this app ever sets - so all three showed zero however many orders
+        // someone had placed.
+        $mine = fn () => Order::where('user_id', $user->id);
         $orderStats = [
-            'total' => Order::where('user_id', $user->id)->count(),
-            'confirmed' => Order::where('user_id', $user->id)->where('status', 'confirmed')->count(),
-            'processing' => Order::where('user_id', $user->id)->where('status', 'processing')->count(),
-            'completed' => Order::where('user_id', $user->id)->where('status', 'completed')->count(),
+            'total' => $mine()->count(),
+            'preparing' => $mine()->where('status', Order::STATUS_PREPARING)->count(),
+            'ready' => $mine()->where('status', Order::STATUS_READY)->count(),
+            'cancelled' => $mine()->where('status', Order::STATUS_CANCELLED)->count(),
         ];
 
         // Wishlist count
