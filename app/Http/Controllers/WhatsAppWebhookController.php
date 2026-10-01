@@ -125,7 +125,9 @@ class WhatsAppWebhookController extends Controller
         } elseif (str_contains($textLower, 'track') || str_contains($textLower, 'order')) {
             $reply = "📦 To track your order, please share your Order ID.\n\nYou can also track at: {$siteUrl}/track-order";
         } elseif (str_contains($textLower, 'hour') || str_contains($textLower, 'open') || str_contains($textLower, 'close') || str_contains($textLower, 'time')) {
-            $hours = \App\Models\Setting::get('opening_hours', 'Mon–Sun: 11am – 11pm');
+            // business_hours, not opening_hours: the latter is stored as JSON and
+            // would send the customer a raw {"Mon & Tue":"..."} blob.
+            $hours = \App\Models\Setting::get('business_hours', 'Mon & Tue 12:00 PM – 10:00 PM, Wed & Thu 12:00 PM – 10:30 PM, Fri & Sat 11:45 AM – 11:00 PM, Sunday 4:00 PM – 10:00 PM');
             $reply = "🕐 *Our Opening Hours*\n\n{$hours}\n\nOrder online: {$siteUrl}";
         } elseif (str_contains($textLower, 'menu') || str_contains($textLower, 'food') || str_contains($textLower, 'burger') || str_contains($textLower, 'order')) {
             $reply = "🍔 Browse our full menu at:\n👉 {$siteUrl}/menu\n\nOrder online for collection or delivery!";
