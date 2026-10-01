@@ -3,16 +3,6 @@
 
 @if(count($stats) > 0)
 <div class="mb-5">
-    {{-- Date filter row --}}
-    <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-            <button class="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-700 bg-white rounded-lg" style="border:1px solid #c9cccf">
-                <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
-                Today
-            </button>
-        </div>
-    </div>
-
     {{-- Stats cards row --}}
     <div class="bg-white overflow-hidden" style="border-radius:12px;border:1px solid #e3e3e3;box-shadow:0 1px 2px rgba(0,0,0,.04)">
         <div class="flex overflow-x-auto" style="scrollbar-width:none">

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalisesToppings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
+    use NormalisesToppings;
+
     protected $fillable = [
         'order_id',
         'product_id',
@@ -49,17 +52,7 @@ class OrderItem extends Model
     {
         $toppings = $this->product_snapshot['toppings'] ?? [];
 
-        return is_array($toppings) ? $toppings : [];
-    }
-
-    /** Whether this line was customised at all — worth a line on the receipt. */
-    public function hasCustomisations(): bool
-    {
-        $toppings = $this->toppings_list;
-
-        return ! empty($toppings['kept'])
-            || ! empty($toppings['added'])
-            || ! empty($toppings['removed']);
+        return is_array($toppings) ? $this->withoutDuplicatedKeeps($toppings) : [];
     }
 
     public function order(): BelongsTo

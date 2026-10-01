@@ -378,8 +378,21 @@ Alpine.store('toppingsModal', {
     },
 
     get keptDefaults() {
-        // Pre-selected options the customer left ticked
-        return this.allToppings.filter(t => t.preselected && this.selected[t.id]);
+        // Pre-selected options the customer left ticked that cost nothing - the
+        // item's own ingredients. These are the "With:" line.
+        return this.allToppings.filter(
+            t => t.preselected && this.selected[t.id] && !Number(t.price)
+        );
+    },
+
+    get extraToppings() {
+        // What goes on the "+" line: anything the customer ticked themselves,
+        // plus any pre-selected option that carries a charge, so the line always
+        // accounts for the money. Free pre-selected options are reported as
+        // `kept` instead - sending them here as well printed every ingredient
+        // twice, on the basket and on the kitchen receipt ("With: Lettuce"
+        // followed by "+ Lettuce, Tomato...").
+        return this.addedToppings.filter(t => !t.preselected || Number(t.price) > 0);
     },
 
     get removedToppings() {
@@ -414,7 +427,7 @@ Alpine.store('toppingsModal', {
     },
 
     async confirm() {
-        const added = this.addedToppings.map(t => ({ id: t.id, name: t.name, price: t.price, section: t.section }));
+        const added = this.extraToppings.map(t => ({ id: t.id, name: t.name, price: t.price, section: t.section }));
         const removed = this.removedToppings.map(t => ({ id: t.id, name: t.name }));
         const kept = this.keptDefaults.map(t => ({ id: t.id, name: t.name, section: t.section }));
 

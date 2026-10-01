@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NormalisesToppings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CartItem extends Model
 {
+    use NormalisesToppings;
+
     protected $fillable = [
         'cart_id',
         'product_id',
@@ -70,8 +73,9 @@ class CartItem extends Model
     {
         $attrs = $this->attributes['attributes'] ?? null;
         $decoded = is_string($attrs) ? json_decode($attrs, true) : $attrs;
+        $toppings = $decoded['toppings'] ?? [];
 
-        return $decoded['toppings'] ?? [];
+        return is_array($toppings) ? $this->withoutDuplicatedKeeps($toppings) : [];
     }
 
     public function updateQuantity(int $quantity): void

@@ -723,6 +723,11 @@
                                         <div style="flex:1;min-width:0;">
                                             <p class="ck-item-name">{{ $item->product->name }}</p>
 
+                                            {{-- The size, labelled the way the receipt labels it. --}}
+                                            @if($item->variant?->name)
+                                                <p class="ck-item-opt"><strong>Size:</strong> {{ $item->variant->name }}</p>
+                                            @endif
+
                                             {{-- The same customisations the cart shows. Leaving them
                                                  off here meant the last screen before paying was the
                                                  one screen that did not say what had been ordered. --}}

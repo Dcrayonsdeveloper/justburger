@@ -68,6 +68,8 @@
             font-size:.72rem; color:rgba(0,0,0,.35); margin-top:.15rem;
             text-transform:uppercase; letter-spacing:.06em;
         }
+        .cart-item-size { font-size:.72rem; line-height:1.3; margin:.15rem 0 0; color:#666666; }
+        .cart-item-size .lbl { font-weight:700; }
         .cart-item-price { font-size:1rem; font-weight:800; color:#C8102E; margin-top:.3rem; }
 
         /* ─── Qty stepper pill ─── */
@@ -287,6 +289,11 @@
                                     <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;padding:.1rem 0;">
                                         <div>
                                             <a :href="item.product_url" class="cart-item-name" x-text="item.name"></a>
+                                            {{-- Labelled, because a bare "Large" sitting under the
+                                                 item name reads like part of the name. --}}
+                                            <template x-if="item.variant_name">
+                                                <p class="cart-item-size"><span class="lbl">Size:</span> <span x-text="item.variant_name"></span></p>
+                                            </template>
                                             <template x-if="item.toppings && (item.toppings.added?.length || item.toppings.removed?.length || item.toppings.kept?.length)">
                                                 <div style="margin-top:.2rem;">
                                                     <template x-if="item.toppings.kept?.length">

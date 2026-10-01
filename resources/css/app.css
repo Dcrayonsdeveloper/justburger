@@ -1028,6 +1028,20 @@ button:disabled, [disabled] {
     line-height: 1.4 !important;
     background: #fff !important;
 }
+
+/* Currency-prefixed inputs: the shorthand `padding` above is !important and
+   wipes the pl-* the blades ask for, dropping the number onto the £ symbol. */
+.layout-admin .form-input.pl-7,
+.layout-admin input[type="number"].pl-7,
+.layout-admin input[type="text"].pl-7 {
+    padding-left: 1.75rem !important;
+}
+
+.layout-admin .form-input.pl-9,
+.layout-admin input[type="number"].pl-9,
+.layout-admin input[type="text"].pl-9 {
+    padding-left: 2.25rem !important;
+}
 .layout-admin .form-input:focus,
 .layout-admin .form-select:focus,
 .layout-admin .form-textarea:focus,
