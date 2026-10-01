@@ -150,6 +150,7 @@ class ProductController extends Controller
             'is_featured' => 'boolean',
             'is_bestseller' => 'boolean',
             'customize_enabled' => 'boolean',
+            'allow_item_note' => 'boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'main_image' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:2048',
@@ -172,6 +173,7 @@ class ProductController extends Controller
             unset($validated['is_featured']);
         }
         $validated['customize_enabled'] = $request->boolean('customize_enabled');
+        $validated['allow_item_note'] = $request->boolean('allow_item_note');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
         // "Compare at price / MRP" is optional; default it to the price (no discount) so the
@@ -274,6 +276,7 @@ class ProductController extends Controller
             'is_featured' => 'boolean',
             'is_bestseller' => 'boolean',
             'customize_enabled' => 'boolean',
+            'allow_item_note' => 'boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'main_image' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:2048',
@@ -298,6 +301,7 @@ class ProductController extends Controller
             unset($validated['is_featured']);
         }
         $validated['customize_enabled'] = $request->boolean('customize_enabled');
+        $validated['allow_item_note'] = $request->boolean('allow_item_note');
         $validated['seller_id'] = $validated['seller_id'] ?: null;
         $validated['brand_id'] = $validated['brand_id'] ?: null;
         // "Compare at price / MRP" is optional; default it to the price (no discount) so the
