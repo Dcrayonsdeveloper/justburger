@@ -84,7 +84,8 @@
         </div>
         <label class="relative inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
             <input type="hidden" name="customize_enabled" value="0">
-            <input type="checkbox" name="customize_enabled" value="1" x-model="on" class="sr-only">
+            <input type="checkbox" name="customize_enabled" value="1" x-model="on" class="sr-only"
+                   {{ (bool) old('customize_enabled', $isEdit ? $product->customize_enabled : false) ? 'checked' : '' }}>
             <span class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors" :class="{ '!bg-primary-600': on }">
                 <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="{ 'translate-x-5': on }"></span>
             </span>
@@ -209,7 +210,8 @@
         </div>
         <label class="relative inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
             <input type="hidden" name="allow_item_note" value="0">
-            <input type="checkbox" name="allow_item_note" value="1" x-model="note" class="sr-only">
+            <input type="checkbox" name="allow_item_note" value="1" x-model="note" class="sr-only"
+                   {{ (bool) old('allow_item_note', (isset($product) && $product) ? $product->allow_item_note : true) ? 'checked' : '' }}>
             <span class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors" :class="{ '!bg-primary-600': note }">
                 <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="{ 'translate-x-5': note }"></span>
             </span>

@@ -20,7 +20,11 @@
     @stack('styles')
 </head>
 <body class="antialiased layout-admin" x-data="{ sidebarOpen: false }" style="background:#f1f1f1;font-family:'Inter',system-ui,-apple-system,sans-serif">
-    <div class="flex h-screen overflow-hidden">
+    {{-- min-h-screen alongside h-screen on purpose. The shell has been seen
+         collapsing to the sidebar's own height on the product edit screen,
+         leaving the page short with dead space below it. height can be lost to
+         an override; min-height still holds the shell to the viewport. --}}
+    <div class="flex h-screen min-h-screen overflow-hidden">
         <!-- Sidebar -->
         @include('admin.partials.sidebar')
 
