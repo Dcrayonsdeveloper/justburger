@@ -231,7 +231,7 @@ Alpine.store('cart', {
         }
     },
 
-    async addWithToppings(productId, quantity = 1, variantId = null, toppingsAdded = [], toppingsRemoved = [], toppingsKept = []) {
+    async addWithToppings(productId, quantity = 1, variantId = null, toppingsAdded = [], toppingsRemoved = [], toppingsKept = [], itemNote = '') {
         this.isLoading = true;
         try {
             const response = await axios.post('/cart/add', {
@@ -241,6 +241,7 @@ Alpine.store('cart', {
                 toppings_added: toppingsAdded,
                 toppings_removed: toppingsRemoved,
                 toppings_kept: toppingsKept,
+                item_note: itemNote,
             });
             if (response.data.cart_count !== undefined) {
                 this.itemCount = response.data.cart_count;
@@ -306,6 +307,8 @@ Alpine.store('toppingsModal', {
     variantId: null,
     variants: [],   // [{ id, name, price }] — the sizes, cheapest first
     basePrice: 0,
+    allowItemNote: false,
+    itemNote: '',
 
     async open(productId, quantity = 1, variantId = null) {
         this.productId = productId;
@@ -316,6 +319,8 @@ Alpine.store('toppingsModal', {
         this.selected = {};
         this.sections = [];
         this.variants = [];
+        this.itemNote = '';
+        this.allowItemNote = false;
         document.body.style.overflow = 'hidden';
 
         try {
@@ -333,9 +338,12 @@ Alpine.store('toppingsModal', {
             }
             this.defaults = data.defaults;
             this.optionals = data.optionals;
+            this.allowItemNote = !!data.allow_item_note;
 
-            // If no toppings, add directly to cart
-            if (!data.has_toppings) {
+            // Straight to the basket only when there is nothing to ask about.
+            // An item with no toppings may still take a kitchen note, and that
+            // is reason enough to show the popup.
+            if (!data.has_toppings && !this.allowItemNote) {
                 this.close();
                 await Alpine.store('cart').add(productId, quantity, variantId);
                 return;
@@ -430,9 +438,10 @@ Alpine.store('toppingsModal', {
         const added = this.extraToppings.map(t => ({ id: t.id, name: t.name, price: t.price, section: t.section }));
         const removed = this.removedToppings.map(t => ({ id: t.id, name: t.name }));
         const kept = this.keptDefaults.map(t => ({ id: t.id, name: t.name, section: t.section }));
+        const note = this.allowItemNote ? this.itemNote.trim().slice(0, 200) : '';
 
         this.close();
-        await Alpine.store('cart').addWithToppings(this.productId, this.quantity, this.variantId, added, removed, kept);
+        await Alpine.store('cart').addWithToppings(this.productId, this.quantity, this.variantId, added, removed, kept, note);
     },
 
     close() {

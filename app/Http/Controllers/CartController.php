@@ -45,6 +45,7 @@ class CartController extends Controller
                 'image' => $item->product->primary_image_url,
                 'slug' => $item->product->slug ?? '',
                 'toppings' => $toppings,
+                'item_note' => $item->item_note,
             ];
         });
 
@@ -79,6 +80,7 @@ class CartController extends Controller
             'toppings_kept.*.id' => ['required_with:toppings_kept', 'integer'],
             'toppings_kept.*.name' => ['required_with:toppings_kept', 'string'],
             'toppings_kept.*.section' => ['nullable', 'string', 'max:100'],
+            'item_note' => ['nullable', 'string', 'max:200'],
         ]);
 
         $product = Product::with(['category', 'brand'])->findOrFail($validated['product_id']);
@@ -103,6 +105,13 @@ class CartController extends Controller
         $toppingsAdded = $validated['toppings_added'] ?? [];
         $toppingsRemoved = $validated['toppings_removed'] ?? [];
         $toppingsKept = $validated['toppings_kept'] ?? [];
+        // Honour the product's own switch rather than trusting the client: a
+        // note posted for a sealed item is dropped here, not displayed later.
+        $itemNote = trim((string) ($validated['item_note'] ?? ''));
+        if ($itemNote !== '' && ! $product->allow_item_note) {
+            $itemNote = '';
+        }
+
         $toppingsAttr = null;
         if (!empty($toppingsAdded) || !empty($toppingsRemoved) || !empty($toppingsKept)) {
             $toppingsAttr = [
@@ -126,10 +135,21 @@ class CartController extends Controller
             ];
         }
 
+        if ($itemNote !== '') {
+            $toppingsAttr ??= [];
+            $toppingsAttr['item_note'] = $itemNote;
+        }
+
         $cart = $this->getOrCreateCart();
 
-        // Match existing item by product + variant + same toppings selection
-        $toppingsSignature = $toppingsAttr ? md5(json_encode($toppingsAttr['toppings'])) : '';
+        // Match on product + variant + the same toppings AND the same note. Two
+        // identical burgers, one "well done" and one not, are two lines for the
+        // kitchen - merging them would lose an instruction.
+        $signature = fn (?array $attrs) => md5(json_encode([
+            $attrs['toppings'] ?? null,
+            $attrs['item_note'] ?? '',
+        ]));
+        $toppingsSignature = $signature($toppingsAttr);
         $existingItem = null;
         $cartItems = $cart->items()
             ->where('product_id', $validated['product_id'])
@@ -137,9 +157,7 @@ class CartController extends Controller
             ->get();
 
         foreach ($cartItems as $item) {
-            $itemToppings = $item->attributes['toppings'] ?? null;
-            $itemSig = $itemToppings ? md5(json_encode($itemToppings)) : '';
-            if ($itemSig === $toppingsSignature) {
+            if ($signature($item->attributes ?: null) === $toppingsSignature) {
                 $existingItem = $item;
                 break;
             }

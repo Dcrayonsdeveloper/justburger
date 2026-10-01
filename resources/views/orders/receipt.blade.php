@@ -233,6 +233,15 @@
                     <div class="rc-opt-item">{{ $t['name'] }}@if(($t['price'] ?? 0) > 0) ({{ format_price($t['price']) }})@endif@unless($loop->last),@endunless</div>
                 @endforeach
             @endforeach
+
+            {{-- The note for this line, under the options it qualifies and
+                 indented like them, so the kitchen reads it as part of the same
+                 item rather than as a note about the order as a whole - that
+                 one is boxed separately below. --}}
+            @if($item->item_note)
+                <div class="rc-opt"><span class="lead">note:</span></div>
+                <div class="rc-opt-item">{{ $item->item_note }}</div>
+            @endif
         @endforeach
 
         {{-- Order note. Optional — most orders carry none, and the box only

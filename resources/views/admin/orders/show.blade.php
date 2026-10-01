@@ -151,6 +151,16 @@
                                         {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</p>
                                 @endif
 
+                                {{-- Per-item note, distinct from the order-wide note lower
+                                     down the page. Tinted so it stands out when someone is
+                                     checking a bag against the screen. --}}
+                                @if($item->item_note)
+                                    <p class="text-xs mt-1 px-2 py-1 rounded"
+                                       style="color:#8a6d1f;background:#fdf6e3;">
+                                        <span class="font-semibold">Note:</span> {{ $item->item_note }}
+                                    </p>
+                                @endif
+
                                 <p class="text-xs text-neutral-600 font-mono mt-1">SKU: {{ $item->sku }}</p>
                             </div>
                             <div class="text-right shrink-0">

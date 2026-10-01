@@ -190,3 +190,30 @@
         @endif
     </div>
 </div>
+
+{{--
+    Item notes are deliberately a separate switch from Customize above: an item
+    can take a kitchen instruction without offering a single topping, and the
+    popup opens for either reason.
+--}}
+<div class="card overflow-hidden mt-5" x-data="{ note: {{ (bool) old('allow_item_note', (isset($product) && $product) ? $product->allow_item_note : true) ? 'true' : 'false' }} }">
+    <div class="px-5 py-4 flex items-start justify-between gap-4">
+        <div>
+            <h2 class="text-base font-semibold text-neutral-900">Item note</h2>
+            <p class="text-xs text-neutral-500 mt-0.5">
+                Lets the customer type an instruction for this item &mdash; &ldquo;no onions&rdquo;, &ldquo;well done&rdquo;,
+                &ldquo;cut in half&rdquo;. It shows in their basket, at checkout and on the kitchen receipt.
+                Turn it off for anything handed over sealed, such as bottled drinks and tubs of ice cream,
+                where a note would only mislead whoever reads the slip.
+            </p>
+        </div>
+        <label class="relative inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
+            <input type="hidden" name="allow_item_note" value="0">
+            <input type="checkbox" name="allow_item_note" value="1" x-model="note" class="sr-only">
+            <span class="relative w-11 h-6 bg-neutral-200 rounded-full transition-colors" :class="{ '!bg-primary-600': note }">
+                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="{ 'translate-x-5': note }"></span>
+            </span>
+            <span class="text-sm font-medium" :class="note ? 'text-primary-700' : 'text-neutral-500'" x-text="note ? 'Enabled' : 'Disabled'"></span>
+        </label>
+    </div>
+</div>

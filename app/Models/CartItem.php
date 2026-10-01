@@ -69,6 +69,15 @@ class CartItem extends Model
         return array_sum(array_column($added, 'price'));
     }
 
+    /** What the customer typed for this line, if the product allows a note. */
+    public function getItemNoteAttribute(): string
+    {
+        $attrs = $this->attributes['attributes'] ?? null;
+        $decoded = is_string($attrs) ? json_decode($attrs, true) : $attrs;
+
+        return trim((string) ($decoded['item_note'] ?? ''));
+    }
+
     public function getToppingsListAttribute(): array
     {
         $attrs = $this->attributes['attributes'] ?? null;

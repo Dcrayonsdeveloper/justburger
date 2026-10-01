@@ -69,6 +69,8 @@
             text-transform:uppercase; letter-spacing:.06em;
         }
         .cart-item-size { font-size:.72rem; line-height:1.3; margin:.15rem 0 0; color:#666666; }
+        .cart-item-note { font-size:.72rem; line-height:1.3; margin:.15rem 0 0; color:#8a6d1f; overflow-wrap:anywhere; }
+        .cart-item-note .lbl { font-weight:700; }
         .cart-item-size .lbl { font-weight:700; }
         .cart-item-price { font-size:1rem; font-weight:800; color:#C8102E; margin-top:.3rem; }
 
@@ -322,6 +324,9 @@
                                                     </template>
                                                 </div>
                                             </template>
+                                            <template x-if="item.item_note">
+                                                <p class="cart-item-note"><span class="lbl">Note:</span> <span x-text="item.item_note"></span></p>
+                                            </template>
                                             <div class="cart-item-price" x-text="fp(item.line_price || item.price)"></div>
                                         </div>
 
@@ -553,6 +558,7 @@
             'toppings_total'=> (float) $item->toppings_total,
             'line_price'    => (float) $item->price + $item->toppings_total,
             'toppings'      => $item->toppings_list,
+            'item_note'     => $item->item_note,
             'mrp'           => (float) $item->product->mrp,
             'discount_pct'  => $item->product->discount_percentage ?? 0,
             'quantity'      => $item->quantity,
