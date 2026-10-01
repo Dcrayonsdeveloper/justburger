@@ -95,6 +95,28 @@
                                                 @if($item->variant_name)
                                                     <p class="text-[12px] text-neutral-600 mt-0.5">{{ $item->variant_name }}</p>
                                                 @endif
+                                                {{-- What the customer actually chose. Without this the page
+                                                     showed a bare name and a total that silently included
+                                                     toppings, so the figure could not be checked against
+                                                     what was ordered. --}}
+                                                @php $opts = $item->toppings_list; @endphp
+                                                @if(!empty($opts['kept']))
+                                                    <p class="text-[12px] text-neutral-500 mt-0.5">With:
+                                                        {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</p>
+                                                @endif
+                                                @if(!empty($opts['added']))
+                                                    <p class="text-[12px] text-emerald-700 mt-0.5">+
+                                                        {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</p>
+                                                @endif
+                                                @if(!empty($opts['removed']))
+                                                    <p class="text-[12px] text-red-600 mt-0.5">No
+                                                        {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</p>
+                                                @endif
+                                                @if($item->item_note)
+                                                    <p class="text-[12px] mt-1 px-2 py-1 rounded" style="color:#8a6d1f;background:#fdf6e3;">
+                                                        <span class="font-semibold">Note:</span> {{ $item->item_note }}
+                                                    </p>
+                                                @endif
                                                 @if($item->sku)
                                                     <p class="text-[11px] text-neutral-600 mt-0.5">SKU: {{ $item->sku }}</p>
                                                 @endif

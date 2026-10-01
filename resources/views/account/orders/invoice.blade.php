@@ -54,6 +54,12 @@
         tbody tr:last-child td { border-bottom: none; }
         .product-name { font-weight: 600; color: #111827; font-size: 14px; }
         .product-variant { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+        /* An invoice has to explain its own figures: a line charged with
+           toppings needs them itemised, or the total cannot be checked. */
+        .product-opt { font-size: 11px; color: #6b7280; margin-top: 2px; }
+        .product-opt--add { color: #047857; }
+        .product-opt--del { color: #b91c1c; }
+        .product-opt--note { color: #8a6d1f; margin-top: 3px; }
 
         /* Totals */
         .totals-wrapper { display: flex; justify-content: flex-end; }
@@ -182,6 +188,19 @@
                             <div class="product-name">{{ $item->product_name }}</div>
                             @if($item->variant_name)
                                 <div class="product-variant">{{ $item->variant_name }}</div>
+                            @endif
+                            @php $opts = $item->toppings_list; @endphp
+                            @if(!empty($opts['kept']))
+                                <div class="product-opt">With: {{ collect($opts['kept'])->pluck('name')->filter()->implode(', ') }}</div>
+                            @endif
+                            @if(!empty($opts['added']))
+                                <div class="product-opt product-opt--add">+ {{ collect($opts['added'])->map(fn ($t) => ($t['name'] ?? '') . (($t['price'] ?? 0) > 0 ? ' (' . format_price($t['price']) . ')' : ''))->filter()->implode(', ') }}</div>
+                            @endif
+                            @if(!empty($opts['removed']))
+                                <div class="product-opt product-opt--del">No {{ collect($opts['removed'])->pluck('name')->filter()->implode(', ') }}</div>
+                            @endif
+                            @if($item->item_note)
+                                <div class="product-opt product-opt--note">Note: {{ $item->item_note }}</div>
                             @endif
                         </td>
                         <td style="font-size: 11px; color: #9ca3af; font-family: monospace;">{{ $item->sku }}</td>
