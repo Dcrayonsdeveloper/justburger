@@ -84,8 +84,15 @@
         .rc-opt-item { font-size:11pt; padding-left:8mm; overflow-wrap:anywhere; page-break-inside:avoid; }
         .rc-opt .lead, .rc-item-variant .lead { font-weight:700; }
 
-        /* Order note. The one thing on the slip the kitchen must not skim past,
-           so it gets a box of its own — the only boxed element on the receipt. */
+        /* A note gets a box so the kitchen cannot skim past it. Two kinds:
+           one per item, indented under the burger it belongs to, and the
+           order-wide one below, full width so it reads as the louder of the
+           two. Both boxed, because both are instructions rather than detail. */
+        .rc-item-note { border:1.5px solid #000; padding:1mm 1.5mm; margin:1mm 0 1.5mm 4mm;
+                        page-break-inside:avoid; }
+        .rc-item-note .hdr { font-size:10.5pt; font-weight:700; letter-spacing:.2mm; }
+        .rc-item-note .body { font-size:11.5pt; font-weight:700; overflow-wrap:anywhere; }
+
         .rc-kitchen-note { border:1.5px solid #000; padding:1.5mm 2mm; margin:2mm 0; page-break-inside:avoid; }
         .rc-kitchen-note .hdr { font-size:11.5pt; font-weight:700; letter-spacing:.3mm; margin-bottom:.8mm; }
         .rc-kitchen-note .body { font-size:12.5pt; font-weight:700; overflow-wrap:anywhere; }
@@ -239,8 +246,10 @@
                  item rather than as a note about the order as a whole - that
                  one is boxed separately below. --}}
             @if($item->item_note)
-                <div class="rc-opt"><span class="lead">note:</span></div>
-                <div class="rc-opt-item">{{ $item->item_note }}</div>
+                <div class="rc-item-note">
+                    <div class="hdr">NOTE</div>
+                    <div class="body">{{ $item->item_note }}</div>
+                </div>
             @endif
         @endforeach
 
