@@ -696,14 +696,17 @@
                 <template x-for="item in $store.cart.items" :key="item.id">
                     <div class="flex gap-3 py-3 border-b border-neutral-100 last:border-0">
                         {{-- Image --}}
-                        <a :href="item.url || '#'" class="shrink-0 w-20 h-20 bg-neutral-50 rounded-lg overflow-hidden">
+                        <a :href="item.slug ? '/menu/' + item.slug : (item.url || '#')" class="shrink-0 w-20 h-20 bg-neutral-50 rounded-lg overflow-hidden">
                             <img :src="(item.image && !item.image.endsWith('.svg')) ? item.image : '/images/products/product-' + ((item.id % 27) + 1) + '.jpg'"
                                  :alt="item.name" class="w-full h-full object-cover">
                         </a>
 
                         {{-- Details --}}
                         <div class="flex-1 min-w-0">
-                            <a :href="item.url || '#'" class="text-sm font-medium text-neutral-900 line-clamp-2 hover:text-[#C8102E] transition-colors" x-text="item.name"></a>
+                            <a :href="item.slug ? '/menu/' + item.slug : (item.url || '#')" class="text-sm font-medium text-neutral-900 line-clamp-2 hover:text-[#C8102E] transition-colors" x-text="item.product_name || item.name"></a>
+                            <template x-if="item.variant_name">
+                                <p class="text-[10px] text-neutral-500 leading-tight mt-0.5"><span class="font-bold">Size:</span> <span x-text="item.variant_name"></span></p>
+                            </template>
                             {{-- Toppings summary --}}
                             <template x-if="item.toppings && (item.toppings.added?.length || item.toppings.removed?.length || item.toppings.kept?.length)">
                                 <div class="mt-0.5">
@@ -732,6 +735,9 @@
                                         </p>
                                     </template>
                                 </div>
+                            </template>
+                            <template x-if="item.item_note">
+                                <p class="text-[10px] leading-tight mt-0.5" style="color:#8a6d1f;overflow-wrap:anywhere;"><span class="font-bold">Note:</span> <span x-text="item.item_note"></span></p>
                             </template>
                             <div class="flex items-baseline gap-1.5 mt-1">
                                 <span class="text-sm font-bold text-neutral-900" x-text="formatCurrency(item.line_price || item.price)"></span>
