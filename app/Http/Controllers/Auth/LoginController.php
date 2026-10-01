@@ -58,8 +58,15 @@ class LoginController extends Controller
             return back()->withErrors(['email' => $message])->onlyInput('email');
         }
 
+        // Auth::attempt() migrates the session, so the guest's id has to be read
+        // BEFORE it runs. Taken afterwards, getId() returns the freshly minted
+        // id and both merges look up a session that never held anything - which
+        // is why signing in used to empty the basket.
+        $guestSessionId = $request->session()->getId();
+
         if ($user && Auth::attempt($credentials, $request->boolean('remember'))) {
-            $this->mergeGuestCart($request);
+            $this->mergeGuestCart($request, $guestSessionId);
+            $this->mergeGuestWishlist($request, $guestSessionId);
             $request->session()->regenerate();
 
             if ($request->wantsJson()) {
@@ -116,9 +123,34 @@ class LoginController extends Controller
         )->first();
     }
 
-    private function mergeGuestCart(Request $request): void
+    /**
+     * Carry a guest's saved products into their account, mirroring
+     * mergeGuestCart(). Without this, signing in silently emptied the
+     * wishlist they had just built.
+     */
+    private function mergeGuestWishlist(Request $request, string $sessionId): void
     {
-        $sessionId = $request->session()->getId();
+
+        $guestRows = \App\Models\Wishlist::whereNull('user_id')
+            ->where('session_id', $sessionId)
+            ->get();
+
+        foreach ($guestRows as $row) {
+            $alreadySaved = \App\Models\Wishlist::where('user_id', Auth::id())
+                ->where('product_id', $row->product_id)
+                ->exists();
+
+            if ($alreadySaved) {
+                $row->delete();
+                continue;
+            }
+
+            $row->update(['user_id' => Auth::id(), 'session_id' => null]);
+        }
+    }
+
+    private function mergeGuestCart(Request $request, string $sessionId): void
+    {
         $guestCart = Cart::where('session_id', $sessionId)
             ->whereNull('user_id')
             ->with('items')
