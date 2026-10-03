@@ -32,6 +32,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // AJAX search endpoints (used by multiple features)
         Route::get('/search/products', [App\Http\Controllers\Admin\SearchController::class, 'products'])->name('search.products');
+        Route::get('/search/orders', [App\Http\Controllers\Admin\SearchController::class, 'orders'])->name('search.orders');
+        Route::get('/search/customers', [App\Http\Controllers\Admin\SearchController::class, 'customers'])->name('search.customers');
 
         // Orders
         Route::middleware('admin.section:orders')->group(function () {

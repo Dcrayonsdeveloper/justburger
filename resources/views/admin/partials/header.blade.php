@@ -169,12 +169,16 @@ function adminSearch() {
                 const res = await fetch(`/admin/search/${this.section}?search=${encodeURIComponent(this.query)}`);
                 const data = await res.json();
                 this.results = (data.data || data || []).slice(0, 8).map(item => {
+                    const money = v => '£' + Number(v || 0).toFixed(2);
                     if (this.section === 'products') {
-                        return { title: item.name, subtitle: '£' + item.price, image: item.primary_image_url || null, url: `/admin/products/${item.id}/edit` };
+                        // Products bind by slug, not id - a link built from the
+                        // id 404s even when the product was found.
+                        return { title: item.name, subtitle: money(item.price), image: item.primary_image_url || null, url: `/admin/products/${item.slug}/edit` };
                     } else if (this.section === 'orders') {
-                        return { title: item.order_number, subtitle: '£' + item.total, image: null, url: `/admin/orders/${item.id}` };
+                        return { title: item.order_number, subtitle: [item.name, money(item.total)].filter(Boolean).join(' · '), image: null, url: `/admin/orders/${item.id}` };
                     } else {
-                        return { title: (item.first_name || '') + ' ' + (item.last_name || ''), subtitle: item.email, image: null, url: `/admin/customers/${item.id}` };
+                        const name = ((item.first_name || '') + ' ' + (item.last_name || '')).trim();
+                        return { title: name || item.email || item.phone, subtitle: item.email || item.phone || '', image: null, url: `/admin/customers/${item.id}` };
                     }
                 });
             } catch(e) { this.results = []; }
