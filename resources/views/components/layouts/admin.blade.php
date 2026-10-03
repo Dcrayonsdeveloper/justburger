@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="admin-root">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -20,11 +20,29 @@
     @stack('styles')
 </head>
 <body class="antialiased layout-admin" x-data="{ sidebarOpen: false }" style="background:#f1f1f1;font-family:'Inter',system-ui,-apple-system,sans-serif">
-    {{-- min-h-screen alongside h-screen on purpose. The shell has been seen
-         collapsing to the sidebar's own height on the product edit screen,
-         leaving the page short with dead space below it. height can be lost to
-         an override; min-height still holds the shell to the viewport. --}}
-    <div class="flex h-screen min-h-screen overflow-hidden">
+    {{--
+        The admin is a fixed shell: exactly one viewport tall, with <main> doing
+        the scrolling. The document itself must never scroll, or you get two
+        scrollbars down the right-hand side.
+
+        CKEditor is what breaks it. It appends a .ck-body-wrapper straight to
+        <body> for its toolbars and balloons, positioned absolutely against the
+        document, which pushes the document past 100vh. That is why only the six
+        pages loading CKEditor - products, pages and blog posts, create and edit
+        - show the extra scrollbar, and every other admin page is fine.
+
+        Clamping html and body removes it without touching how the editor
+        positions anything.
+    --}}
+    <style>
+        html.admin-root, html.admin-root > body.layout-admin {
+            height: 100%;
+            overflow: hidden;
+        }
+        /* The editor's own panels stay out of the document's height. */
+        body.layout-admin > .ck-body-wrapper { position: fixed; top: 0; left: 0; }
+    </style>
+    <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         @include('admin.partials.sidebar')
 
