@@ -145,7 +145,11 @@
     <!-- Bottom Bar -->
     <div class="border-t border-white/10">
         <div class="container mx-auto px-6 lg:px-8 py-5">
-            <p class="text-xs text-white/40">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
+            <p class="text-xs text-white/40">
+                &copy; {{ date('Y') }} {{ $siteName }}. All rights reserved. &middot;
+                <a href="https://dcrayon.com/" target="_blank" rel="noopener"
+                   class="underline hover:text-white/70 transition-colors">Created by Dcrayons Inc</a>
+            </p>
         </div>
     </div>
 </footer>
